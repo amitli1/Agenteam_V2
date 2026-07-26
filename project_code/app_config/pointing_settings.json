@@ -1,0 +1,213 @@
+{
+    "_comment": [
+        "Example config: shared memory /tmp/cam_grabber, 640x480, MOSSE tracker, all target manager features enabled.",
+        "Pass via {\"config_file\": \"/path/to/example_shm_mosse_full_tm.json\"} and override any field inline.",
+        "",
+        "Legend:",
+        "  REQUIRED   - must be provided (no default)",
+        "  OPTIONAL   - has a default value, shown in parentheses",
+        "  MODE-ONLY  - only used when running in that specific mode"
+    ],
+
+    "_comment_source": "REQUIRED for shm mode. shm://... prefix triggers shared memory mode.",
+    "source": "shm:///tmp/cam_grabber",
+
+    "_comment_prompt": "OPTIONAL (default: empty string = idle start, no tracking until prompt is set)",
+    "prompt": "",
+
+    "_comment_model_path": "OPTIONAL (default: /data/pointing_head_v3/snapshots/pointing_v3)",
+    "model_path": "/data/pointing_head_v3/snapshots/pointing_v3",
+
+    "tracker": {
+        "_comment": "All OPTIONAL. Tracker algorithm config.",
+        "_comment_tracker_type": "OPTIONAL (default: mosse). Options: gat | klt | kcf | mosse",
+        "tracker_type": "klt",
+        "_comment_stability_threshold": "OPTIONAL (default: 2). Frames needed to confirm stable lock",
+        "stability_threshold": 1,
+        "_comment_jump_threshold": "OPTIONAL (default: 2). Frames to detect tracking jump/break",
+        "jump_threshold": 1,
+        "_comment_proximity_distance": "OPTIONAL (default: 25). Pixel distance for proximity matching",
+        "proximity_distance": 1
+    },
+
+    "logging": {
+        "_comment_log_mode": "OPTIONAL (default: debug). Options: debug | long_run | release",
+        "log_mode": "debug"
+    },
+
+    "target_manager": {
+        "_comment": "All OPTIONAL. Target Manager config — KF, gating, SPRT, lifecycle, shadow.",
+
+        "_comment_toggles": "--- Feature toggles ---",
+
+        "_comment_enable_kf": "Master KF switch. false = raw tracker pass-through, no smoothing/gating/SPRT.",
+        "enable_kf": true,
+
+        "_comment_enable_gating": "false = accept every VLM detection (skip Mahalanobis gate). Useful for debugging.",
+        "enable_gating": true,
+
+        "_comment_enable_sprt": "false = every gate-passing detection is treated as MATCH (no SWITCH possible).",
+        "enable_sprt": true,
+
+        "_comment_min_vlm_confidence": "OPTIONAL (default: 0.5). VLM detections below this confidence are rejected as misses. Prevents near-zero-confidence garbage positions from triggering SPRT SWITCH or polluting the KF. UP = stricter, ignores low-confidence detections. DOWN (e.g. 0.001) = accept almost everything.",
+        "min_vlm_confidence": 0.4,
+
+        "_comment_kf": "--- Kalman Filter ---",
+
+        "_comment_process_noise_accel": "How much random acceleration the KF expects (px/s^2). UP = KF trusts tracker more, reacts faster to maneuvers, covariance grows faster. DOWN = smoother output, slower reaction. Example: 5 for a stationary camera, 50 for a handheld drone.",
+        "process_noise_accel": 200.0,
+
+        "_comment_r_visual_std": "Noise std (px) assigned to visual tracker measurements. IMPORTANT: Should be LARGE (50-100) to prevent visual updates from shrinking position covariance. Visual updates mainly teach velocity from frame-to-frame motion, NOT reduce position uncertainty. Only VLM measurements should shrink covariance. UP = allows P to grow between VLM detections (ellipse expands). DOWN = visual updates shrink P too much (ellipse stays constant).",
+        "r_visual_std": 2.0,
+
+        "_comment_r_vlm_std": "Noise std (px) used in the gating covariance S = P + R. UP = wider gate, more VLM detections pass. DOWN = tighter gate, only very close detections pass. Example: 5 for a precise VLM, 30 for a coarse one.",
+        "r_vlm_std": 20.0,
+
+        "_comment_r_vlm_min": "Best-case VLM noise (px) when confidence=1.0. Used for bridge fusion R scaling. UP = less KF correction even on high-confidence detections. DOWN = strong KF pull toward confident detections.",
+        "r_vlm_min": 5.0,
+
+        "_comment_r_vlm_max": "Worst-case VLM noise (px) when confidence=0.0. UP = very weak KF pull on low-confidence detections. DOWN = still pulls KF noticeably even with low confidence.",
+        "r_vlm_max": 50.0,
+
+        "_comment_p_initial_pos": "Initial position uncertainty (px^2). Higher = KF takes longer to converge after init. Example: 50 if first VLM detection is reliable, 500 if it could be far off.",
+        "p_initial_pos": 100.0,
+
+        "_comment_p_initial_vel": "Initial velocity uncertainty (px^2/s^2). Higher = KF explores velocity space more at start. Example: 10 for slow targets, 200 for fast ones.",
+        "p_initial_vel": 150.0,
+
+        "_comment_p_pos_max": "Cap on position covariance. Prevents P from growing unbounded between VLM updates, keeping Mahalanobis distances meaningful. UP = gate stays wide longer without VLM. DOWN = gate tightens faster, earlier rejection of far detections.",
+        "p_pos_max": 150.0,
+
+        "_comment_default_dt": "Assumed time between frames (seconds) when no prior frame exists. 0.0333 = 30 FPS. Only affects the very first KF predict.",
+        "default_dt": 0.0333,
+
+        "_comment_gating": "--- Mahalanobis Gating ---",
+
+        "_comment_gate_threshold": "Mahalanobis distance cutoff. 4.0 in 2D ~ 99.97% acceptance. UP = accept farther detections (fewer false rejections, more false accepts). DOWN = reject anything not very close to KF prediction. Example: 3.0 for strict, 6.0 for lenient.",
+        "gate_threshold": 5.0,
+
+        "_comment_sprt_section": "--- SPRT (Sequential Probability Ratio Test) ---",
+
+        "_comment_sprt_alpha": "P(false match). Not directly used when min_match/min_switch set thresholds.",
+        "sprt_alpha": 0.01,
+
+        "_comment_sprt_beta": "P(missed match). Not directly used when min_match/min_switch set thresholds.",
+        "sprt_beta": 0.05,
+
+        "_comment_sprt_w_spatial": "Weight of spatial (distance) evidence in SPRT score. Higher = distance matters more than VLM confidence. Example: 0.8 spatial + 0.2 vlm = mostly trust distance.",
+        "sprt_w_spatial": 0.5,
+
+        "_comment_sprt_w_vlm": "Weight of VLM confidence evidence in SPRT score. Higher = confidence matters more than distance. Example: 0.2 spatial + 0.8 vlm = mostly trust VLM confidence.",
+        "sprt_w_vlm": 0.5,
+
+        "_comment_sprt_initial_score": "SPRT score at start / after reset. 0 = neutral. Positive = bias toward MATCH. Negative = bias toward SWITCH.",
+        "sprt_initial_score": 0.0,
+
+        "_comment_sprt_vlm_baseline": "Expected VLM confidence for a random/wrong detection. VLM gives 0.5-0.7 even for wrong objects, so 0.5 is realistic. UP = need higher confidence to count as positive evidence. DOWN = even moderate confidence is positive.",
+        "sprt_vlm_baseline": 0.5,
+
+        "_comment_sprt_score_decay": "Leaky integrator: score *= decay before each update. 0.9 = old evidence fades 10% per VLM cycle. UP (closer to 1.0) = longer memory, slower decisions. DOWN (e.g. 0.7) = forgets fast, recent detections dominate.",
+        "sprt_score_decay": 0.85,
+
+        "_comment_sprt_clamp_score": "true = after MATCH/SWITCH decision, clamp score at threshold (prevents runaway). false = score continues accumulating freely.",
+        "sprt_clamp_score": true,
+
+        "_comment_min_switch_detections": "How many consecutive worst-case bad VLM detections needed before SWITCH. UP = harder to trigger SWITCH (more tolerant of bad detections). DOWN = faster SWITCH (aggressive). Example: 2 for responsive, 5 for conservative.",
+        "min_switch_detections": 3,
+
+        "_comment_min_match_detections": "How many consecutive best-case good VLM detections needed before MATCH. UP = slower to confirm a match (more cautious). DOWN = 1 good detection triggers MATCH immediately.",
+        "min_match_detections": 2,
+
+        "_comment_spatial_llr_cap": "Floor on negative spatial evidence per detection. Prevents one far detection (mahal=10 -> LLR=-47) from causing instant SWITCH. UP (e.g. -2.0) = weaker max penalty per detection. DOWN (e.g. -8.0) = stronger penalty, faster SWITCH.",
+        "spatial_llr_cap": -4.0,
+
+        "_comment_sprt_vlm_miss_penalty": "SPRT score penalty when VLM returns conf~0 (can't find target). UP = VLM misses push toward SWITCH faster. DOWN = misses are weak evidence, need many to matter. 0 = ignore misses entirely.",
+        "sprt_vlm_miss_penalty": 0.3,
+
+        "_comment_lifecycle": "--- Lifecycle State Machine ---",
+
+        "_comment_max_coast_frames": "Frames without visual tracker output before CONFIRMED -> COASTING. At 30fps: 45 = 1.5 seconds. UP = wait longer before coasting (tolerant of tracker dropouts). DOWN = enter coasting sooner.",
+        "max_coast_frames": 45,
+
+        "_comment_coast_to_lost_frames": "Frames without visual tracker output before COASTING -> LOST. At 30fps: 90 = 3 seconds. UP = coast longer on KF prediction alone. DOWN = give up sooner.",
+        "coast_to_lost_frames": 90,
+
+        "_comment_confirm_vlm_count": "VLM detections needed in TENTATIVE before CONFIRMED. UP = more VLM confirmations needed (slower but safer lock-on). DOWN = 1 detection confirms immediately (fast but risky). Example: 1 for low-latency, 3 for high-confidence.",
+        "confirm_vlm_count": 1,
+
+        "_comment_max_vlm_misses": "Consecutive VLM misses (conf~0) before CONFIRMED/COASTING -> LOST. UP = tolerate more misses. DOWN = lose track quickly when VLM can't find target. Example: 1 for aggressive, 5 for patient.",
+        "max_vlm_misses": 2,
+
+        "_comment_bridge": "--- Bridge Fusion ---",
+
+        "_comment_bridge_settle_time": "Seconds to wait after forwarding VLM detection to tracker before fusing bridge position into KF. Compensates for VLM processing delay. UP = more time for bridge catch-up (smoother but delays fusion). DOWN = fuse sooner (responsive but bridge may not have caught up). 0 for tests.",
+        "bridge_settle_time": 0.15,
+
+        "_comment_shadow": "--- Shadow Tracking (Mini-MHT) ---",
+
+        "_comment_enable_shadow_tracking": "true = on SPRT SWITCH, spawn a shadow tracker at VLM position instead of hard-resetting. Shadow must confirm before replacing primary. false = legacy hard SWITCH (instant reset to VLM position).",
+        "enable_shadow_tracking": true,
+
+        "_comment_max_shadow_frames": "Max frames a shadow can run before timeout. At 30fps: 90 = 3 seconds. If shadow doesn't confirm by then, it's killed and primary resumes. UP = give shadow more time to confirm. DOWN = quick decision.",
+        "max_shadow_frames": 90,
+
+        "_comment_freeze": "--- Freeze Detection ---",
+
+        "_comment_enable_freeze_detection": "Detect when tracker locks on background and returns frozen position. true = automatically mark tracker as LOST and retry locking when same position repeats. false = disable freeze detection.",
+        "enable_freeze_detection": true,
+
+        "_comment_max_frozen_frames": "Consecutive frames at nearly identical position before marking tracker as LOST. At 30fps: 10 = 0.33 seconds, 15 = 0.5 seconds. UP = more tolerant of slow-moving targets (reduces false positives). DOWN = faster recovery from background lock (more aggressive). Example: 10 for fast-moving, 20 for slow-moving objects.",
+        "max_frozen_frames": 10,
+
+        "_comment_freeze_position_threshold": "Max pixel movement to consider position 'frozen' (Euclidean distance). UP = allows more jitter before triggering freeze (tolerant of noisy tracker). DOWN = stricter freeze detection (catches subtle background lock). Example: 1.0 for high-res stable tracking, 3.0 for noisy low-res tracking.",
+        "freeze_position_threshold": 0,
+
+        "_comment_sam": "--- SAM Visual Verification ---",
+        "_comment_sam_enabled": "Master toggle. Requires SAM service running at sam_service_url.",
+        "sam_enabled": true,
+        "_comment_sam_service_url": "SAM segmentation service URL. Empty = disabled.",
+        "sam_service_url": "http://localhost:8004",
+        "_comment_sam_timeout": "HTTP timeout for SAM calls (seconds).",
+        "sam_timeout": 2.0,
+        "_comment_sprt_w_visual": "Weight of SAM visual similarity in SPRT. When enabling, rebalance: e.g. w_spatial=0.35 + w_vlm=0.35 + w_visual=0.3 = 1.0. 0 = disabled.",
+        "sprt_w_visual": 0.5,
+        "_comment_sprt_visual_baseline": "Expected visual similarity for wrong detection. UP = need higher similarity for positive evidence.",
+        "sprt_visual_baseline": 0.4,
+
+        "_comment_sam_reference_update_interval": "Frames between SAM reference updates. At 30fps: 60 = 2 seconds, 900 = 30 seconds. Only updates if similarity threshold is met. UP = update less frequently (more stable reference). DOWN = update more frequently (adapts faster to appearance changes).",
+        "sam_reference_update_interval": 60,
+
+        "_comment_sam_reference_update_similarity_threshold": "Minimum visual similarity to update SAM reference. 0.5 = moderate match, 0.8 = strong match. Only updates when tracking is stable and similarity is above this threshold. UP = stricter updates (only when very similar). DOWN = more lenient updates (adapts to larger appearance changes).",
+        "sam_reference_update_similarity_threshold": 0.5,
+
+        "_comment_sam_reference_rescue_interval": "RESCUE: Force SAM reference update after this many frames regardless of similarity (prevents stuck on bad reference). At 30fps: 90 = 3 seconds, 300 = 10 seconds. Only applies when tracking is stable. Set to 0 to disable rescue updates.",
+        "sam_reference_rescue_interval": 90,
+
+        "_comment_distance": "--- Distance Estimation ---",
+        "_comment_distance_enabled": "Master toggle. Requires sam_enabled=true (uses SAM for segmentation).",
+        "distance_enabled": true,
+        "_comment_distance_hfov_degrees": "Camera horizontal FOV in degrees. 90 is typical webcam.",
+        "distance_hfov_degrees": 22.5,
+        "_comment_distance_default_class": "Override object class for prior lookup. Empty = extract from lock prompt.",
+        "distance_default_class": "man",
+        "_comment_send_frame_image": "Include base64 JPEG of detection frame in WebSocket results. Bandwidth-heavy.",
+        "send_frame_image": false,
+        "_comment_send_debug_state": "Include tracker debug state dict in WebSocket results (lifecycle, KF, SPRT internals). Disable to reduce payload.",
+        "send_debug_state": false
+    },
+
+    "_comment_reconnection": "Shared by RTSP and shared memory modes. All OPTIONAL.",
+    "reconnect_attempts": -1,
+    "reconnect_interval": 2.0,
+    "allow_start_disconnected": true,
+
+    "shared_memory": {
+        "_comment": "SHM MODE-ONLY settings. width and height are REQUIRED for shm mode.",
+        "_comment_width": "REQUIRED for shm mode. Frame width in pixels",
+        "width": 640,
+        "_comment_height": "REQUIRED for shm mode. Frame height in pixels",
+        "height": 480,
+        "_comment_fps": "OPTIONAL (default: 30). Expected frame rate",
+        "fps": 30
+    }
+}

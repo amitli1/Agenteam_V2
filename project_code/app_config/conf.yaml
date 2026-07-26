@@ -1,0 +1,56 @@
+audio:
+  language: en
+  vad_threshold: 0.6
+  stt:
+    model_size: large-v3-turbo # ivrit-ai/faster-whisper-v2-d4 #large-v3-turbo #large-v3-turbo #/models/faster-whisper-large-v3 faster-whisper-large-v3-turbo
+    num_beams: 5
+    confidence_threshold: 0.36
+    compression_ratio_threshold: 2.4
+  vad:
+    vad_threshold: 0.5
+    vad_chunk: 512
+    sample_rate: 16000
+  wakeword:
+    channels: 1
+    chunk: 4096
+    sample_rate: 16000
+
+general:
+  run_as_master: true
+
+  master_quad_port: 8001
+  master_air_ip: 127.0.0.1
+  master_air_port: 8125
+
+  slave_quad_port: 8011
+  slave_air_ip: 127.0.0.1
+  slave_air_port: 8124
+
+  ground_ip: 127.0.0.1
+  groud_port: 8123
+
+flightPath:
+  default_drone_altitude: 20.0
+  spatial_distance: 5.0
+  slave_drone_altitude_offset: 3.0
+
+
+llm:
+  api_key: EMPTY
+  base_url: http://localhost:8090/v1
+  llm_model: openai/gpt-oss-20b
+
+vision:
+  use_online: false
+  summary_port: 8080
+  hold_port   : 6000
+  point_port  : 8003
+
+logging_and_records:
+  output_path: /home/amitli/repo/Agenteam_V2/outputs
+
+database:
+    db_path: /home/amitli/repo/Agenteam_V2/project_code/app_config/airsim_poly_db.csv
+
+test:
+  run_in_test_mode: false
