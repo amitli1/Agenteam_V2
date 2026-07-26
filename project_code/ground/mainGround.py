@@ -34,9 +34,10 @@ class MainGround:
         self.last_quad_data = None
         app.add_url_rule("/status",view_func=self.on_air_status_message,methods=["POST"],)
         app.add_url_rule("/text_to_user", view_func=self.on_air_text_to_user, methods=["POST"], )
+        self.status_received_event = threading.Event()
 
         self.master_drone_location = None
-        self.slave_drone_location = None
+        self.slave_drone_location  = None
 
     def on_air_status_message(self):
         last_quad_data      = request.get_json(silent=True)
@@ -48,6 +49,7 @@ class MainGround:
                                     'alt': self.last_quad_data['alt'],
                                     'yaw': self.last_quad_data['yaw']}
 
+        self.status_received_event.set()
         return "OK", 200
 
     def on_air_text_to_user(self):
@@ -90,8 +92,12 @@ if __name__ == "__main__":
     air_process = multiprocessing.Process(target=mainAir.start_air, daemon=True)
     air_process.start()
 
+    time.sleep(3)
     mainGround = MainGround()
-    mainGround.handle_user_text("Hey jarvis go to building number one")
+    logging.info('Wait till getting messages from air')
+    mainGround.status_received_event.wait()
+    logging.info('Got messages from air - continue')
+    mainGround.handle_user_text("Hey buddy go to building number one")
 
     # flask_groundthread = threading.Thread(
     #     target=lambda: app.run(host="0.0.0.0", port=app_settings.general.groud_port, use_reloader=False),

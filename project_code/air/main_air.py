@@ -45,9 +45,8 @@ class MainAir:
     def main_air_logic(self):
 
         while True:
-            time.sleep(1)
+            time.sleep(1) # get message every second
             last_quad_msg = self.quadManager.get_last_quad_message()
-
             if last_quad_msg is None:
                 continue
 
@@ -63,6 +62,12 @@ class MainAir:
 
 
 if __name__ == "__main__":
+
+    logging.basicConfig(
+        level=logging.INFO,  # or DEBUG
+        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+    )
+    logger = logging.getLogger(__name__)
 
     mainAir = MainAir()
     mainAir.start_air()

@@ -21,6 +21,7 @@ class QuadManager:
         )
         self._thread.start()
         self.last_status_data = None
+        self.quad_manager_ready = threading.Event()
 
     def _run_status_loop(self):
         # each thread needs its own event loop to run async code
@@ -96,6 +97,8 @@ class QuadManager:
                             flag_first_msg         = True
 
                             self.last_status_data = json.loads(message)
+                            self.quad_manager_ready.set()
+
                             # lat                   = status_data['lat']
                             # lon                   = status_data['lon']
                             # alt                   = status_data['alt']
@@ -164,10 +167,15 @@ class TesterUtils:
 
         return corners
 
-if __name__ == "__main__":
 
-    # {'timestamp': 1784451253894, 'is_armed': False, 'flight_mode': 'HOLD', 'lat': 47.6414678, 'lon': -122.14016489999999, 'alt': -0.012000000104308128, 'yaw': 187.4424285888672, 'horizontal_velocity': 0.0, 'vertical_velocity': 0.0, 'battery_voltage': 16.200000762939453, 'in_air': False, 'is_mission_finished': True, 'mission_progress': '0/0', 'last_mission_estimated_time': 'No mission yet', 'last_mission_waypoint': None}
+def simple_get_status_test():
+    quadManager = QuadManager(8001)
+    quadManager.quad_manager_ready.wait()
+    current = quadManager.get_current_location()
+    print(current)
 
+
+def simple_flight_test():
     quadManager = QuadManager(8001)
     testerUtils = TesterUtils()
     time.sleep(3)
@@ -181,7 +189,7 @@ if __name__ == "__main__":
     horizontal_m = math.sqrt(total_dist_m ** 2 - climb_m ** 2)  # ~45.83 m
 
     wp = testerUtils.offset_wp(current['lat'], current['lon'], current['alt'] + climb_m,
-                   distance_m=horizontal_m, bearing_deg=0)
+                               distance_m=horizontal_m, bearing_deg=0)
 
     print(f'Fly to wp: {wp}')
     # quadManager.fly_to_wp([wp])
@@ -195,10 +203,16 @@ if __name__ == "__main__":
     quadManager.fly_to_wp(l_wp)
     print('finished')
 
-
-
     quadManager._thread.join()
     print("Finished")
 
     # in_air = True, flight_mode = MISSION, is_armed = True, is_mission_finished = False, mission_progress = 0/1, last_mission_waypoint = {'lat': 47.64189659982582, 'lon': -122.139558583092, 'alt': 19.994001388549805, 'yaw': None}
     # in_air = True, flight_mode = HOLD, is_armed = True, is_mission_finished = True, mission_progress = 1/1, last_mission_waypoint = {'lat': 47.64279595161966, 'lon': -122.13955819999998, 'alt': 40.025001525878906, 'yaw': None}
+
+
+if __name__ == "__main__":
+
+    # {'timestamp': 1784451253894, 'is_armed': False, 'flight_mode': 'HOLD', 'lat': 47.6414678, 'lon': -122.14016489999999, 'alt': -0.012000000104308128, 'yaw': 187.4424285888672, 'horizontal_velocity': 0.0, 'vertical_velocity': 0.0, 'battery_voltage': 16.200000762939453, 'in_air': False, 'is_mission_finished': True, 'mission_progress': '0/0', 'last_mission_estimated_time': 'No mission yet', 'last_mission_waypoint': None}
+    simple_get_status_test()
+    #simple_flight_test()
+
