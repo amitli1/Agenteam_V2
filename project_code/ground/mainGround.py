@@ -13,14 +13,13 @@ import logging
 import threading
 import multiprocessing
 import time
+import requests
 
 from flask import Flask, jsonify, request
 
 init_logger()
 
 app = Flask(__name__)
-
-
 
 class MainGround:
 
@@ -40,6 +39,9 @@ class MainGround:
 
         self.master_drone_location = None
         self.slave_drone_location  = None
+
+        self.master_drone_url = f"http://{app_settings.general.master_air_ip}:{app_settings.general.master_air_port}/ground_command"
+        self.slave_drone_url  = f"http://{app_settings.general.slave_air_ip}:{app_settings.general.slave_air_port}/ground_command"
 
     def on_air_status_message(self):
         air_status_msg = request.get_json(silent=True)
@@ -96,7 +98,27 @@ class MainGround:
                                                       SPATIAL_DISTANCE=app_settings.flightPath.spatial_distance,
                                                       DELTA_ALT_SLAVE_DRONE=app_settings.flightPath.slave_drone_altitude_offset)
 
-                print(json.dumps(result, indent=2))
+                logging.info(f"Got plan from LLM. status: {result['status']}, action: {result['action']}, team_member: {result['team_member']}")
+                if result['status'] == "success":
+                    #(result['action'] == "goto") or (result['action'] == "surround")
+                    if result['team_member'] == "buddy":
+                        plan_list = result['plan']['buddy']
+                        r = requests.post(self.master_drone_url,
+                                          json={"command": "plan","plan_list": plan_list})
+                        r.raise_for_status()
+                    elif result['team_member'] == "jarvis":
+                        plan_list = result['plan']['jarvis']
+                        r = requests.post(self.slave_drone_url,
+                                          json={"command": "plan","plan_list": plan_list})
+                    elif result['team_member'] == "team":
+                        plan_list = result['plan']['buddy']
+                        r = requests.post(self.master_drone_url,
+                                          json={"command": "plan","plan_list": plan_list})
+                        plan_list = result['plan']['jarvis']
+                        r = requests.post(self.slave_drone_url,
+                                          json={"command": "plan","plan_list": plan_list})
+
+                #logging.info(json.dumps(result, indent=2))
 
 
 if __name__ == "__main__":

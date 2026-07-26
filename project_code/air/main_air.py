@@ -10,15 +10,6 @@ from project_code.vision.vision_manager import VisionManager
 app = Flask(__name__)
 
 
-@app.post("/command")
-def on_ground_command():
-    data = request.get_json(silent=True)
-    logging.info(f"Received request for command: {data}")
-    return jsonify({
-        "status": "",
-        "location": "",
-        })
-
 class MainAir:
 
     def __init__(self):
@@ -26,6 +17,9 @@ class MainAir:
         # --- quad
         quad_port          = app_settings.general.master_quad_port if app_settings.general.run_as_master else app_settings.general.slave_quad_port
         self.quadManager   = QuadManager(quad_port)
+
+        # ground rest api:
+        app.add_url_rule("/ground_command", view_func=self.on_ground_command, methods=["POST"], )
 
         # --- vision
         self.visionManager = VisionManager()
@@ -61,6 +55,15 @@ class MainAir:
             except Exception as e:
                 logging.error(f'Got exception while sending status to ground: {e}')
 
+    def on_ground_command(self):
+        data = request.get_json(silent=True)
+        logging.info(f"Received request for command: {data}")
+
+        if data['command'] == 'plan':
+            plan_list = data['plan_list']
+            self.quadManager.fly_to_wp(plan_list)
+
+        return "OK", 200
 
 
 

@@ -49,7 +49,7 @@ class QuadManager:
 
     def fly_to_wp(self, l_wp):
 
-        # [{'lat, 'lon', 'aly'}]
+        # [{'lat, 'lon', 'alt}]
         url = f"http://{self.target_ip}:{self.quad_port}/mission"
         try:
             r = requests.post(
@@ -109,7 +109,7 @@ class QuadManager:
                             is_mission_finished   = self.last_status_data['is_mission_finished']
                             mission_progress      = self.last_status_data['mission_progress']
                             last_mission_waypoint = self.last_status_data['last_mission_waypoint']
-                            #print(f"in_air = {in_air}, flight_mode = {flight_mode}, is_armed = {is_armed}, is_mission_finished = {is_mission_finished}, mission_progress = {mission_progress}, last_mission_waypoint = {last_mission_waypoint}")
+                            print(f"in_air = {in_air}, flight_mode = {flight_mode}, is_armed = {is_armed}, is_mission_finished = {is_mission_finished}, mission_progress = {mission_progress}, last_mission_waypoint = {last_mission_waypoint}")
                         except Exception as e:
                             logging.error(f'Error while receiving message: {e}')
 
@@ -171,19 +171,21 @@ class TesterUtils:
 def simple_get_status_test():
     quadManager = QuadManager(8001)
     quadManager.quad_manager_ready.wait()
-    current = quadManager.get_current_location()
+    current = quadManager.get_last_quad_message()
     print(current)
 
 
 def simple_flight_test():
     quadManager = QuadManager(8001)
+    quadManager.quad_manager_ready.wait()
+
     testerUtils = TesterUtils()
-    time.sleep(3)
+
 
     print(f'Get current location')
     current = quadManager.get_current_location()
 
-    total_dist_m = 100
+    total_dist_m = 150
     climb_m = 20
 
     horizontal_m = math.sqrt(total_dist_m ** 2 - climb_m ** 2)  # ~45.83 m
@@ -199,12 +201,15 @@ def simple_flight_test():
     print(f'Get current location')
     l_wp = testerUtils.get_square_points(current, radius=15)
 
+    print(f"\tStatus: {quadManager.get_last_quad_message()}")
     print(f'Fly to square: {l_wp}')
     quadManager.fly_to_wp(l_wp)
+    print(f"\tStatus: {quadManager.get_last_quad_message()}")
     print('finished')
 
     quadManager._thread.join()
     print("Finished")
+    time.sleep(60)
 
     # in_air = True, flight_mode = MISSION, is_armed = True, is_mission_finished = False, mission_progress = 0/1, last_mission_waypoint = {'lat': 47.64189659982582, 'lon': -122.139558583092, 'alt': 19.994001388549805, 'yaw': None}
     # in_air = True, flight_mode = HOLD, is_armed = True, is_mission_finished = True, mission_progress = 1/1, last_mission_waypoint = {'lat': 47.64279595161966, 'lon': -122.13955819999998, 'alt': 40.025001525878906, 'yaw': None}
@@ -213,6 +218,11 @@ def simple_flight_test():
 if __name__ == "__main__":
 
     # {'timestamp': 1784451253894, 'is_armed': False, 'flight_mode': 'HOLD', 'lat': 47.6414678, 'lon': -122.14016489999999, 'alt': -0.012000000104308128, 'yaw': 187.4424285888672, 'horizontal_velocity': 0.0, 'vertical_velocity': 0.0, 'battery_voltage': 16.200000762939453, 'in_air': False, 'is_mission_finished': True, 'mission_progress': '0/0', 'last_mission_estimated_time': 'No mission yet', 'last_mission_waypoint': None}
-    simple_get_status_test()
-    #simple_flight_test()
+    #simple_get_status_test()
+    simple_flight_test()
+
+# No mistion:
+# 'flight_mode': 'HOLD'
+# 'is_mission_finished': True
+# 'mission_progress': '0/0'
 
