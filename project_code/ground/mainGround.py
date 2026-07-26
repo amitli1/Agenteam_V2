@@ -94,6 +94,14 @@ if __name__ == "__main__":
 
     time.sleep(3)
     mainGround = MainGround()
+
+    flask_groundthread = threading.Thread(
+        target=lambda: app.run(host="0.0.0.0", port=app_settings.general.groud_port, use_reloader=False),
+        daemon=True,
+    )
+    flask_groundthread.start()
+
+
     logging.info('Wait till getting messages from air')
     mainGround.status_received_event.wait()
     logging.info('Got messages from air - continue')
