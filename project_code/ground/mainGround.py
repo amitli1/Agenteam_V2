@@ -31,7 +31,9 @@ class MainGround:
         self.databaseManager      = DatabaseManager()
         self.DroneNavigationAgent = DroneNavigationAgent()
 
-        self.last_quad_data = None
+        self.last_master_quad_data = None
+        self.last_slave_quad_data = None
+
         app.add_url_rule("/status",view_func=self.on_air_status_message,methods=["POST"],)
         app.add_url_rule("/text_to_user", view_func=self.on_air_text_to_user, methods=["POST"], )
         self.status_received_event = threading.Event()
@@ -40,20 +42,37 @@ class MainGround:
         self.slave_drone_location  = None
 
     def on_air_status_message(self):
-        last_quad_data      = request.get_json(silent=True)
-        self.last_quad_data = last_quad_data
-        logging.info(f'Got air quad msg: {last_quad_data}')
+        air_status_msg = request.get_json(silent=True)
+        if air_status_msg['drone_role'] == 'master':
+            self.last_master_quad_data = air_status_msg['last_quad_msg']
 
-        self.master_drone_location = {'lat': self.last_quad_data['lat'],
-                                    'lon': self.last_quad_data['lon'],
-                                    'alt': self.last_quad_data['alt'],
-                                    'yaw': self.last_quad_data['yaw']}
+            self.master_drone_location = {'lat': self.last_master_quad_data['lat'],
+                                          'lon': self.last_master_quad_data['lon'],
+                                          'alt': self.last_master_quad_data['alt'],
+                                          'yaw': self.last_master_quad_data['yaw']}
+
+
+        elif air_status_msg['drone_role'] == 'slave':
+            self.last_slave_quad_data = air_status_msg['last_quad_msg']
+
+            self.slave_drone_location = {'lat': self.last_master_quad_data['lat'],
+                                          'lon': self.last_master_quad_data['lon'],
+                                          'alt': self.last_master_quad_data['alt'],
+                                          'yaw': self.last_master_quad_data['yaw']}
+
+        else:
+            logging.error(f"Got unknown drone role: {air_status_msg['drone_role']}")
+
+
 
         self.status_received_event.set()
         return "OK", 200
 
     def on_air_text_to_user(self):
-        text_to_user = request.get_json(silent=True)
+
+        msg          = request.get_json(silent=True)
+        drone_role   = msg['drone_role']
+        text_to_user = msg['text_to_user']
         return "OK", 200
 
     def start_ground(self):
@@ -92,7 +111,6 @@ if __name__ == "__main__":
     air_process = multiprocessing.Process(target=mainAir.start_air, daemon=True)
     air_process.start()
 
-    time.sleep(3)
     mainGround = MainGround()
 
     flask_groundthread = threading.Thread(
@@ -106,15 +124,3 @@ if __name__ == "__main__":
     mainGround.status_received_event.wait()
     logging.info('Got messages from air - continue')
     mainGround.handle_user_text("Hey buddy go to building number one")
-
-    # flask_groundthread = threading.Thread(
-    #     target=lambda: app.run(host="0.0.0.0", port=app_settings.general.groud_port, use_reloader=False),
-    #     daemon=True,
-    # )
-    # flask_groundthread.start()
-    #
-    #
-    # #mainGround.start_ground()
-    # mainGround.handle_user_text("Hey jarvis go to building number one")
-    #
-    # time.sleep(100000)

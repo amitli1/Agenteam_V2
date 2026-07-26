@@ -36,6 +36,8 @@ class MainAir:
             daemon=True,  # thread dies when main program exits
         )
         self._logic_thread.start()
+        self.drone_role = "master" if app_settings.general.run_as_master else "slave"
+        logging.info(f'Drone role: {self.drone_role}')
 
 
     def start_air(self):
@@ -52,7 +54,8 @@ class MainAir:
 
             try:
                 ground_url = f"http://{app_settings.general.ground_ip}:{app_settings.general.groud_port}/status"
-                r = requests.post(ground_url, json=last_quad_msg)
+
+                r = requests.post(ground_url, json={"drone_role": self.drone_role, "last_quad_msg": last_quad_msg})
                 r.raise_for_status()
 
             except Exception as e:
