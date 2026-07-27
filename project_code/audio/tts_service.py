@@ -18,18 +18,22 @@ logger.setLevel(logging.INFO)
 
 logging.info("CUDA: {}".format(torch.cuda.is_available()))
 
+# Device can be forced via the TTS_DEVICE env var (e.g. "cpu" on Intel/CPU-only
+# hosts). If not set, fall back to cuda when available, otherwise cpu.
+TTS_DEVICE = os.environ.get("TTS_DEVICE") or ("cuda" if torch.cuda.is_available() else "cpu")
+
 # Load the TTS model once
 if in_docker():
-    logging.info(f"Start loading kokoro model (in docker)")
+    logging.info(f"Start loading kokoro model (in docker, device={TTS_DEVICE})")
     pipeline = KPipeline(lang_code='a',
                          #model='/models/tts/kokoro-v1_0.pth',
-                         device="cuda"
+                         device=TTS_DEVICE
                          )
     logging.info(f"\tloaded")
 else:
-    logging.info('Start loading kokoro model (not docker)')
-    pipeline = KPipeline(lang_code='a', device='cuda')
-    #pipeline = KPipeline(lang_code='h', device='cuda')
+    logging.info(f'Start loading kokoro model (not docker, device={TTS_DEVICE})')
+    pipeline = KPipeline(lang_code='a', device=TTS_DEVICE)
+    #pipeline = KPipeline(lang_code='h', device=TTS_DEVICE)
 SAMPLE_RATE = 24000
 
 class TTSRequest(BaseModel):

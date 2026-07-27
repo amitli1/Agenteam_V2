@@ -15,6 +15,10 @@ audio:
     chunk: 4096
     sample_rate: 16000
 
+speakers:
+  card: -1 #use aplay -l, (-1 - the app will choose the default)
+  device: -1 #use aplay -l (-1 - the app will choose the default)
+
 general:
   run_as_master: true
 
@@ -27,7 +31,7 @@ general:
   slave_air_port: 8124
 
   ground_ip: 127.0.0.1
-  groud_port: 8123
+  ground_port: 8123
 
 flightPath:
   default_drone_altitude: 20.0

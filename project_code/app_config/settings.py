@@ -56,12 +56,16 @@ class General(BaseModel):
     slave_air_ip: str
     slave_air_port: int
     ground_ip: str
-    groud_port: int
+    ground_port: int
 
 class FLightPath(BaseModel):
   default_drone_altitude: float
   spatial_distance: float
   slave_drone_altitude_offset: float
+
+class Speakers(BaseModel):
+    card: int
+    device: int
 
 class Settings(BaseModel):
     audio: AudioConfig
@@ -72,6 +76,7 @@ class Settings(BaseModel):
     database: DataBase
     general: General
     vision: Vision
+    speakers: Speakers
 
 # amitli
 def load_config(path: str = "app_config/conf.yaml") -> Settings:

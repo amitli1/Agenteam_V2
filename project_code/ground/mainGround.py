@@ -1,5 +1,7 @@
 import json
 
+from pydub import AudioSegment
+
 from project_code.air.main_air import MainAir
 from project_code.app_config.settings import app_settings
 from project_code.audio.audio_pipeline import AudioPipeline
@@ -8,13 +10,15 @@ from project_code.llm.drone_navigation_agent import DroneNavigationAgent
 from project_code.llm.llm_command_parser import LlmCommandParser
 from project_code.llm.llm_mission_planner import MissionPlannerAgent
 from project_code.utils.logger_utils import init_logger
-from project_code.utils.utils import create_output_folder, check_models, warmup
+from project_code.utils.sound_player import SoundPlayerManager
+from project_code.utils.utils import create_output_folder, check_models, warmup, get_running_ip, \
+    prepare_audio_for_speech
 import logging
 import threading
 import multiprocessing
 import time
 import requests
-
+import numpy as np
 from flask import Flask, jsonify, request
 
 init_logger()
@@ -70,11 +74,19 @@ class MainGround:
         self.status_received_event.set()
         return "OK", 200
 
+
     def on_air_text_to_user(self):
 
         msg          = request.get_json(silent=True)
         drone_role   = msg['drone_role']
         text_to_user = msg['text_to_user']
+
+        response = requests.post(f"http://{get_running_ip()}:8002/synthesize/", json={"text": text_to_user})
+        data = response.json()
+        if response.status_code != 200:
+            return f"Error while sending text: {text_to_user} to TTS tool", 400
+
+        prepare_audio_for_speech(data)
         return "OK", 200
 
     def start_ground(self):
@@ -121,28 +133,37 @@ class MainGround:
                 #logging.info(json.dumps(result, indent=2))
 
 
-if __name__ == "__main__":
-    create_output_folder()
-    if check_models() is False:
-        #exit(0)
-        None
-    else:
-        warmup()
+def run_ground_test():
 
-    mainAir    = MainAir()
+    mainAir = MainAir()
     air_process = multiprocessing.Process(target=mainAir.start_air, daemon=True)
     air_process.start()
 
     mainGround = MainGround()
 
     flask_groundthread = threading.Thread(
-        target=lambda: app.run(host="0.0.0.0", port=app_settings.general.groud_port, use_reloader=False),
+        target=lambda: app.run(host="0.0.0.0", port=app_settings.general.ground_port, use_reloader=False),
         daemon=True,
     )
     flask_groundthread.start()
-
 
     logging.info('Wait till getting messages from air')
     mainGround.status_received_event.wait()
     logging.info('Got messages from air - continue')
     mainGround.handle_user_text("Hey buddy go to building number one")
+    # mainGround.handle_user_text("Hey buddy return home")
+
+
+def run_ground():
+    create_output_folder()
+    if check_models() is False:
+        # exit(0)
+        None
+    else:
+        warmup()
+
+    SoundPlayerManager().start()
+
+if __name__ == "__main__":
+    run_ground()
+    run_ground_test()

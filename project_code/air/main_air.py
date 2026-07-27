@@ -47,7 +47,7 @@ class MainAir:
                 continue
 
             try:
-                ground_url = f"http://{app_settings.general.ground_ip}:{app_settings.general.groud_port}/status"
+                ground_url = f"http://{app_settings.general.ground_ip}:{app_settings.general.ground_port}/status"
 
                 r = requests.post(ground_url, json={"drone_role": self.drone_role, "last_quad_msg": last_quad_msg})
                 r.raise_for_status()
@@ -61,7 +61,9 @@ class MainAir:
 
         if data['command'] == 'plan':
             plan_list = data['plan_list']
-            self.quadManager.fly_to_wp(plan_list)
+            res = self.quadManager.fly_to_wp(plan_list)
+            if res is False:
+                return jsonify({"error": "error while sending wp to quad manager"}), 400
 
         return "OK", 200
 

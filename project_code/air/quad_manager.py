@@ -1,5 +1,6 @@
 import time
 
+from project_code.app_config.settings import app_settings
 from project_code.utils.utils import get_running_ip
 import websockets
 import logging
@@ -22,6 +23,7 @@ class QuadManager:
         self._thread.start()
         self.last_status_data = None
         self.quad_manager_ready = threading.Event()
+        self.isMissionInProgress = False
 
     def _run_status_loop(self):
         # each thread needs its own event loop to run async code
@@ -60,10 +62,17 @@ class QuadManager:
             )
             if r.status_code != 200:
                 logging.error(f"Failed to fly to wp, status code: {r.status_code}")
+                logging.info('Set isMissionInProgress to False')
+                self.isMissionInProgress = False
                 return False
         except Exception as e:
             logging.exception(f"Failed to fly to wp: {e}")
+            logging.info('Set isMissionInProgress to False')
+            self.isMissionInProgress = False
             return False
+
+        logging.info('Set isMissionInProgress to True')
+        self.isMissionInProgress = True
         return True
 
 
@@ -76,6 +85,32 @@ class QuadManager:
 
     def get_last_quad_message(self):
         return self.last_status_data
+
+
+    def check_mission_progress(self, flight_mode, is_mission_finished, mission_progress):
+
+        if self.last_status_data is None:
+            return
+
+        text_to_user = None
+        if self.isMissionInProgress:
+            current, total = map(int, mission_progress.split("/"))
+            if (total != 0) and (current == total):
+                text_to_user = "I have reached the destination."
+                self.isMissionInProgress = False
+            else:
+                if mission_progress != self.last_status_data['mission_progress']:
+                    text_to_user = "Hold on, still flying"
+
+
+        if text_to_user is not None:
+            self.send_text_to_user(text_to_user)
+
+    def send_text_to_user(self, text_to_user):
+        address    = f"http://{app_settings.general.ground_ip}:{app_settings.general.ground_port}/text_to_user"
+        drone_role = "Master" if app_settings.general.run_as_master else "Slave"
+        response   = requests.post(f"{address}", json={"drone_role": drone_role, "text_to_user": text_to_user})
+        logging.info(f"Send text: {text_to_user} to ground, response: {response.status_code}")
 
     async def receive_drone_status(self):
 
@@ -92,24 +127,30 @@ class QuadManager:
                             message                = await websocket.recv()
 
                             if flag_first_msg is False:
+                                self.send_text_to_user('Start getting drone status')
                                 logging.info(f'Got first quad message: {message}')
 
                             flag_first_msg         = True
 
+                            current_status_data = json.loads(message)
+
+                            # lat                   = current_status_data['lat']
+                            # lon                   = current_status_data['lon']
+                            # alt                   = current_status_data['alt']
+                            # yaw                   = current_status_data['yaw']
+                            in_air                = current_status_data['in_air']
+                            flight_mode           = current_status_data['flight_mode']
+                            is_armed              = current_status_data['is_armed']
+                            is_mission_finished   = current_status_data['is_mission_finished']
+                            mission_progress      = current_status_data['mission_progress']
+                            last_mission_waypoint = current_status_data['last_mission_waypoint']
+
+                            self.check_mission_progress(flight_mode, is_mission_finished, mission_progress)
+
+                            # save last msg
                             self.last_status_data = json.loads(message)
                             self.quad_manager_ready.set()
 
-                            # lat                   = status_data['lat']
-                            # lon                   = status_data['lon']
-                            # alt                   = status_data['alt']
-                            # yaw                   = status_data['yaw']
-                            in_air                = self.last_status_data['in_air']
-                            flight_mode           = self.last_status_data['flight_mode']
-                            is_armed              = self.last_status_data['is_armed']
-                            is_mission_finished   = self.last_status_data['is_mission_finished']
-                            mission_progress      = self.last_status_data['mission_progress']
-                            last_mission_waypoint = self.last_status_data['last_mission_waypoint']
-                            print(f"in_air = {in_air}, flight_mode = {flight_mode}, is_armed = {is_armed}, is_mission_finished = {is_mission_finished}, mission_progress = {mission_progress}, last_mission_waypoint = {last_mission_waypoint}")
                         except Exception as e:
                             logging.error(f'Error while receiving message: {e}')
 
@@ -178,7 +219,7 @@ def simple_get_status_test():
 def simple_flight_test():
     quadManager = QuadManager(8001)
     quadManager.quad_manager_ready.wait()
-
+    time.sleep(3)
     testerUtils = TesterUtils()
 
 
@@ -202,24 +243,46 @@ def simple_flight_test():
     l_wp = testerUtils.get_square_points(current, radius=15)
 
     print(f"\tStatus: {quadManager.get_last_quad_message()}")
-    print(f'Fly to square: {l_wp}')
+    print(f'\t\tFly to square: {l_wp}')
     quadManager.fly_to_wp(l_wp)
     print(f"\tStatus: {quadManager.get_last_quad_message()}")
     print('finished')
 
     quadManager._thread.join()
+
     print("Finished")
-    time.sleep(60)
+
 
     # in_air = True, flight_mode = MISSION, is_armed = True, is_mission_finished = False, mission_progress = 0/1, last_mission_waypoint = {'lat': 47.64189659982582, 'lon': -122.139558583092, 'alt': 19.994001388549805, 'yaw': None}
     # in_air = True, flight_mode = HOLD, is_armed = True, is_mission_finished = True, mission_progress = 1/1, last_mission_waypoint = {'lat': 47.64279595161966, 'lon': -122.13955819999998, 'alt': 40.025001525878906, 'yaw': None}
 
 
+def simple_fly_to_wp():
+        l_wp = [(47.64146699947751, -122.13956425421526, 0.0), (47.640141, -122.1415707, 20.0)]
+        url = f"http://127.0.0.1:8001/mission"
+        try:
+            r = requests.post(
+                url,
+                json=l_wp,
+                headers={"accept": "application/json", "content-type": "application/json"},
+                timeout=10,  # a bit more than 5 helps when mavsdk is slow
+            )
+            if r.status_code != 200:
+                print(f"Failed to fly to wp, status code: {r.status_code}")
+                return False
+        except Exception as e:
+            print(f"Failed to fly to wp: {e}")
+            return False
+
+        print("OK")
+        return True
+
 if __name__ == "__main__":
 
     # {'timestamp': 1784451253894, 'is_armed': False, 'flight_mode': 'HOLD', 'lat': 47.6414678, 'lon': -122.14016489999999, 'alt': -0.012000000104308128, 'yaw': 187.4424285888672, 'horizontal_velocity': 0.0, 'vertical_velocity': 0.0, 'battery_voltage': 16.200000762939453, 'in_air': False, 'is_mission_finished': True, 'mission_progress': '0/0', 'last_mission_estimated_time': 'No mission yet', 'last_mission_waypoint': None}
     #simple_get_status_test()
-    simple_flight_test()
+    #simple_flight_test()
+    simple_fly_to_wp()
 
 # No mistion:
 # 'flight_mode': 'HOLD'

@@ -12,6 +12,9 @@ from openai import OpenAI
 
 from project_code.app_config.settings import app_settings
 from project_code.utils.logger_utils import CURRENT_DATE
+import re
+
+from project_code.utils.sound_player import SoundPlayerManager
 
 
 def check_models():
@@ -109,3 +112,48 @@ def warmup():
 def create_output_folder():
     folder_path = os.path.join(app_settings.logging_and_records.output_path, CURRENT_DATE)
     os.makedirs(folder_path, exist_ok=True)
+
+def prepare_audio_for_speech(data):
+
+    audio     = data['audio'][0]
+    sr        = data['sample_rate']
+    audio     = np.asarray(audio, dtype=np.float32)
+    arr_int16 = (audio * 32767).astype(np.int16)
+    raw_audio = arr_int16.tobytes()
+    audio = AudioSegment(
+        data=raw_audio,
+        sample_width=2,  # 2 bytes for int16
+        frame_rate=sr, #24000,  # your sample rate
+        channels=1  # mono; set to 2 if stereo
+    )
+
+    # change speed:
+    audio = audio.speedup(playback_speed=1.15)
+
+    # Export to WAV
+    file_num  = get_last_generated_file()
+    file_num  = file_num + 1
+    file_name = f'generated_audio_{file_num}.wav'
+    outpath   = f"{app_settings.logging_and_records.output_path}/{file_name}"
+    audio.export(outpath, format="wav")
+    logging.info(f'Push to Q: {file_name}')
+    SoundPlayerManager().get_file_queue().put(outpath)
+
+def get_last_generated_file():
+
+    #folder = r'./outputs/'
+    folder = app_settings.logging_and_records.output_path
+    pattern = re.compile(r"generated_audio_(\d+)\.wav")
+
+    max_num = 0
+    latest_file = None
+
+    for fname in os.listdir(folder):
+        match = pattern.match(fname)
+        if match:
+            num = int(match.group(1))
+            if num > max_num:
+                max_num = num
+                latest_file = fname
+
+    return max_num

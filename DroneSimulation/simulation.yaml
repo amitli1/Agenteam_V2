@@ -1,0 +1,8 @@
+general:
+  quad_port: 8001
+
+  start_lat: 47.641467
+  start_lon: -122.14016489999999
+  start_alt: 0.0
+
+  mission_step_duration: 3
