@@ -15,7 +15,6 @@ from project_code.utils.utils import create_output_folder, check_models, warmup,
     prepare_audio_for_speech
 import logging
 import threading
-import multiprocessing
 import time
 import requests
 import numpy as np
@@ -50,7 +49,7 @@ class MainGround:
     def on_air_status_message(self):
         air_status_msg = request.get_json(silent=True)
         if air_status_msg['drone_role'] == 'master':
-            self.last_master_quad_data = air_status_msg['last_quad_msg']
+            self.last_master_quad_data = json.loads(air_status_msg['last_quad_msg'])
 
             self.master_drone_location = {'lat': self.last_master_quad_data['lat'],
                                           'lon': self.last_master_quad_data['lon'],
@@ -80,6 +79,7 @@ class MainGround:
         msg          = request.get_json(silent=True)
         drone_role   = msg['drone_role']
         text_to_user = msg['text_to_user']
+        logging.info(f'Got text: {text_to_user} from: {drone_role}')
 
         response = requests.post(f"http://{get_running_ip()}:8002/synthesize/", json={"text": text_to_user})
         data = response.json()
@@ -136,8 +136,8 @@ class MainGround:
 def run_ground_test():
 
     mainAir = MainAir()
-    air_process = multiprocessing.Process(target=mainAir.start_air, daemon=True)
-    air_process.start()
+    air_thread = threading.Thread(target=mainAir.start_air, daemon=True)
+    air_thread.start()
 
     mainGround = MainGround()
 

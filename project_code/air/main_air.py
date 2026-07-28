@@ -1,3 +1,7 @@
+import json
+
+from project_code.air import air_share_fields
+from project_code.air.air_share_fields import quad_last_status_data
 from project_code.air.quad_manager import QuadManager
 from project_code.app_config.settings import app_settings
 import logging
@@ -42,8 +46,12 @@ class MainAir:
 
         while True:
             time.sleep(1) # get message every second
-            last_quad_msg = self.quadManager.get_last_quad_message()
+            with air_share_fields.quad_last_status_data_lock:
+                last_quad_msg = json.dumps(dict(quad_last_status_data))
+
             if last_quad_msg is None:
+                continue
+            if last_quad_msg == '{}':
                 continue
 
             try:

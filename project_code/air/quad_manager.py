@@ -1,5 +1,7 @@
 import time
 
+from project_code.air.air_share_fields import quad_last_status_data, quad_isMissionInProgress, \
+    quad_last_status_data_lock
 from project_code.app_config.settings import app_settings
 from project_code.utils.utils import get_running_ip
 import websockets
@@ -21,9 +23,6 @@ class QuadManager:
             daemon=True,  # thread dies when main program exits
         )
         self._thread.start()
-        self.last_status_data = None
-        self.quad_manager_ready = threading.Event()
-        self.isMissionInProgress = False
 
     def _run_status_loop(self):
         # each thread needs its own event loop to run async code
@@ -45,10 +44,6 @@ class QuadManager:
             logging.exception(f"[quad_api_return] Failed calling /return: {e}")
             return 500
 
-    def is_mission_finished(self):
-        return self.last_status_data['mission_finished']
-
-
     def fly_to_wp(self, l_wp):
 
         # [{'lat, 'lon', 'alt}]
@@ -62,45 +57,33 @@ class QuadManager:
             )
             if r.status_code != 200:
                 logging.error(f"Failed to fly to wp, status code: {r.status_code}")
-                logging.info('Set isMissionInProgress to False')
-                self.isMissionInProgress = False
+                quad_isMissionInProgress.clear()
                 return False
         except Exception as e:
             logging.exception(f"Failed to fly to wp: {e}")
-            logging.info('Set isMissionInProgress to False')
-            self.isMissionInProgress = False
+            quad_isMissionInProgress.clear()
             return False
 
-        logging.info('Set isMissionInProgress to True')
-        self.isMissionInProgress = True
+        quad_isMissionInProgress.set()
         return True
-
-
-    def get_current_location(self):
-        lat   = self.last_status_data['lat']
-        lon   = self.last_status_data['lon']
-        alt   = self.last_status_data['alt']
-        yaw   = self.last_status_data['yaw']
-        return {'lat': lat, 'lon': lon, 'alt': alt, 'yaw': yaw}
-
-    def get_last_quad_message(self):
-        return self.last_status_data
 
 
     def check_mission_progress(self, flight_mode, is_mission_finished, mission_progress):
 
-        if self.last_status_data is None:
+        if quad_last_status_data is None:
             return
 
+        is_in_progress = quad_isMissionInProgress.is_set()
         text_to_user = None
-        if self.isMissionInProgress:
+        if is_in_progress:
             current, total = map(int, mission_progress.split("/"))
             if (total != 0) and (current == total):
                 text_to_user = "I have reached the destination."
-                self.isMissionInProgress = False
+                quad_isMissionInProgress.clear()
             else:
-                if mission_progress != self.last_status_data['mission_progress']:
-                    text_to_user = "Hold on, still flying"
+                with quad_last_status_data_lock:
+                    if mission_progress != quad_last_status_data.get('mission_progress'):
+                        text_to_user = "Hold on, still flying"
 
 
         if text_to_user is not None:
@@ -148,8 +131,9 @@ class QuadManager:
                             self.check_mission_progress(flight_mode, is_mission_finished, mission_progress)
 
                             # save last msg
-                            self.last_status_data = json.loads(message)
-                            self.quad_manager_ready.set()
+                            with quad_last_status_data_lock:
+                                quad_last_status_data.update(json.loads(message))
+
 
                         except Exception as e:
                             logging.error(f'Error while receiving message: {e}')
