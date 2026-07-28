@@ -136,18 +136,17 @@ class MainGround:
                     #(result['action'] == "goto") or (result['action'] == "surround")
                     if (result['team_member'] == "team") or (result['team_member'] == "buddy"):
                         plan_list = result['plan']['buddy']
-                        r = requests.post(self.master_drone_url,json={"command": "plan","plan_list": plan_list})
+                        r         = requests.post(self.master_drone_url,json={"command": "plan","plan_list": plan_list})
                         r.raise_for_status()
                     if (result['team_member'] == "team") or (result['team_member'] == "jarvis"):
                         plan_list = result['plan']['jarvis']
-                        r = requests.post(self.slave_drone_url,json={"command": "plan","plan_list": plan_list})
+                        r         = requests.post(self.slave_drone_url,json={"command": "plan","plan_list": plan_list})
 
-                #logging.info(json.dumps(result, indent=2))
 
 
 def run_ground_test():
 
-    mainAir = MainAir()
+    mainAir    = MainAir()
     air_thread = threading.Thread(target=mainAir.start_air, daemon=True)
     air_thread.start()
 
@@ -166,6 +165,9 @@ def run_ground_test():
     while True:
         time.sleep(1)
         if mainGround.get_to_destination:
+            mainGround.handle_user_text("Hey buddy hold the junction")
+            time.sleep(5)
+
             mainGround.handle_user_text("Hey buddy return home")
             time.sleep(5)
             break

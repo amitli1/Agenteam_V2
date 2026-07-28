@@ -24,6 +24,8 @@ class MainAir:
 
         # ground rest api:
         app.add_url_rule("/ground_command", view_func=self.on_ground_command, methods=["POST"], )
+        app.add_url_rule("/handle_message_from_master_drone", view_func=self.handle_message_from_master_drone, methods=["POST"], )
+
 
         # --- vision
         self.visionManager = VisionManager()
@@ -37,6 +39,10 @@ class MainAir:
         self.drone_role = "master" if app_settings.general.run_as_master else "slave"
         logging.info(f'Drone role: {self.drone_role}')
 
+    def handle_message_from_master_drone(self):
+        payload = request.get_json(silent=True)
+        logging.info(f"Received request for message from master drone: {payload}")
+        return "OK", 200
 
     def start_air(self):
         air_port = app_settings.general.master_air_port if app_settings.general.run_as_master else app_settings.general.slave_air_port

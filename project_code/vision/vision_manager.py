@@ -39,9 +39,6 @@ class VisionManager(object):
 
         if self.is_online is False:
             return
-
-
-
         try:
             stop_url = f"http://{get_running_ip()}:{app_settings.vision.point_port}/api/pointing-agent/stop"
             logging.info(f'Send pointing-agent/stop (to: {stop_url})')
@@ -67,6 +64,30 @@ class VisionManager(object):
         except Exception as e:
             logging.error(f'Error sending request for process-video: {e}')
 
+
+    def handle_point_status(self, data, last_is_active, last_agent_status):
+        if 'session' in data:
+            if 'is_active' in data['session']:
+                current_is_active = data['session']['is_active']
+                if current_is_active != last_is_active:
+                    logging.info(f'Point is_active change from: {last_is_active} to: {current_is_active}')
+                last_is_active = current_is_active
+
+        if 'agent' in data:
+            if 'status' in data['agent']:
+                current_agent_staus = data['agent']['status']
+
+                if current_agent_staus == "locked":
+                    None
+
+                if current_agent_staus != last_agent_status:
+                    point_status = f'Point agent status change from: {last_agent_status} to: {current_agent_staus}'
+                    logging.info(point_status)
+                last_agent_status = current_agent_staus
+
+        return last_is_active, last_agent_status
+
+
     def receive_vision_point_status(self):
         if self.is_online is False:
             return
@@ -74,6 +95,8 @@ class VisionManager(object):
         logging.info('Start listing for pointing status')
         got_status_msg    = False
         send_video_window = False
+        last_is_active    = None
+        last_agent_status = None
 
         while True:
 
@@ -86,6 +109,8 @@ class VisionManager(object):
                 r = requests.get(f"http://{get_running_ip()}:{self.point_port}/api/pointing-agent/status", json={})
                 r.raise_for_status()
                 data = r.json()
+                last_is_active, last_agent_status = self.handle_point_status(data, last_is_active, last_agent_status)
+
                 if got_status_msg is False:
                     logging.info(f"Got pointing status message")
                 got_status_msg = True
@@ -93,6 +118,17 @@ class VisionManager(object):
                 if got_status_msg is True:
                     logging.error(f"Error in receiving point status: {e}")
                 got_status_msg = False
+
+
+    def handle_vision_hold_status(self, hold_status):
+        if len(hold_status) != 0:
+            # 1. check we are master
+            # 2. check we are in team mission
+            # 3. send to slave
+            # if config_mp.is_in_hold_state.value and (len(hold_status['msg']) > 0):
+            #     hold_msg = f'Hold status: {hold_status}'
+            #     logging.info(hold_msg)
+            None
 
     def receive_vision_hold_status(self):
         if self.is_online is False:
@@ -109,6 +145,8 @@ class VisionManager(object):
                 r = requests.get(f"http://{get_running_ip()}:{self.hold_port}/alert-get", json={})
                 r.raise_for_status()
                 data = r.json()
+                self.handle_vision_hold_status(data)
+
                 if got_status_msg is False:
                     logging.info(f"Got hold status message")
                 got_status_msg = True

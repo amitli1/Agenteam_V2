@@ -62,11 +62,17 @@ if __name__ == '__main__':
 
     llmCommandParser = LlmCommandParser()
     res = llmCommandParser.split_user_command("Hey jarvis go to building number one, and point to the car or cow")
-    res = llmCommandParser.split_user_command("Hey team fly to junction number five, surround it and tell me what you see")
-    res = llmCommandParser.split_user_command("Buddy describe")
+    #res = llmCommandParser.split_user_command("Hey team fly to junction number five, surround it and tell me what you see")
+    #res = llmCommandParser.split_user_command("Buddy describe")
     #res = llmCommandParser.split_user_command("Buddy return home")
-    res = llmCommandParser.split_user_command("hey team go home")
+    #res = llmCommandParser.split_user_command("hey team go home")
+    res = llmCommandParser.split_user_command('Hey jarvis Hold the junction and look for weapons')
     # res = llm_Manager.split_user_command("Hey")
     # res = llm_Manager.split_user_command("Buddy to back to home")
     for command in res:
         print(command)
+
+    # command: Hey jarvis Hold the junction and look for weapons
+    # result :
+# {'team_member': 'jarvis', 'fly_command': '', 'vision_command': 'Hold the junction'}
+# {'team_member': 'jarvis', 'fly_command': '', 'vision_command': 'look for weapons'}
