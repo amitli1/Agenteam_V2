@@ -73,6 +73,11 @@ class MainAir:
             if res is False:
                 return jsonify({"error": "error while sending wp to quad manager"}), 400
 
+        elif data['command'] == 'home':
+            res = self.quadManager.call_back_home()
+            if res is False:
+                return jsonify({"error": "error while sending wp to quad manager"}), 400
+
         return "OK", 200
 
 

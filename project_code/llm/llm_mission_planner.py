@@ -578,6 +578,7 @@ if __name__ == "__main__":
 
 
     tests = [
+        ("return home", "team", master, None),
         ("go to building number two", "buddy", master, None),
         ("surround building number one", "team", master, slave),
         ("jarvis fly to building number 2", "jarvis", master, slave),

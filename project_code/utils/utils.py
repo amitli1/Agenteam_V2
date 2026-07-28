@@ -136,7 +136,7 @@ def prepare_audio_for_speech(data):
     file_name = f'generated_audio_{file_num}.wav'
     outpath   = f"{app_settings.logging_and_records.output_path}/{file_name}"
     audio.export(outpath, format="wav")
-    logging.info(f'Push to Q: {file_name}')
+    logging.info(f'Push to Q: {file_name} (current Q size: {SoundPlayerManager().get_file_queue().qsize()})')
     SoundPlayerManager().get_file_queue().put(outpath)
 
 def get_last_generated_file():

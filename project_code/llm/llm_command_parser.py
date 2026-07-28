@@ -64,6 +64,8 @@ if __name__ == '__main__':
     res = llmCommandParser.split_user_command("Hey jarvis go to building number one, and point to the car or cow")
     res = llmCommandParser.split_user_command("Hey team fly to junction number five, surround it and tell me what you see")
     res = llmCommandParser.split_user_command("Buddy describe")
+    #res = llmCommandParser.split_user_command("Buddy return home")
+    res = llmCommandParser.split_user_command("hey team go home")
     # res = llm_Manager.split_user_command("Hey")
     # res = llm_Manager.split_user_command("Buddy to back to home")
     for command in res:

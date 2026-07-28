@@ -35,7 +35,7 @@ class QuadManager:
                 url,
                 json=None,
                 headers={"accept": "application/json", "content-type": "application/json"},
-                timeout=10,
+                timeout=5,
             )
             status_code = r.status_code
             logging.info(f"Status code: {status_code}")
@@ -80,6 +80,8 @@ class QuadManager:
             if (total != 0) and (current == total):
                 text_to_user = "I have reached the destination."
                 quad_isMissionInProgress.clear()
+                self.send_get_to_destination_to_user()
+
             else:
                 with quad_last_status_data_lock:
                     if mission_progress != quad_last_status_data.get('mission_progress'):
@@ -94,6 +96,12 @@ class QuadManager:
         drone_role = "Master" if app_settings.general.run_as_master else "Slave"
         response   = requests.post(f"{address}", json={"drone_role": drone_role, "text_to_user": text_to_user})
         logging.info(f"Send text: {text_to_user} to ground, response: {response.status_code}")
+
+    def send_get_to_destination_to_user(self):
+        address = f"http://{app_settings.general.ground_ip}:{app_settings.general.ground_port}/get_to_destination"
+        drone_role = "Master" if app_settings.general.run_as_master else "Slave"
+        response = requests.post(f"{address}", json={"drone_role": drone_role})
+        logging.info(f"Send get_to_destination message to ground, response: {response.status_code}")
 
     async def receive_drone_status(self):
 

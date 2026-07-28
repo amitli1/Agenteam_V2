@@ -36,6 +36,7 @@ class MainGround:
         self.last_master_quad_data = None
         self.last_slave_quad_data = None
 
+        app.add_url_rule("/get_to_destination", view_func=self.on_air_get_to_destination, methods=["POST"], )
         app.add_url_rule("/status",view_func=self.on_air_status_message,methods=["POST"],)
         app.add_url_rule("/text_to_user", view_func=self.on_air_text_to_user, methods=["POST"], )
         self.status_received_event = threading.Event()
@@ -45,6 +46,18 @@ class MainGround:
 
         self.master_drone_url = f"http://{app_settings.general.master_air_ip}:{app_settings.general.master_air_port}/ground_command"
         self.slave_drone_url  = f"http://{app_settings.general.slave_air_ip}:{app_settings.general.slave_air_port}/ground_command"
+
+        self.get_to_destination = False
+
+    def on_air_get_to_destination(self):
+        air_msg = request.get_json(silent=True)
+
+        self.get_to_destination = True
+        if air_msg['drone_role'] == 'master':
+            None
+        else:
+            None
+        return "OK", 200
 
     def on_air_status_message(self):
         air_status_msg = request.get_json(silent=True)
@@ -100,7 +113,15 @@ class MainGround:
         l_commands = self.llmCommandParser.split_user_command(text)
         for command in l_commands:
             logging.info(command)
-            if command['fly_command'] != '':
+
+            if 'home' in command['fly_command']:
+                if (command['team_member'] == "team") or (command['team_member'] == "buddy"):
+                    r = requests.post(self.master_drone_url,json={"command": "home"})
+
+                if (command['team_member'] == "team") or (command['team_member'] == "jarvis"):
+                    r = requests.post(self.slave_drone_url, json={"command": "home"})
+
+            elif command['fly_command'] != '':
                 result = self.llmMissionPlanner.get_way_points(text_command=command['fly_command'],
                                                       team_member=command['team_member'],
                                                       master_drone_location=self.master_drone_location,
@@ -113,22 +134,13 @@ class MainGround:
                 logging.info(f"Got plan from LLM. status: {result['status']}, action: {result['action']}, team_member: {result['team_member']}")
                 if result['status'] == "success":
                     #(result['action'] == "goto") or (result['action'] == "surround")
-                    if result['team_member'] == "buddy":
+                    if (result['team_member'] == "team") or (result['team_member'] == "buddy"):
                         plan_list = result['plan']['buddy']
-                        r = requests.post(self.master_drone_url,
-                                          json={"command": "plan","plan_list": plan_list})
+                        r = requests.post(self.master_drone_url,json={"command": "plan","plan_list": plan_list})
                         r.raise_for_status()
-                    elif result['team_member'] == "jarvis":
+                    if (result['team_member'] == "team") or (result['team_member'] == "jarvis"):
                         plan_list = result['plan']['jarvis']
-                        r = requests.post(self.slave_drone_url,
-                                          json={"command": "plan","plan_list": plan_list})
-                    elif result['team_member'] == "team":
-                        plan_list = result['plan']['buddy']
-                        r = requests.post(self.master_drone_url,
-                                          json={"command": "plan","plan_list": plan_list})
-                        plan_list = result['plan']['jarvis']
-                        r = requests.post(self.slave_drone_url,
-                                          json={"command": "plan","plan_list": plan_list})
+                        r = requests.post(self.slave_drone_url,json={"command": "plan","plan_list": plan_list})
 
                 #logging.info(json.dumps(result, indent=2))
 
@@ -151,7 +163,13 @@ def run_ground_test():
     mainGround.status_received_event.wait()
     logging.info('Got messages from air - continue')
     mainGround.handle_user_text("Hey buddy go to building number one")
-    # mainGround.handle_user_text("Hey buddy return home")
+    while True:
+        time.sleep(1)
+        if mainGround.get_to_destination:
+            mainGround.handle_user_text("Hey buddy return home")
+            time.sleep(5)
+            break
+
 
 
 def run_ground():
@@ -167,3 +185,5 @@ def run_ground():
 if __name__ == "__main__":
     run_ground()
     run_ground_test()
+    time.sleep(10)
+    logging.info('finished')
