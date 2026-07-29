@@ -8,12 +8,13 @@ import json
 
 class VisionManager(object):
 
-    def __init__(self, on_hold_status_callback):
+    def __init__(self, on_hold_status_callback, fnc_send_text_to_user):
         self.is_online               = app_settings.vision.use_online
         self.summary_port            = app_settings.vision.summary_port
         self.hold_port               = app_settings.vision.hold_port
         self.point_port              = app_settings.vision.point_port
         self.on_hold_status_callback = on_hold_status_callback
+        self.fnc_send_text_to_user   = fnc_send_text_to_user
 
         # point thread
         self.point_status_thread = threading.Thread(
@@ -32,6 +33,19 @@ class VisionManager(object):
             target=self.receive_vision_summary_status,
             daemon=True
         )
+
+    def handle_vision_command(self, vision_command, objects_to_focus):
+        if vision_command == "point":
+            self.start_point(text=f"focus on {objects_to_focus}")
+        elif vision_command == "hold":
+            self.start_hold(text=f"focus on {objects_to_focus}")
+        elif vision_command == "summary":
+            self.call_summary_to_get_ready()
+            self.start_summary(objects_to_focus=objects_to_focus)
+        elif vision_command == "describe":
+            self.describe_summerization(objects_to_focus)
+        else:
+            logging.error(f"Unknown vision command: {vision_command}")
 
 
 
@@ -331,14 +345,16 @@ class VisionManager(object):
 
         try:
             start_time = time.time()
-            payload = {"task": "describe", "transcription": text}
-            url = f"http://{get_running_ip()}:{self.summary_port}/describe"
+            payload    = {"task": "describe", "transcription": text}
+            url        = f"http://{get_running_ip()}:{self.summary_port}/describe"
             logging.info(f'Send message to: {url} with: {payload}')
-            r = requests.post(url, json=payload)
+            r          = requests.post(url, json=payload)
             r.raise_for_status()
-            res = r.json()
-            end_time = time.time()
+            desc        = r.json()
+            end_time   = time.time()
             logging.info(f'describe took: {(end_time - start_time):.2f} sec')
+            logging.info(f'Describe response: {desc}')
+            self.fnc_send_text_to_user(desc)
         except Exception as e:
             logging.error(f'Error while sending describe message: {e}')
             res = None

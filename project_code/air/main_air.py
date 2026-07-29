@@ -20,7 +20,7 @@ class MainAir:
 
         # --- quad
         quad_port          = app_settings.general.master_quad_port if app_settings.general.run_as_master else app_settings.general.slave_quad_port
-        self.quadManager   = QuadManager(quad_port)
+        self.quadManager   = QuadManager(quad_port, self.send_text_to_user)
 
         # ground rest api:
         app.add_url_rule("/ground_command", view_func=self.on_ground_command, methods=["POST"], )
@@ -28,7 +28,7 @@ class MainAir:
 
 
         # --- vision
-        self.visionManager = VisionManager(self.on_hold_objects)
+        self.visionManager = VisionManager(self.on_hold_objects, self.send_text_to_user)
 
         # --- main air logic
         self._logic_thread = threading.Thread(
@@ -38,6 +38,13 @@ class MainAir:
         self._logic_thread.start()
         self.drone_role = "master" if app_settings.general.run_as_master else "slave"
         logging.info(f'Drone role: {self.drone_role}')
+
+    def send_text_to_user(self, text_to_user):
+        address    = f"http://{app_settings.general.ground_ip}:{app_settings.general.ground_port}/text_to_user"
+        drone_role = "Master" if app_settings.general.run_as_master else "Slave"
+        response   = requests.post(f"{address}", json={"drone_role": drone_role, "text_to_user": text_to_user})
+        logging.info(f"Send text: {text_to_user} to ground, response: {response.status_code}")
+
 
     def on_hold_objects(self, hold_status):
         if app_settings.general.run_as_master:
@@ -87,6 +94,12 @@ class MainAir:
             res = self.quadManager.call_back_home()
             if res is False:
                 return jsonify({"error": "error while sending wp to quad manager"}), 400
+
+        elif data['command'] == 'vision':
+            vision_command   =  data['vision_command']['vision_command']
+            objects_to_focus = data['vision_command']['objects_to_focus']
+            self.visionManager.handle_vision_command(vision_command, objects_to_focus)
+
 
         return "OK", 200
 

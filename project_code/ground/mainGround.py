@@ -9,6 +9,7 @@ from project_code.db.database_manager import DatabaseManager
 from project_code.llm.drone_navigation_agent import DroneNavigationAgent
 from project_code.llm.llm_command_parser import LlmCommandParser
 from project_code.llm.llm_mission_planner import MissionPlannerAgent
+from project_code.llm.llm_vision_parser import VisionParser
 from project_code.utils.logger_utils import init_logger
 from project_code.utils.sound_player import SoundPlayerManager
 from project_code.utils.utils import create_output_folder, check_models, warmup, get_running_ip, \
@@ -32,6 +33,7 @@ class MainGround:
         self.llmMissionPlanner    = MissionPlannerAgent()
         self.databaseManager      = DatabaseManager()
         self.DroneNavigationAgent = DroneNavigationAgent()
+        self.vision_parser        = VisionParser()
 
         self.last_master_quad_data = None
         self.last_slave_quad_data = None
@@ -136,9 +138,31 @@ class MainGround:
                     plan_list = result['plan']['jarvis']
                     r         = requests.post(self.slave_drone_url, json={"command": "plan", "plan_list": plan_list})
 
-    def handle_vision_command(self, command):
-        # 'tell me what you see'
-        None
+    def handle_vision_command(self, text, command):
+
+        # {'vision_commands': [{'command': 'point', 'need_more_data': False, 'objects': 'red car, blue truck'}]}
+        llm_result       = self.vision_parser.parse(text)
+        llm_result       = llm_result['vision_commands']
+        vision_command   = command['command']
+        need_more_data   = command['need_more_data']
+        objects_to_focus = command['objects']
+
+        if need_more_data:
+            None
+
+        command_to_air = {
+            "vision_command": vision_command,
+            "objects_to_focus": objects_to_focus
+        }
+
+        r = requests.post(self.master_drone_url, json={"command": "vision", "vision_command": command_to_air})
+        r.raise_for_status()
+
+        if r.status_code != 200:
+            logging.error(f"Unexpected status when sending command to air: {r.status_code}")
+            return False
+
+        return True
 
     def handle_user_text(self, text):
         l_commands = self.llmCommandParser.split_user_command(text)
@@ -146,7 +170,7 @@ class MainGround:
             logging.info(command)
 
             if command['vision_command'] != '':
-                self.handle_vision_command(command)
+                self.handle_vision_command(text, command)
 
             if command['fly_command'] != '':
                 self.handle_fly_command(command)

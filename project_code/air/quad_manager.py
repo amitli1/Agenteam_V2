@@ -13,12 +13,13 @@ import requests
 import math
 
 class QuadManager:
-    def __init__(self, quad_port):
-        self.quad_port = quad_port
-        self.target_ip = get_running_ip()
-        self.quad_url  = f"ws://{self.target_ip}:{self.quad_port}/ws/drone-status"
+    def __init__(self, quad_port, fnc_send_text_to_user):
+        self.fnc_send_text_to_user = fnc_send_text_to_user
+        self.quad_port             = quad_port
+        self.target_ip             = get_running_ip()
 
-        self._thread = threading.Thread(
+        self.quad_url  = f"ws://{self.target_ip}:{self.quad_port}/ws/drone-status"
+        self._thread   = threading.Thread(
             target=self._run_status_loop,
             daemon=True,  # thread dies when main program exits
         )
@@ -89,13 +90,8 @@ class QuadManager:
 
 
         if text_to_user is not None:
-            self.send_text_to_user(text_to_user)
+            self.fnc_send_text_to_user(text_to_user)
 
-    def send_text_to_user(self, text_to_user):
-        address    = f"http://{app_settings.general.ground_ip}:{app_settings.general.ground_port}/text_to_user"
-        drone_role = "Master" if app_settings.general.run_as_master else "Slave"
-        response   = requests.post(f"{address}", json={"drone_role": drone_role, "text_to_user": text_to_user})
-        logging.info(f"Send text: {text_to_user} to ground, response: {response.status_code}")
 
     def send_get_to_destination_to_user(self):
         address = f"http://{app_settings.general.ground_ip}:{app_settings.general.ground_port}/get_to_destination"
