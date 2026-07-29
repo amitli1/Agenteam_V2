@@ -12,3 +12,4 @@
 12. LLM params from config file
 13. run wtih wake word (buddy and team) 
 14. stop summary and describe
+15. instead of TTS use - wav (save what you can)
