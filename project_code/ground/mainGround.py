@@ -49,8 +49,10 @@ class MainGround:
         self.master_drone_url = f"http://{app_settings.general.master_air_ip}:{app_settings.general.master_air_port}/ground_command"
         self.slave_drone_url  = f"http://{app_settings.general.slave_air_ip}:{app_settings.general.slave_air_port}/ground_command"
 
-        self.get_to_destination = False
-        self.fnc_test_callback  = None
+        self.get_to_destination  = False
+        self.fnc_test_callback   = None
+        self.last_fly_command    = None
+        self.last_vision_command = None
 
     def set_fnc_test_callback(self, fnc):
         self.fnc_test_callback = fnc
@@ -92,6 +94,18 @@ class MainGround:
         self.status_received_event.set()
         return "OK", 200
 
+    def run_tts(self, text_to_user):
+        response = requests.post(f"http://{get_running_ip()}:8002/synthesize/", json={"text": text_to_user})
+        data = response.json()
+        if response.status_code != 200:
+            return False
+
+        prepare_audio_for_speech(data)
+
+        if self.fnc_test_callback is not None:
+            self.fnc_test_callback(text_to_user)
+
+        return True
 
     def on_air_text_to_user(self):
 
@@ -100,15 +114,8 @@ class MainGround:
         text_to_user = msg['text_to_user']
         logging.info(f'Got text: {text_to_user} from: {drone_role}')
 
-        response = requests.post(f"http://{get_running_ip()}:8002/synthesize/", json={"text": text_to_user})
-        data = response.json()
-        if response.status_code != 200:
+        if not self.run_tts(text_to_user):
             return f"Error while sending text: {text_to_user} to TTS tool", 400
-
-        prepare_audio_for_speech(data)
-
-        if self.fnc_test_callback is not None:
-            self.fnc_test_callback(text_to_user)
 
         return "OK", 200
 
@@ -148,15 +155,26 @@ class MainGround:
 
     def handle_vision_command(self, text, command):
 
+        result_obj = {
+            "success"       : True,
+            "need_more_data": False,
+            "vision_command": None
+        }
+
         # {'vision_commands': [{'command': 'point', 'need_more_data': False, 'objects': 'red car, blue truck'}]}
         llm_result       = self.vision_parser.parse(text)
-        llm_result       = llm_result['vision_commands']
+        llm_result       = llm_result['vision_commands'][0]
         vision_command   = llm_result['command']
         need_more_data   = llm_result['need_more_data']
         objects_to_focus = llm_result['objects']
 
+        # save vision command in the return result
+        result_obj['vision_command'] = vision_command
+
         if need_more_data:
-            None
+            result_obj['success']        = False
+            result_obj['need_more_data'] = True
+            return result_obj
 
         command_to_air = {
             "vision_command": vision_command,
@@ -168,9 +186,11 @@ class MainGround:
 
         if r.status_code != 200:
             logging.error(f"Unexpected status when sending command to air: {r.status_code}")
-            return False
+            result_obj['success'] = False
+            result_obj['need_more_data'] = False
+            return result_obj
 
-        return True
+        return result_obj
 
     def handle_user_text(self, text):
         l_commands = self.llmCommandParser.split_user_command(text)
@@ -178,8 +198,11 @@ class MainGround:
             logging.info(command)
 
             if command['vision_command'] != '':
-                if self.handle_vision_command(text, command) is False:
-                    logging.error(f"Stop running commands")
+                vision_result_ = self.handle_vision_command(text, command)
+                if vision_result_['need_more_data']:
+                    self.run_tts("what should I look for ?")
+                    self.last_fly_command    = command['fly_command']
+                    self.last_vision_command = vision_result_['vision_command']
                     break
 
             if command['fly_command'] != '':
