@@ -28,7 +28,7 @@ class MainAir:
 
 
         # --- vision
-        self.visionManager = VisionManager()
+        self.visionManager = VisionManager(self.on_hold_objects)
 
         # --- main air logic
         self._logic_thread = threading.Thread(
@@ -38,6 +38,10 @@ class MainAir:
         self._logic_thread.start()
         self.drone_role = "master" if app_settings.general.run_as_master else "slave"
         logging.info(f'Drone role: {self.drone_role}')
+
+    def on_hold_objects(self, hold_status):
+        if app_settings.general.run_as_master:
+            None
 
     def handle_message_from_master_drone(self):
         payload = request.get_json(silent=True)

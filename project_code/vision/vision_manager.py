@@ -8,31 +8,36 @@ import json
 
 class VisionManager(object):
 
-    def __init__(self):
-        self.is_online = app_settings.vision.use_online
-        self.summary_port = app_settings.vision.summary_port
-        self.hold_port    = app_settings.vision.hold_port
-        self.point_port   = app_settings.vision.point_port
+    def __init__(self, on_hold_status_callback):
+        self.is_online               = app_settings.vision.use_online
+        self.summary_port            = app_settings.vision.summary_port
+        self.hold_port               = app_settings.vision.hold_port
+        self.point_port              = app_settings.vision.point_port
+        self.on_hold_status_callback = on_hold_status_callback
 
-        # start point thread
+        # point thread
         self.point_status_thread = threading.Thread(
             target=self.receive_vision_point_status,
             daemon=True
         )
-        self.point_status_thread.start()
 
-        # start hold thread
+        # hold thread
         self.hold_status_thread = threading.Thread(
             target=self.receive_vision_hold_status,
             daemon=True
         )
-        self.hold_status_thread.start()
 
-        # start summary thread
+        # summary thread
         self.summary_status_thread = threading.Thread(
             target=self.receive_vision_summary_status,
             daemon=True
         )
+
+
+
+    def start_collect_vision_telemetry(self):
+        self.point_status_thread.start()
+        self.hold_status_thread.start()
         self.summary_status_thread.start()
 
     def open_video_window(self):
@@ -50,7 +55,7 @@ class VisionManager(object):
             return False
 
         try:
-            with open("pointing_settings.json", "r") as f:
+            with open(app_settings.vision.pointing_settings_file, "r") as f:
                 payload_img = json.load(f)
 
             r = requests.post(f"http://{get_running_ip()}:{app_settings.vision.point_port}/api/pointing-agent/start", json=payload_img)
@@ -106,7 +111,7 @@ class VisionManager(object):
                 send_video_window = self.open_video_window()
 
             try:
-                r = requests.get(f"http://{get_running_ip()}:{self.point_port}/api/pointing-agent/status", json={})
+                r    = requests.get(f"http://{get_running_ip()}:{self.point_port}/api/pointing-agent/status", json={})
                 r.raise_for_status()
                 data = r.json()
                 last_is_active, last_agent_status = self.handle_point_status(data, last_is_active, last_agent_status)
@@ -122,6 +127,8 @@ class VisionManager(object):
 
     def handle_vision_hold_status(self, hold_status):
         if len(hold_status) != 0:
+            if self.on_hold_status_callback is not None:
+                self.on_hold_status_callback(hold_status)
             # 1. check we are master
             # 2. check we are in team mission
             # 3. send to slave
@@ -142,7 +149,7 @@ class VisionManager(object):
             time.sleep(0.1)  # 100ms
 
             try:
-                r = requests.get(f"http://{get_running_ip()}:{self.hold_port}/alert-get", json={})
+                r    = requests.get(f"http://{get_running_ip()}:{self.hold_port}/alert-get", json={})
                 r.raise_for_status()
                 data = r.json()
                 self.handle_vision_hold_status(data)

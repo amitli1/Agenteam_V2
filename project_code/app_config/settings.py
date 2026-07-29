@@ -46,6 +46,7 @@ class Vision(BaseModel):
     summary_port: int
     hold_port: int
     point_port: int
+    pointing_settings_file: str
 
 class General(BaseModel):
     run_as_master: bool

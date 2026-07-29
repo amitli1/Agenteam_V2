@@ -109,38 +109,48 @@ class MainGround:
         )
         self.audio_thread.start()
 
+    def handle_fly_command(self, command):
+        if 'home' in command['fly_command']:
+            if (command['team_member'] == "team") or (command['team_member'] == "buddy"):
+                r = requests.post(self.master_drone_url, json={"command": "home"})
+
+            if (command['team_member'] == "team") or (command['team_member'] == "jarvis"):
+                r = requests.post(self.slave_drone_url, json={"command": "home"})
+        else:
+            result = self.llmMissionPlanner.get_way_points(text_command          = command['fly_command'],
+                                                           team_member           = command['team_member'],
+                                                           master_drone_location = self.master_drone_location,
+                                                           slave_drone_location  = self.slave_drone_location,
+                                                           database_manager      = self.databaseManager,
+                                                           ALT_DEFAULT           = app_settings.flightPath.default_drone_altitude,
+                                                           SPATIAL_DISTANCE      = app_settings.flightPath.spatial_distance,
+                                                           DELTA_ALT_SLAVE_DRONE = app_settings.flightPath.slave_drone_altitude_offset)
+
+            logging.info(f"Got plan from LLM. status: {result['status']}, action: {result['action']}, team_member: {result['team_member']}")
+            if result['status'] == "success":
+                if (result['team_member'] == "team") or (result['team_member'] == "buddy"):
+                    plan_list = result['plan']['buddy']
+                    r         = requests.post(self.master_drone_url, json={"command": "plan", "plan_list": plan_list})
+                    r.raise_for_status()
+                if (result['team_member'] == "team") or (result['team_member'] == "jarvis"):
+                    plan_list = result['plan']['jarvis']
+                    r         = requests.post(self.slave_drone_url, json={"command": "plan", "plan_list": plan_list})
+
+    def handle_vision_command(self, command):
+        # 'tell me what you see'
+        None
+
     def handle_user_text(self, text):
         l_commands = self.llmCommandParser.split_user_command(text)
         for command in l_commands:
             logging.info(command)
 
-            if 'home' in command['fly_command']:
-                if (command['team_member'] == "team") or (command['team_member'] == "buddy"):
-                    r = requests.post(self.master_drone_url,json={"command": "home"})
+            if command['vision_command'] != '':
+                self.handle_vision_command(command)
 
-                if (command['team_member'] == "team") or (command['team_member'] == "jarvis"):
-                    r = requests.post(self.slave_drone_url, json={"command": "home"})
+            if command['fly_command'] != '':
+                self.handle_fly_command(command)
 
-            elif command['fly_command'] != '':
-                result = self.llmMissionPlanner.get_way_points(text_command=command['fly_command'],
-                                                      team_member=command['team_member'],
-                                                      master_drone_location=self.master_drone_location,
-                                                      slave_drone_location=self.slave_drone_location,
-                                                      database_manager=self.databaseManager,
-                                                      ALT_DEFAULT=app_settings.flightPath.default_drone_altitude,
-                                                      SPATIAL_DISTANCE=app_settings.flightPath.spatial_distance,
-                                                      DELTA_ALT_SLAVE_DRONE=app_settings.flightPath.slave_drone_altitude_offset)
-
-                logging.info(f"Got plan from LLM. status: {result['status']}, action: {result['action']}, team_member: {result['team_member']}")
-                if result['status'] == "success":
-                    #(result['action'] == "goto") or (result['action'] == "surround")
-                    if (result['team_member'] == "team") or (result['team_member'] == "buddy"):
-                        plan_list = result['plan']['buddy']
-                        r         = requests.post(self.master_drone_url,json={"command": "plan","plan_list": plan_list})
-                        r.raise_for_status()
-                    if (result['team_member'] == "team") or (result['team_member'] == "jarvis"):
-                        plan_list = result['plan']['jarvis']
-                        r         = requests.post(self.slave_drone_url,json={"command": "plan","plan_list": plan_list})
 
 
 
@@ -161,7 +171,8 @@ def run_ground_test():
     logging.info('Wait till getting messages from air')
     mainGround.status_received_event.wait()
     logging.info('Got messages from air - continue')
-    mainGround.handle_user_text("Hey buddy go to building number one")
+    #mainGround.handle_user_text("Hey buddy go to building number one")
+    mainGround.handle_user_text("Hey buddy surround the building and tell me what you see")
     while True:
         time.sleep(1)
         if mainGround.get_to_destination:

@@ -49,6 +49,7 @@ vision:
   summary_port: 8080
   hold_port   : 6000
   point_port  : 8003
+  pointing_settings_file: /home/amitli/repo/Agenteam_V2/project_code/app_config/pointing_settings.json
 
 logging_and_records:
   output_path: /home/amitli/repo/Agenteam_V2/outputs
