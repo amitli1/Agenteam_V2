@@ -53,6 +53,7 @@ class MainGround:
         self.fnc_test_callback   = None
         self.last_fly_command    = None
         self.last_vision_command = None
+        self.last_text_command   = None
 
     def set_fnc_test_callback(self, fnc):
         self.fnc_test_callback = fnc
@@ -192,8 +193,19 @@ class MainGround:
 
         return result_obj
 
+    def merge_current_and_previous_commands(self, l_current_command, current_text):
+        if self.last_fly_command is None and self.last_vision_command is None:
+            return l_current_command, current_text
+
+        l_current_command[0]['fly_command']    = self.last_fly_command
+        l_current_command[0]['vision_command'] = f"{self.last_vision_command} {current_text}"
+
+        return l_current_command, f"{self.last_text_command} {current_text}"
+
     def handle_user_text(self, text):
-        l_commands = self.llmCommandParser.split_user_command(text)
+        l_commands       = self.llmCommandParser.split_user_command(text)
+        l_commands, text = self.merge_current_and_previous_commands(l_commands, text)
+
         for command in l_commands:
             logging.info(command)
 
@@ -203,10 +215,16 @@ class MainGround:
                     self.run_tts("what should I look for ?")
                     self.last_fly_command    = command['fly_command']
                     self.last_vision_command = vision_result_['vision_command']
-                    break
+                    self.last_text_command   = text
+                    return
 
             if command['fly_command'] != '':
                 self.handle_fly_command(command)
+
+        logging.info(f'Clear last_fly_command and last_vision_command')
+        self.last_fly_command    = None
+        self.last_vision_command = None
+        self.last_text_command   = None
 
 
 

@@ -34,8 +34,15 @@ def run_test(parser, text, expected):
 
 def run_all_tests():
     parser = VisionParser()
-
     tests = [
+        (
+            "jarvis, surround the building and tell me what you see jarvis, look for people and weapons",
+            [{"command": "summary", "objects": "people, weapons", "need_more_data": False}],
+        ),
+        (
+          "summary look for people and weapons",
+          [{"command": "summary", "objects": "people, weapons", "need_more_data": False}],
+        ),
         (
             "point to the red car or blue truck",
             [{"command": "point", "objects": "red car, blue truck", "need_more_data": False}],
