@@ -114,7 +114,7 @@ class QuadManager:
                             message                = await websocket.recv()
 
                             if flag_first_msg is False:
-                                self.send_text_to_user('Start getting drone status')
+                                self.fnc_send_text_to_user('Start getting drone status')
                                 logging.info(f'Got first quad message: {message}')
 
                             flag_first_msg         = True

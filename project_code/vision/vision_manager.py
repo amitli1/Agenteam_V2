@@ -15,6 +15,7 @@ class VisionManager(object):
         self.point_port              = app_settings.vision.point_port
         self.on_hold_status_callback = on_hold_status_callback
         self.fnc_send_text_to_user   = fnc_send_text_to_user
+        self.is_online               = True # take from config
 
         # point thread
         self.point_status_thread = threading.Thread(
@@ -362,12 +363,27 @@ class VisionManager(object):
 
 
 
+def test_on_hold_status_callback(hold_status):
+    None
 
-
+def fnc_send_text_to_user(text):
+    None
 
 
 if __name__ == "__main__":
-    vision_manager = VisionManager()
-    vision_manager.point_status_thread.join()
+    logging.basicConfig(
+        level=logging.INFO,  # Minimum level to display
+        format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
+    )
+
+    logger = logging.getLogger(__name__)
+
+    vision_manager = VisionManager(on_hold_status_callback = test_on_hold_status_callback,
+                                   fnc_send_text_to_user = fnc_send_text_to_user)
+
+    vision_manager.start_collect_vision_telemetry()
+    #vision_manager.point_status_thread.join()
+    time.sleep(30)
+
 
 

@@ -29,6 +29,7 @@ class MainAir:
 
         # --- vision
         self.visionManager = VisionManager(self.on_hold_objects, self.send_text_to_user)
+        self.visionManager.start_collect_vision_telemetry()
 
         # --- main air logic
         self._logic_thread = threading.Thread(

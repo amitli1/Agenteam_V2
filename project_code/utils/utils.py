@@ -38,6 +38,14 @@ def check_models():
         logging.info(f"Whisper Model is not ready")
         return False
 
+    # 3. check TTS:
+    try:
+        response = requests.post("http://127.0.0.1:8002/synthesize/", timeout=2)
+    except requests.exceptions.ConnectionError:
+        logging.info(f"Whisper Model is not ready")
+        return False
+
+
     return True
 
 
@@ -82,6 +90,8 @@ def play_wav_file(wav_file_name, output_device):
 
 
 def warmup():
+
+    # --- TTS
     try:
         logging.info(f'Start TTS warmup')
         response = requests.post(f"http://{get_running_ip()}:8002/synthesize/", json={"text": 'warmup TTS'})
@@ -93,7 +103,7 @@ def warmup():
     except Exception as e:
         logging.error(f'TTS warmup failed: {e}')
 
-
+    # --- WHISPER
     try:
         logging.info('Start WHISPER warmup')
         audio       = AudioSegment.from_wav(f"{os.getcwd()}/audio_files/Please_say_again.wav")
@@ -104,7 +114,7 @@ def warmup():
         if response.status_code != 200:
             logging.error(f'Whisper warmup failed with status_code: {response.status_code != 200}')
         else:
-            logging.info(f'End TTS warmup')
+            logging.info(f'End STT warmup')
     except Exception as e:
         logging.error(f'Whisper warmup failed: {e}')
 

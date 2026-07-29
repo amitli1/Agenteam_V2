@@ -50,6 +50,10 @@ class MainGround:
         self.slave_drone_url  = f"http://{app_settings.general.slave_air_ip}:{app_settings.general.slave_air_port}/ground_command"
 
         self.get_to_destination = False
+        self.fnc_test_callback  = None
+
+    def set_fnc_test_callback(self, fnc):
+        self.fnc_test_callback = fnc
 
     def on_air_get_to_destination(self):
         air_msg = request.get_json(silent=True)
@@ -102,6 +106,10 @@ class MainGround:
             return f"Error while sending text: {text_to_user} to TTS tool", 400
 
         prepare_audio_for_speech(data)
+
+        if self.fnc_test_callback is not None:
+            self.fnc_test_callback(text_to_user)
+
         return "OK", 200
 
     def start_ground(self):
@@ -143,9 +151,9 @@ class MainGround:
         # {'vision_commands': [{'command': 'point', 'need_more_data': False, 'objects': 'red car, blue truck'}]}
         llm_result       = self.vision_parser.parse(text)
         llm_result       = llm_result['vision_commands']
-        vision_command   = command['command']
-        need_more_data   = command['need_more_data']
-        objects_to_focus = command['objects']
+        vision_command   = llm_result['command']
+        need_more_data   = llm_result['need_more_data']
+        objects_to_focus = llm_result['objects']
 
         if need_more_data:
             None
@@ -170,42 +178,14 @@ class MainGround:
             logging.info(command)
 
             if command['vision_command'] != '':
-                self.handle_vision_command(text, command)
+                if self.handle_vision_command(text, command) is False:
+                    logging.error(f"Stop running commands")
+                    break
 
             if command['fly_command'] != '':
                 self.handle_fly_command(command)
 
 
-
-
-def run_ground_test():
-
-    mainAir    = MainAir()
-    air_thread = threading.Thread(target=mainAir.start_air, daemon=True)
-    air_thread.start()
-
-    mainGround = MainGround()
-
-    flask_groundthread = threading.Thread(
-        target=lambda: app.run(host="0.0.0.0", port=app_settings.general.ground_port, use_reloader=False),
-        daemon=True,
-    )
-    flask_groundthread.start()
-
-    logging.info('Wait till getting messages from air')
-    mainGround.status_received_event.wait()
-    logging.info('Got messages from air - continue')
-    #mainGround.handle_user_text("Hey buddy go to building number one")
-    mainGround.handle_user_text("Hey buddy surround the building and tell me what you see")
-    while True:
-        time.sleep(1)
-        if mainGround.get_to_destination:
-            mainGround.handle_user_text("Hey buddy hold the junction")
-            time.sleep(5)
-
-            mainGround.handle_user_text("Hey buddy return home")
-            time.sleep(5)
-            break
 
 
 
@@ -219,8 +199,19 @@ def run_ground():
 
     SoundPlayerManager().start()
 
+    mainGround = MainGround()
+    flask_groundthread = threading.Thread(
+        target=lambda: app.run(host="0.0.0.0", port=app_settings.general.ground_port, use_reloader=False),
+        daemon=True,
+    )
+    flask_groundthread.start()
+    mainGround.status_received_event.wait()
+    return mainGround
+
+
+
+
 if __name__ == "__main__":
     run_ground()
-    run_ground_test()
-    time.sleep(10)
-    logging.info('finished')
+    #time.sleep(10)
+    #logging.info('finished')
