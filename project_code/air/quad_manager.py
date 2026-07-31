@@ -90,7 +90,8 @@ class QuadManager:
 
 
         if text_to_user is not None:
-            self.fnc_send_text_to_user(text_to_user)
+            if self.fnc_send_text_to_user:
+                self.fnc_send_text_to_user(text_to_user)
 
 
     def send_get_to_destination_to_user(self):
@@ -114,8 +115,9 @@ class QuadManager:
                             message                = await websocket.recv()
 
                             if flag_first_msg is False:
-                                self.fnc_send_text_to_user('Start getting drone status')
-                                logging.info(f'Got first quad message: {message}')
+                                if self.fnc_send_text_to_user:
+                                    self.fnc_send_text_to_user('Start getting drone status')
+                                    logging.info(f'Got first quad message: {message}')
 
                             flag_first_msg         = True
 
@@ -131,7 +133,7 @@ class QuadManager:
                             is_mission_finished   = current_status_data['is_mission_finished']
                             mission_progress      = current_status_data['mission_progress']
                             last_mission_waypoint = current_status_data['last_mission_waypoint']
-
+                            #print(json.loads(message))
                             self.check_mission_progress(flight_mode, is_mission_finished, mission_progress)
 
                             # save last msg
@@ -205,38 +207,35 @@ def simple_get_status_test():
 
 
 def simple_flight_test():
-    quadManager = QuadManager(8001)
-    quadManager.quad_manager_ready.wait()
-    time.sleep(3)
+    quadManager = QuadManager(8001, None)
+    #quadManager.quad_manager_ready.wait()
+    #time.sleep(3)
     testerUtils = TesterUtils()
 
-
-    print(f'Get current location')
-    current = quadManager.get_current_location()
+    while True:
+        currentStatusData = quad_last_status_data
+        time.sleep(1)
+        if currentStatusData:
+            break
 
     total_dist_m = 150
     climb_m = 20
 
     horizontal_m = math.sqrt(total_dist_m ** 2 - climb_m ** 2)  # ~45.83 m
 
-    wp = testerUtils.offset_wp(current['lat'], current['lon'], current['alt'] + climb_m,
+    wp = testerUtils.offset_wp(currentStatusData['lat'], currentStatusData['lon'], currentStatusData['alt'] + climb_m,
                                distance_m=horizontal_m, bearing_deg=0)
 
+
     print(f'Fly to wp: {wp}')
-    # quadManager.fly_to_wp([wp])
+    quadManager.fly_to_wp([wp])
 
-    current = quadManager.get_current_location()
+    time.sleep(3)
+    l_wp = testerUtils.get_square_points(currentStatusData, radius=15)
 
-    print(f'Get current location')
-    l_wp = testerUtils.get_square_points(current, radius=15)
 
-    print(f"\tStatus: {quadManager.get_last_quad_message()}")
-    print(f'\t\tFly to square: {l_wp}')
     quadManager.fly_to_wp(l_wp)
-    print(f"\tStatus: {quadManager.get_last_quad_message()}")
-    print('finished')
-
-    quadManager._thread.join()
+    time.sleep(3)
 
     print("Finished")
 
@@ -269,8 +268,8 @@ if __name__ == "__main__":
 
     # {'timestamp': 1784451253894, 'is_armed': False, 'flight_mode': 'HOLD', 'lat': 47.6414678, 'lon': -122.14016489999999, 'alt': -0.012000000104308128, 'yaw': 187.4424285888672, 'horizontal_velocity': 0.0, 'vertical_velocity': 0.0, 'battery_voltage': 16.200000762939453, 'in_air': False, 'is_mission_finished': True, 'mission_progress': '0/0', 'last_mission_estimated_time': 'No mission yet', 'last_mission_waypoint': None}
     #simple_get_status_test()
-    #simple_flight_test()
-    simple_fly_to_wp()
+    simple_flight_test()
+    #simple_fly_to_wp()
 
 # No mistion:
 # 'flight_mode': 'HOLD'

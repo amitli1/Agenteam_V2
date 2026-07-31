@@ -54,6 +54,7 @@ class MainGround:
         self.last_fly_command    = None
         self.last_vision_command = None
         self.last_text_command   = None
+        self.last_destination    = None
 
     def set_fnc_test_callback(self, fnc):
         self.fnc_test_callback = fnc
@@ -96,9 +97,13 @@ class MainGround:
         return "OK", 200
 
     def run_tts(self, text_to_user):
-        response = requests.post(f"http://{get_running_ip()}:8002/synthesize/", json={"text": text_to_user})
-        data = response.json()
-        if response.status_code != 200:
+        try:
+            response = requests.post(f"http://{get_running_ip()}:8002/synthesize/", json={"text": text_to_user})
+            data = response.json()
+            if response.status_code != 200:
+                return False
+        except Exception as e:
+            logging.error(f'Error while sending text: {text_to_user} to TTS tool')
             return False
 
         prepare_audio_for_speech(data)
@@ -146,6 +151,9 @@ class MainGround:
 
             logging.info(f"Got plan from LLM. status: {result['status']}, action: {result['action']}, team_member: {result['team_member']}")
             if result['status'] == "success":
+
+                self.last_destination = result['target']
+
                 if (result['team_member'] == "team") or (result['team_member'] == "buddy"):
                     plan_list = result['plan']['buddy']
                     r         = requests.post(self.master_drone_url, json={"command": "plan", "plan_list": plan_list})
