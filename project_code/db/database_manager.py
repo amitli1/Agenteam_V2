@@ -34,6 +34,9 @@ class DatabaseManager:
 if __name__ == "__main__":
     databaseManager = DatabaseManager()
     res = databaseManager.get_location("junction", "1")
-    print(res)
+    df = databaseManager.get_db()
+    print(df.shape)
+    print(df.to_dict())
+    #print(res)
 
 

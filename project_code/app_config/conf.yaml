@@ -57,5 +57,8 @@ logging_and_records:
 database:
     db_path: /home/amitli/repo/Agenteam_V2/project_code/app_config/airsim_poly_db.csv
 
+monitor:
+  monitor_port: 7031
+
 test:
   run_in_test_mode: false

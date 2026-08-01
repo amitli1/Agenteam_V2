@@ -118,6 +118,22 @@ def warmup():
     except Exception as e:
         logging.error(f'Whisper warmup failed: {e}')
 
+    # --- LLM:
+    try:
+        logging.info('Start LLM warmup')
+        client = OpenAI(
+            api_key=app_settings.llm.api_key,
+            base_url=app_settings.llm.base_url
+        )
+        response = client.chat.completions.create(
+            model=app_settings.llm.llm_model,
+            messages=[{"role": "user", "content": "Hi"}],
+            max_tokens=20
+        )
+        logging.info(f'End LLM warmup, response: {response.choices[0].message.content}')
+    except Exception as e:
+        logging.error(f'LLM warmup failed: {e}')
+
 
 def create_output_folder():
     folder_path = os.path.join(app_settings.logging_and_records.output_path, CURRENT_DATE)

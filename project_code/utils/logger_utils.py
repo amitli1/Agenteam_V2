@@ -1,6 +1,8 @@
 import logging
 import os
 from datetime import datetime
+from project_code.app_config.settings import app_settings
+
 
 
 def get_timestamp_string():
@@ -19,8 +21,8 @@ def init_logger():
                                      datefmt='%Y-%m-%d %H:%M:%S')
 
     # # File handler
-    os.makedirs("logs", exist_ok=True)
-    log_name     = f"logs/log_{CURRENT_DATE}.txt"
+    #os.makedirs("logs", exist_ok=True)
+    log_name     = f"{app_settings.logging_and_records.output_path}/log_{CURRENT_DATE}.txt"
     file_handler = logging.FileHandler(log_name)
     file_handler.setFormatter(formatter)
 

@@ -356,6 +356,7 @@ class VisionManager(object):
             logging.info(f'describe took: {(end_time - start_time):.2f} sec')
             logging.info(f'Describe response: {desc}')
             self.fnc_send_text_to_user(desc)
+            res = desc
         except Exception as e:
             logging.error(f'Error while sending describe message: {e}')
             res = None

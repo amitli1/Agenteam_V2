@@ -40,8 +40,6 @@ from typing import Optional, List, Dict, Any, Tuple
 
 from openai import OpenAI
 
-from project_code.monitor.app_tester import _post, post_master_pos, post_slave_pos, post_waypoint, post_path
-
 # ---------------------------------------------------------------------------
 # Google ADK (agents / tools). ADK is a mandatory dependency of this module.
 # ---------------------------------------------------------------------------
@@ -310,6 +308,18 @@ class MissionPlannerAgent:
     # Database lookup
     # ------------------------------------------------------------------ #
     @staticmethod
+    def _parse_target_string(target: str) -> Tuple[str, str]:
+        """Split a target string like 'building 2' into (entity_type, entity_number)."""
+        if not target:
+            return "", ""
+        parts = str(target).strip().lower().split()
+        if len(parts) < 2:
+            return "", ""
+        entity_number = parts[-1]
+        entity_type = " ".join(parts[:-1])
+        return entity_type, entity_number
+
+    @staticmethod
     def _find_entity(database_manager, entity_type: str, entity_number: str):
         """Return the matching DataFrame row or None."""
         df = database_manager.get_db()
@@ -362,6 +372,7 @@ class MissionPlannerAgent:
         ALT_DEFAULT: float,
         SPATIAL_DISTANCE: float,
         DELTA_ALT_SLAVE_DRONE: float,
+        last_destination: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Plan the flight and return a structured way-point plan.
 
@@ -388,6 +399,20 @@ class MissionPlannerAgent:
         action = intent.get("action", "unknown")
         entity_type = intent.get("entity_type", "")
         entity_number = intent.get("entity_number", "")
+
+        # No specific destination in the command (e.g. "surround the building") ->
+        # fall back to the last known destination, if any.
+        if not entity_number:
+            fallback_type, fallback_number = self._parse_target_string(last_destination)
+            if fallback_number:
+                entity_type = fallback_type or entity_type
+                entity_number = fallback_number
+                if action == "unknown":
+                    action = "goto"
+                logging.info(
+                    f"No explicit destination in '{text_command}', "
+                    f"reusing last_destination='{last_destination}'."
+                )
 
         if action == "unknown" or not entity_number:
             return self._error(
@@ -544,18 +569,6 @@ def init_monitor(base_url, df, master, slave):
         for coord in coords:
             post_waypoint(base_url, lat=coord[0], lon=coord[1], alt=15, title=entity)
 
-
-def add_path_to_monitor(base_url, result):
-    buddy = result['plan']["buddy"]
-    jarvis = result['plan']['jarvis']
-
-
-    if buddy is not None:
-        post_path(base_url, points=buddy, title="buddy")
-    if jarvis is not None:
-        post_path(base_url, points=jarvis, title="jarvis")
-
-    None
 
 if __name__ == "__main__":
     # Use the real project DatabaseManager (reads the CSV configured in

@@ -147,9 +147,13 @@ class MainGround:
                                                            database_manager      = self.databaseManager,
                                                            ALT_DEFAULT           = app_settings.flightPath.default_drone_altitude,
                                                            SPATIAL_DISTANCE      = app_settings.flightPath.spatial_distance,
-                                                           DELTA_ALT_SLAVE_DRONE = app_settings.flightPath.slave_drone_altitude_offset)
+                                                           DELTA_ALT_SLAVE_DRONE = app_settings.flightPath.slave_drone_altitude_offset,
+                                                           last_destination      = self.last_destination)
 
-            logging.info(f"Got plan from LLM. status: {result['status']}, action: {result['action']}, team_member: {result['team_member']}")
+            if result['status'] == "error":
+                logging.error(f"Got error llmMissionPlanner.get_way_points: {result['error']}")
+            else:
+                logging.info(f"Got plan from LLM. status: {result['status']}, action: {result['action']}, team_member: {result['team_member']}")
             if result['status'] == "success":
 
                 self.last_destination = result['target']

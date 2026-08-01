@@ -29,6 +29,9 @@ class AudioConfig(BaseModel):
 class TestConfig(BaseModel):
     run_in_test_mode: bool
 
+class Monitor(BaseModel):
+    monitor_port: int
+
 
 class LLM(BaseModel):
     api_key: str
@@ -78,6 +81,7 @@ class Settings(BaseModel):
     general: General
     vision: Vision
     speakers: Speakers
+    monitor: Monitor
 
 # amitli
 def load_config(path: str = "app_config/conf.yaml") -> Settings:
