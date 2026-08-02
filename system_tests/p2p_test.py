@@ -67,9 +67,10 @@ class FullSystemTest():
 
 
     def test_1(self):
+
         self.mainGround.handle_user_text("Hey buddy go to building number one")
         if self.check_if_step_finished_successfully('I have reached the destination.') is False:
-            exit(0)
+            return False
 
         mainGround.handle_user_text("Hey buddy point to the car or weapons")
 
@@ -77,6 +78,9 @@ class FullSystemTest():
         if self.check_if_step_finished_successfully('what should I look for ?') is True:
 
             mainGround.handle_user_text("buddy, look for people and weapons")
+
+            if self.check_if_step_finished_successfully('I have reached the destination.') is False:
+                return False
 
             mainGround.handle_user_text("buddy, describe")
 
@@ -92,8 +96,7 @@ class FullSystemTest():
         logging.info(f"✅ Logs: {result} ✅ ")
         logging.info( "✅ TEST FINISHED  ✅ ")
         logging.info( "✅ ✅ ✅ ✅ ✅ ✅ ✅ ✅ ")
-
-
+        return result
 
 if __name__ == "__main__":
 
@@ -103,4 +106,5 @@ if __name__ == "__main__":
 
     fullSystemTest = FullSystemTest(mainGround)
     mainGround.set_fnc_test_callback(fullSystemTest.wait_for_text_from_air)
-    fullSystemTest.test_1()
+    result = fullSystemTest.test_1()
+    logging.info(f'\nResult: {result}')

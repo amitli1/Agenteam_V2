@@ -36,6 +36,7 @@ if __name__ == "__main__":
     res = databaseManager.get_location("junction", "1")
     df = databaseManager.get_db()
     print(df.shape)
+    print(df.columns)
     print(df.to_dict())
     #print(res)
 

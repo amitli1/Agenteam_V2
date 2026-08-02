@@ -6,6 +6,7 @@ from project_code.air.main_air import MainAir
 from project_code.app_config.settings import app_settings
 from project_code.audio.audio_pipeline import AudioPipeline
 from project_code.db.database_manager import DatabaseManager
+from project_code.ground.monitor_collector import MonitorCollector
 from project_code.llm.drone_navigation_agent import DroneNavigationAgent
 from project_code.llm.llm_command_parser import LlmCommandParser
 from project_code.llm.llm_mission_planner import MissionPlannerAgent
@@ -34,6 +35,8 @@ class MainGround:
         self.databaseManager      = DatabaseManager()
         self.DroneNavigationAgent = DroneNavigationAgent()
         self.vision_parser        = VisionParser()
+        self.monitorCollector     = MonitorCollector()
+        self.monitorCollector.start()
 
         self.last_master_quad_data = None
         self.last_slave_quad_data = None
@@ -71,6 +74,9 @@ class MainGround:
 
     def on_air_status_message(self):
         air_status_msg = request.get_json(silent=True)
+
+        self.monitorCollector.update_air_status_msg(air_status_msg)
+
         if air_status_msg['drone_role'] == 'master':
             self.last_master_quad_data = json.loads(air_status_msg['last_quad_msg'])
 
