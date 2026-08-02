@@ -1,0 +1,47 @@
+General:
+-----------
+Write web app which will show in scatter plot (lat, lon, alt OR lat, lon) positions of drones and buildings.
+
+Inputs:
+-------------
+The app will get messages (in POST):
+1. get_dataset
+    1.1 json with keys: 'entity_type', 'entity_number', 'lat', 'lon', 'alt', 'geometry'
+    1.2 'geometry' - may have one point (lat, lon) (i.e "[47.6395010,-122.141538]")
+    1.3 'geometry' - may have array of points (lat, lon) (i.e "[[47.6401410 -122.1415707, 47.6401410 -122.1409465, 47.6397875 -122.1409465, 47.6397875 -122.1415707]]")
+
+2. get_master_status
+    2.1 json with keys: 'lat', 'lon', 'alt'
+    2.2 there may have more keys in the json, but we will use only 'lat', 'lon', 'alt'
+    2.3 this message is the position of the master drone
+
+3. get_slave_status
+    3.1 json with keys: 'lat', 'lon', 'alt'
+    3.2 there may have more keys in the json, but we will use only 'lat', 'lon', 'alt'
+    3.3 this message is the position of the slave drone
+
+Display:
+    - The app will have radio button which we can move from 2D to 3D (with or without alt).
+    - The app will display in 2 table (master drone, slave drone) the messages of (get_master_status, get_slave_status).
+    - The scatter plot will have white background with black grid.
+    - The inputs from 'get_dataset' message will be displayed in blue
+    - The inputs from 'get_master_status' message will be displayed in green
+    - The inputs from 'get_slave_status' message will be displayed in red
+    - dont clear old data, just add new data to the scatter plot.
+    - display in scatter plot (not MAP)
+
+Implementation:
+-------------
+1. write the web app under monitor folder.
+2. write docker and docker-compose files to run the web app.
+3. docker-compose: the port for the web app should be 7031
+
+
+Updates:
+1. for 'get_dataset':
+    1.1 near each point (lat, lon) display the 'entity_type' and 'entity_number' in the scatter plot.
+    1.2 if 'geometry' has array of points, display the 'entity_type' and 'entity_number' near the first point of the array and connect the dots with lines to show the shape of the building.
+
+
+2. for 'get_master_status'  and 'get_slave_status':
+    2.1 connect the dots with lines to show the path of the drones.

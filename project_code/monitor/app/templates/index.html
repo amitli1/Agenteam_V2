@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Drone / Building Monitor</title>
+    <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 0;
+            padding: 16px;
+            background: #f4f4f4;
+        }
+        h1 {
+            font-size: 20px;
+            margin-bottom: 12px;
+        }
+        .controls {
+            margin-bottom: 12px;
+        }
+        .controls label {
+            margin-right: 16px;
+            font-weight: bold;
+        }
+        #plot {
+            width: 100%;
+            height: 620px;
+            background: #ffffff;
+            border: 1px solid #ccc;
+        }
+        .tables {
+            display: flex;
+            gap: 24px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        .table-box {
+            flex: 1;
+            min-width: 380px;
+        }
+        .table-box h2 {
+            font-size: 16px;
+            margin: 0 0 6px 0;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            background: #fff;
+            font-size: 13px;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 4px 8px;
+            text-align: left;
+        }
+        th {
+            background: #eee;
+        }
+        .master-color { color: green; font-weight: bold; }
+        .slave-color { color: red; font-weight: bold; }
+        .dataset-color { color: blue; font-weight: bold; }
+        .table-scroll {
+            max-height: 240px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+        }
+        .table-scroll table {
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Drone / Building Monitor</h1>
+
+    <div class="controls">
+        <label>
+            <input type="radio" name="mode" value="2d" checked> 2D (lat/lon)
+        </label>
+        <label>
+            <input type="radio" name="mode" value="3d"> 3D (lat/lon/alt)
+        </label>
+        <span class="dataset-color">&#9679; Dataset</span> &nbsp;
+        <span class="master-color">&#9679; Master drone</span> &nbsp;
+        <span class="slave-color">&#9679; Slave drone</span>
+    </div>
+
+    <div id="plot"></div>
+
+    <div class="tables">
+        <div class="table-box">
+            <h2 class="master-color">Master drone status</h2>
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr><th>Time</th><th>Lat</th><th>Lon</th><th>Alt</th></tr>
+                    </thead>
+                    <tbody id="master-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="table-box">
+            <h2 class="slave-color">Slave drone status</h2>
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr><th>Time</th><th>Lat</th><th>Lon</th><th>Alt</th></tr>
+                    </thead>
+                    <tbody id="slave-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let mode = "2d";
+
+        function getMode() {
+            const checked = document.querySelector('input[name="mode"]:checked');
+            return checked ? checked.value : "2d";
+        }
+
+        document.querySelectorAll('input[name="mode"]').forEach(el => {
+            el.addEventListener('change', () => {
+                mode = getMode();
+                render(lastSnapshot);
+            });
+        });
+
+        function makeTrace(points, name, color) {
+            const lat = points.map(p => p.lat);
+            const lon = points.map(p => p.lon);
+            const alt = points.map(p => (p.alt === null || p.alt === undefined) ? 0 : p.alt);
+
+            if (mode === "3d") {
+                return {
+                    x: lat, y: lon, z: alt,
+                    mode: 'lines+markers',
+                    type: 'scatter3d',
+                    name: name,
+                    line: { color: color },
+                    marker: { color: color, size: 4 }
+                };
+            }
+            return {
+                x: lat, y: lon,
+                mode: 'lines+markers',
+                type: 'scatter',
+                name: name,
+                line: { color: color },
+                marker: { color: color, size: 7 }
+            };
+        }
+
+        function makeDatasetTraces(groups) {
+            // Markers + label trace: one marker per point, label text only on the
+            // first point of each group (entity_type + entity_number).
+            const mLat = [], mLon = [], mAlt = [], mText = [], mHover = [];
+
+            // Shape trace: lines connecting the points of groups that have more
+            // than one point, closing the polygon back to the first point.
+            // Different groups/shapes are separated by a null entry so Plotly
+            // doesn't draw a line between unrelated shapes.
+            const sLat = [], sLon = [], sAlt = [];
+
+            (groups || []).forEach(group => {
+                const points = group.points || [];
+                const label = `${group.entity_type != null ? group.entity_type : ''} ${group.entity_number != null ? group.entity_number : ''}`.trim();
+
+                points.forEach((p, idx) => {
+                    mLat.push(p.lat);
+                    mLon.push(p.lon);
+                    mAlt.push(p.alt === null || p.alt === undefined ? 0 : p.alt);
+                    mText.push(idx === 0 ? label : '');
+                    mHover.push(label);
+                });
+
+                if (points.length > 1) {
+                    points.forEach(p => {
+                        sLat.push(p.lat);
+                        sLon.push(p.lon);
+                        sAlt.push(p.alt === null || p.alt === undefined ? 0 : p.alt);
+                    });
+                    // close the polygon back to the first point
+                    sLat.push(points[0].lat);
+                    sLon.push(points[0].lon);
+                    sAlt.push(points[0].alt === null || points[0].alt === undefined ? 0 : points[0].alt);
+                    // separator so the next shape isn't connected to this one
+                    sLat.push(null);
+                    sLon.push(null);
+                    sAlt.push(null);
+                }
+            });
+
+            if (mode === "3d") {
+                return [
+                    {
+                        x: mLat, y: mLon, z: mAlt,
+                        mode: 'markers+text',
+                        type: 'scatter3d',
+                        name: 'Dataset',
+                        text: mText,
+                        hovertext: mHover,
+                        textposition: 'top center',
+                        textfont: { color: 'blue' },
+                        marker: { color: 'blue', size: 4 }
+                    },
+                    {
+                        x: sLat, y: sLon, z: sAlt,
+                        mode: 'lines',
+                        type: 'scatter3d',
+                        name: 'Dataset shapes',
+                        line: { color: 'blue' },
+                        showlegend: false
+                    }
+                ];
+            }
+
+            return [
+                {
+                    x: mLat, y: mLon,
+                    mode: 'markers+text',
+                    type: 'scatter',
+                    name: 'Dataset',
+                    text: mText,
+                    hovertext: mHover,
+                    textposition: 'top center',
+                    textfont: { color: 'blue' },
+                    marker: { color: 'blue', size: 7 }
+                },
+                {
+                    x: sLat, y: sLon,
+                    mode: 'lines',
+                    type: 'scatter',
+                    name: 'Dataset shapes',
+                    line: { color: 'blue' },
+                    showlegend: false
+                }
+            ];
+        }
+
+        function render(snapshot) {
+            if (!snapshot) return;
+
+            const traces = [
+                ...makeDatasetTraces(snapshot.dataset_groups),
+                makeTrace(snapshot.master_points, 'Master drone', 'green'),
+                makeTrace(snapshot.slave_points, 'Slave drone', 'red'),
+            ];
+
+            const baseLayout = {
+                paper_bgcolor: '#ffffff',
+                plot_bgcolor: '#ffffff',
+                margin: { t: 20 },
+            };
+
+            let layout;
+            if (mode === "3d") {
+                layout = Object.assign({}, baseLayout, {
+                    scene: {
+                        xaxis: { title: 'Lat', gridcolor: '#000000', color: '#000000', zerolinecolor: '#000000' },
+                        yaxis: { title: 'Lon', gridcolor: '#000000', color: '#000000', zerolinecolor: '#000000' },
+                        zaxis: { title: 'Alt', gridcolor: '#000000', color: '#000000', zerolinecolor: '#000000' },
+                        bgcolor: '#ffffff'
+                    }
+                });
+            } else {
+                layout = Object.assign({}, baseLayout, {
+                    xaxis: { title: 'Lat', gridcolor: '#000000', zerolinecolor: '#000000', color: '#000000' },
+                    yaxis: { title: 'Lon', gridcolor: '#000000', zerolinecolor: '#000000', color: '#000000' },
+                });
+            }
+
+            Plotly.react('plot', traces, layout);
+        }
+
+        function fillTable(bodyId, rows) {
+            const tbody = document.getElementById(bodyId);
+            tbody.innerHTML = '';
+            rows.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${row.time}</td><td>${row.lat}</td><td>${row.lon}</td><td>${row.alt !== null && row.alt !== undefined ? row.alt : ''}</td>`;
+                tbody.appendChild(tr);
+            });
+        }
+
+        let lastSnapshot = null;
+
+        async function poll() {
+            try {
+                const resp = await fetch('/data');
+                const snapshot = await resp.json();
+                lastSnapshot = snapshot;
+                render(snapshot);
+                fillTable('master-table-body', snapshot.master_history);
+                fillTable('slave-table-body', snapshot.slave_history);
+            } catch (e) {
+                console.error('poll failed', e);
+            } finally {
+                setTimeout(poll, 1500);
+            }
+        }
+
+        poll();
+    </script>
+</body>
+</html>
+
