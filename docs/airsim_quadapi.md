@@ -1,7 +1,17 @@
 # Airsim:
 ```
 ./Blocks.sh -windowed -ResX=640 -ResY=480 -scalability=1 -t.MaxFPS=30
+
+Steps:
+1. Run Q_Ground (remote controller)
+2. cd /home/amitli/Agent_Team_Prj/Q_Ground/LinuxNoEditor
+3. ./Block ./runh -windowed -ResX=640 -ResY=480 -scalability=1 -t.MaxFPS=30
+4. cd /home/amitli/Agent_Team_Prj/Q_Ground/QuadAPI_airsim
+5.  sudo ./run_all.sh 
+
 ```
+
+
 
 # Jetson:
 ```

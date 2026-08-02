@@ -280,7 +280,7 @@ if __name__ == "__main__":
 # px4 - drone controller (first time only, saved after restart)
 # cd ~/Lin_all
 # # # http:/ks.suxNoEditor
-# ./Bloo ./runh -windowed -ResX=640 -ResY=480 -scalability=1 -t.MaxFPS=30
+# ./Block ./runh -windowed -ResX=640 -ResY=480 -scalability=1 -t.MaxFPS=30
 # # cd ~/QuadAPI_airsim
 # # sud127.0.0.1:8001/docs
 # qground - drone controller (remote control)

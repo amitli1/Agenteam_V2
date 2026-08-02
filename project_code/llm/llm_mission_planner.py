@@ -277,17 +277,15 @@ class MissionPlannerAgent:
 
     @staticmethod
     def _prepend_current_location(
-        drone_location: Dict[str, float], alt: float
+            drone_location: Dict[str, float], alt: float
     ) -> List[Tuple[float, float, float]]:
-        """Build a single-item list with the drone's current (lat, lon, alt).
-
-        Used as the starting way-point of a path so the plan reflects the
-        drone's actual current position rather than only the destination.
+        """Build the starting way-points: current position, then climb straight
+        up (same lat/lon) to the target altitude before any lateral movement.
         """
         lat = float(drone_location["lat"])
         lon = float(drone_location["lon"])
         cur_alt = float(drone_location.get("alt", alt))
-        return [(lat, lon, cur_alt)]
+        return [(lat, lon, cur_alt), (lat, lon, alt)]
 
     def _surround_waypoints(
         self, center_lat: float, center_lon: float, alt: float
