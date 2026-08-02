@@ -207,7 +207,7 @@ def simple_get_status_test():
 
 
 def simple_flight_test():
-    quadManager = QuadManager(8001, None)
+    quadManager = QuadManager(8011, None)
     #quadManager.quad_manager_ready.wait()
     #time.sleep(3)
     testerUtils = TesterUtils()
@@ -218,8 +218,8 @@ def simple_flight_test():
         if currentStatusData:
             break
 
-    total_dist_m = 150
-    climb_m = 20
+    total_dist_m = 200
+    climb_m = 30
 
     horizontal_m = math.sqrt(total_dist_m ** 2 - climb_m ** 2)  # ~45.83 m
 
@@ -275,4 +275,16 @@ if __name__ == "__main__":
 # 'flight_mode': 'HOLD'
 # 'is_mission_finished': True
 # 'mission_progress': '0/0'
+
+#
+# px4 - drone controller (first time only, saved after restart)
+# cd ~/Lin_all
+# # # http:/ks.suxNoEditor
+# ./Bloo ./runh -windowed -ResX=640 -ResY=480 -scalability=1 -t.MaxFPS=30
+# # cd ~/QuadAPI_airsim
+# # sud127.0.0.1:8001/docs
+# qground - drone controller (remote control)
+# air sim - simulation
+# run_all - quad api
+
 
