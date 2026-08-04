@@ -110,6 +110,10 @@ class FullSystemTest():
         logging.info("✅ TEST FINISHED  ✅ ")
         logging.info("✅ ✅ ✅ ✅ ✅ ✅ ✅ ✅ ")
 
+    def test_fly_to_the_moon(self):
+        self.mainGround.handle_user_text("Hey jarvis fly to the moon")
+        time.sleep(30)
+
 
 if __name__ == "__main__":
 
@@ -119,5 +123,6 @@ if __name__ == "__main__":
     fullSystemTest = FullSystemTest(mainGround)
     mainGround.set_fnc_test_callback(fullSystemTest.wait_for_text_from_air)
     #result = fullSystemTest.test_1()
-    result = fullSystemTest.test_team()
+    #result = fullSystemTest.test_team()
+    result = fullSystemTest.test_fly_to_the_moon()
     logging.info(f'\nResult: {result}')
