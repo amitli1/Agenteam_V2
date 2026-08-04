@@ -64,6 +64,13 @@ class SoundPlayerManager:
         self.queue.put(None)
         self.thread.join()
 
+    def is_intel_cpu(self) -> bool:
+        try:
+            with open("/proc/cpuinfo") as f:
+                return "GenuineIntel" in f.read()
+        except Exception:
+            return False
+
     def get_usb_audio_device(self):
         result = subprocess.run(
             ["aplay", "-l"],
@@ -83,7 +90,8 @@ class SoundPlayerManager:
                 break
 
         if card is None:
-            logging.error("USB audio device not found")
+            if not self.is_intel_cpu():
+                logging.error("USB audio device not found")
 
         return card, device
 

@@ -135,6 +135,7 @@ def warmup():
         logging.error(f'LLM warmup failed: {e}')
 
 
+
 def create_output_folder():
     folder_path = os.path.join(app_settings.logging_and_records.output_path, CURRENT_DATE)
     os.makedirs(folder_path, exist_ok=True)

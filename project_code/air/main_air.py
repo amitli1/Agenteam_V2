@@ -11,8 +11,9 @@ import time
 import requests
 from project_code.vision.vision_manager import VisionManager
 
-app = Flask(__name__)
+logging.getLogger("werkzeug").setLevel(logging.ERROR)
 
+app = Flask(__name__)
 
 class MainAir:
 
