@@ -14,3 +14,19 @@
 14. stop summary and describe
 15. instead of TTS use - wav (save what you can)
 16. when moving drone - first go up in altitude and then move to the target (avoid obstacles)
+
+
+
+under docs - write run_sim.sh which:
+
+terminal with 7 tabs:
+1. run the dockers/tts docker
+2. run the VisionSimulator docker
+3. run project_code/monitor docker
+4. /home/amitli/Agent_Team_Prj/Q_Ground/QGroundControl-x86_64.AppImage
+5.
+cd /home/amitli/Agent_Team_Prj/Q_Ground/LinuxNoEditor
+./Block.sh ./runh -windowed -ResX=640 -ResY=480 -scalability=1 -t.MaxFPS=30
+6. cd /home/amitli/Agent_Team_Prj/Q_Ground/QuadAPI_airsim
+sudo ./run_all.sh 
+7. run the dockers/air docker

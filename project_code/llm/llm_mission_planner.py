@@ -266,6 +266,14 @@ class MissionPlannerAgent:
 
         return points
 
+    # Add this helper near the other utils (e.g. next to _offset_latlon or _error)
+    @staticmethod
+    def _wps_to_json(wps: Optional[List[Tuple[float, float, float]]]) -> Optional[List[Dict[str, float]]]:
+        """Convert a list of (lat, lon, alt) tuples to a list of {'lat','lon','alt'} dicts."""
+        if wps is None:
+            return None
+        return [{"lat": lat, "lon": lon, "alt": alt} for lat, lon, alt in wps]
+
     @staticmethod
     def _offset_latlon(
         lat: float, lon: float, d_north_m: float, d_east_m: float
@@ -484,6 +492,11 @@ class MissionPlannerAgent:
             plan[TEAM_MEMBER_SLAVE] = self._prepend_current_location(
                 slave_drone_location, slave_alt
             ) + slave_wps
+
+        plan = {
+            TEAM_MEMBER_MASTER: self._wps_to_json(plan[TEAM_MEMBER_MASTER]),
+            TEAM_MEMBER_SLAVE: self._wps_to_json(plan[TEAM_MEMBER_SLAVE]),
+        }
 
         return {
             "status": "success",

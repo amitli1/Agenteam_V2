@@ -36,6 +36,12 @@ class VisionManager(object):
         )
 
     def handle_vision_command(self, vision_command, objects_to_focus):
+
+        if app_settings.vision.use_online is False:
+            logging.info(f'use_online is False, Vision command: {vision_command} - Handled')
+            return
+
+        start_time = time.time()
         if vision_command == "point":
             self.start_point(text=f"focus on {objects_to_focus}")
         elif vision_command == "hold":
@@ -47,6 +53,8 @@ class VisionManager(object):
             self.describe_summerization(objects_to_focus)
         else:
             logging.error(f"Unknown vision command: {vision_command}")
+        end_time = time.time()
+        logging.info(f'Handling vision command: {vision_command} took: {(end_time - start_time):.2f} seconds')
 
 
 
@@ -61,7 +69,7 @@ class VisionManager(object):
             return
         try:
             stop_url = f"http://{get_running_ip()}:{app_settings.vision.point_port}/api/pointing-agent/stop"
-            logging.info(f'Send pointing-agent/stop (to: {stop_url})')
+            #logging.info(f'Send pointing-agent/stop (to: {stop_url})')
             r = requests.post(stop_url, json={})
             r.raise_for_status()
             r = r.json()
@@ -124,6 +132,8 @@ class VisionManager(object):
 
             if send_video_window is False:
                 send_video_window = self.open_video_window()
+                if send_video_window:
+                    logging.info('process-video (open windows) - succeed')
 
             try:
                 r    = requests.get(f"http://{get_running_ip()}:{self.point_port}/api/pointing-agent/status", json={})

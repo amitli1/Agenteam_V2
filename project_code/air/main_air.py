@@ -19,6 +19,7 @@ class MainAir:
     def __init__(self):
 
         # --- quad
+        logging.info(f'run_as_master: {app_settings.general.run_as_master}')
         quad_port          = app_settings.general.master_quad_port if app_settings.general.run_as_master else app_settings.general.slave_quad_port
         self.quadManager   = QuadManager(quad_port, self.send_text_to_user)
 
@@ -41,10 +42,13 @@ class MainAir:
         logging.info(f'Drone role: {self.drone_role}')
 
     def send_text_to_user(self, text_to_user):
-        address    = f"http://{app_settings.general.ground_ip}:{app_settings.general.ground_port}/text_to_user"
-        drone_role = "Master" if app_settings.general.run_as_master else "Slave"
-        response   = requests.post(f"{address}", json={"drone_role": drone_role, "text_to_user": text_to_user})
-        logging.info(f"Send text: {text_to_user} to ground, response: {response.status_code}")
+        try:
+            address    = f"http://{app_settings.general.ground_ip}:{app_settings.general.ground_port}/text_to_user"
+            drone_role = "Master" if app_settings.general.run_as_master else "Slave"
+            response   = requests.post(f"{address}", json={"drone_role": drone_role, "text_to_user": text_to_user})
+            logging.info(f"Send text: {text_to_user} to ground, response: {response.status_code}")
+        except Exception as e:
+            logging.error(f'Error while sending: {text_to_user} to ground. error: {e}')
 
 
     def on_hold_objects(self, hold_status):
@@ -62,6 +66,8 @@ class MainAir:
 
     def main_air_logic(self):
 
+        print_err = False
+
         while True:
             time.sleep(1) # get message every second
             with air_share_fields.quad_last_status_data_lock:
@@ -77,17 +83,24 @@ class MainAir:
 
                 r = requests.post(ground_url, json={"drone_role": self.drone_role, "last_quad_msg": last_quad_msg})
                 r.raise_for_status()
+                print_err = False
 
             except Exception as e:
-                logging.error(f'Got exception while sending status to ground: {e}')
+                if print_err is False:
+                    logging.error(f'Got exception while sending status to ground: {e}')
+                print_err = True
 
     def on_ground_command(self):
-        data = request.get_json(silent=True)
+        start_time = time.time()
+        data       = request.get_json(silent=True)
         logging.info(f"Received request for command: {data}")
 
         if data['command'] == 'plan':
             plan_list = data['plan_list']
-            res = self.quadManager.fly_to_wp(plan_list)
+            start_quad_time = time.time()
+            res             = self.quadManager.fly_to_wp(plan_list)
+            end_quad_time   = time.time()
+            logging.info(f'Handling plan command took : {(end_quad_time - start_quad_time):.2f} seconds')
             if res is False:
                 return jsonify({"error": "error while sending wp to quad manager"}), 400
 
@@ -101,7 +114,8 @@ class MainAir:
             objects_to_focus = data['vision_command']['objects_to_focus']
             self.visionManager.handle_vision_command(vision_command, objects_to_focus)
 
-
+        end_time = time.time()
+        logging.info(f'Process on_ground_command (successfully) took : {(end_time - start_time):.2f} seconds')
         return "OK", 200
 
 

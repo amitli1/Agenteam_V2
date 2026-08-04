@@ -164,13 +164,16 @@ class MainGround:
 
                 self.last_destination = result['target']
 
-                if (result['team_member'] == "team") or (result['team_member'] == "buddy"):
-                    plan_list = result['plan']['buddy']
-                    r         = requests.post(self.master_drone_url, json={"command": "plan", "plan_list": plan_list})
-                    r.raise_for_status()
-                if (result['team_member'] == "team") or (result['team_member'] == "jarvis"):
-                    plan_list = result['plan']['jarvis']
-                    r         = requests.post(self.slave_drone_url, json={"command": "plan", "plan_list": plan_list})
+                try:
+                    if (result['team_member'] == "team") or (result['team_member'] == "buddy"):
+                        plan_list = result['plan']['buddy']
+                        r         = requests.post(self.master_drone_url, json={"command": "plan", "plan_list": plan_list})
+                        r.raise_for_status()
+                    if (result['team_member'] == "team") or (result['team_member'] == "jarvis"):
+                        plan_list = result['plan']['jarvis']
+                        r         = requests.post(self.slave_drone_url, json={"command": "plan", "plan_list": plan_list})
+                except Exception as e:
+                    logging.error(f"Error while sending plan to drone: {e}")
 
     def handle_vision_command(self, text, command):
 

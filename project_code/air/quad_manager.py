@@ -52,7 +52,7 @@ class QuadManager:
         try:
             r = requests.post(
                 url,
-                json=l_wp,
+                json=l_wp[1:],
                 headers={"accept": "application/json", "content-type": "application/json"},
                 timeout=10,  # a bit more than 5 helps when mavsdk is slow
             )
@@ -75,7 +75,9 @@ class QuadManager:
             return
 
         is_in_progress = quad_isMissionInProgress.is_set()
-        text_to_user = None
+        text_to_user   = None
+
+
         if is_in_progress:
             current, total = map(int, mission_progress.split("/"))
             if (total != 0) and (current == total):
@@ -264,11 +266,62 @@ def simple_fly_to_wp():
         print("OK")
         return True
 
+
+
+async def get_status_message(number_of_iterations):
+    quad_url = f"ws://127.0.0.1:8001/ws/drone-status"
+    async with websockets.connect(quad_url) as websocket:
+        while True:
+            try:
+                flag_connection_opened = True
+                message = await websocket.recv()
+                current_status_data = json.loads(message)
+                print(f'{current_status_data}')
+                number_of_iterations = number_of_iterations - 1
+                if number_of_iterations == 0:
+                    break
+            except Exception as e:
+                print(f'Failed to get status message: {e}')
+
+
+def fly_error():
+
+
+
+    #l_wp = [[47.641467899999995, -122.1401648, -0.0010000000474974513], [47.641467899999995, -122.1401648, 20.0], [47.640141, -122.1415707, 20.0]]
+    # l_wp = [[47.641467899999995, -122.1401648, 50.0]]
+    #
+    # l_wp = [
+    #     {
+    #         "lat": 47.641467899999995,
+    #         "lon": -122.1401648,
+    #         "alt": 50.0
+    #     }
+    #
+    l_wp = [{"lat": 47.641467899999995, "lon": -122.1401648, "alt": 20.0},
+            {"lat":47.640141, "lon": -122.1415707, "alt": 20.0}]
+    target_ip = "127.0.0.1"
+    quad_port = 8001
+    url = f"http://{target_ip}:{quad_port}/mission"
+    try:
+        r = requests.post(
+            url,
+            json=l_wp,
+            headers={"accept": "application/json", "content-type": "application/json"},
+            timeout=10,  # a bit more than 5 helps when mavsdk is slow
+        )
+        print(f"r.status_code == {r.status_code}")
+    except Exception as e:
+        print(e)
+
+
 if __name__ == "__main__":
 
-    # {'timestamp': 1784451253894, 'is_armed': False, 'flight_mode': 'HOLD', 'lat': 47.6414678, 'lon': -122.14016489999999, 'alt': -0.012000000104308128, 'yaw': 187.4424285888672, 'horizontal_velocity': 0.0, 'vertical_velocity': 0.0, 'battery_voltage': 16.200000762939453, 'in_air': False, 'is_mission_finished': True, 'mission_progress': '0/0', 'last_mission_estimated_time': 'No mission yet', 'last_mission_waypoint': None}
+    asyncio.run(get_status_message(1))
+    fly_error()
+    asyncio.run(get_status_message(60))
     #simple_get_status_test()
-    simple_flight_test()
+    #simple_flight_test()
     #simple_fly_to_wp()
 
 # No mistion:
@@ -283,6 +336,8 @@ if __name__ == "__main__":
 # ./Block ./runh -windowed -ResX=640 -ResY=480 -scalability=1 -t.MaxFPS=30
 # # cd ~/QuadAPI_airsim
 # # sud127.0.0.1:8001/docs
+
+#
 # qground - drone controller (remote control)
 # air sim - simulation
 # run_all - quad api

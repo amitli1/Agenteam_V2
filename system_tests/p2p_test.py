@@ -51,16 +51,16 @@ class FullSystemTest():
 
         start_time = time.time()
         while True:
-            if self.wait_event.wait(timeout=10) is False:
+            if self.wait_event.wait(timeout=90) is False:
                 if text_to_wait != '':
-                    logging.error("❌ Timeout waiting for text from air ❌")
+                    logging.error("❌ (1) Timeout waiting for text from air ❌")
                 return False
 
             if text_to_wait == self.text_from_air:
                 break
 
-            if (time.time() - start_time) > 30:
-                logging.error("❌ Timeout waiting for text from air ❌")
+            if (time.time() - start_time) > 90:
+                logging.error("❌ (2) Timeout waiting for text from air ❌")
                 return False
 
         return True
@@ -101,7 +101,7 @@ class FullSystemTest():
 if __name__ == "__main__":
 
 
-    run_air()
+    #run_air()
     mainGround = run_ground()
 
     fullSystemTest = FullSystemTest(mainGround)

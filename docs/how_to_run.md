@@ -5,10 +5,15 @@
 Steps:
 1. Run Q_Ground (remote controller)
 2. cd /home/amitli/Agent_Team_Prj/Q_Ground/LinuxNoEditor
-3. ./Block ./runh -windowed -ResX=640 -ResY=480 -scalability=1 -t.MaxFPS=30
+3. ./Block.sh ./runh -windowed -ResX=640 -ResY=480 -scalability=1 -t.MaxFPS=30
 4. cd /home/amitli/Agent_Team_Prj/Q_Ground/QuadAPI_airsim
 5.  sudo ./run_all.sh 
 
+```
+
+# Air:
+```
+udo docker compose -f docker-compose.air-intel.yml up --build
 ```
 
 
@@ -28,4 +33,12 @@ sudo docker compose -f docker-compose.tts-intel.yml up
 # failed to set up container networking:
 ```
 docker compose down --remove-orphans
+```
+
+# Quad:
+```
+when finished:
+is_mission_finished = True (and flight_mode': 'HOLD')
+flight_mode = 'HOLD' (from flight_mode': 'MISSION')
+mission_progress='2/2' (and flight_mode': 'HOLD')
 ```
