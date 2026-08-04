@@ -88,12 +88,12 @@ class MainGround:
 
 
         elif air_status_msg['drone_role'] == 'slave':
-            self.last_slave_quad_data = air_status_msg['last_quad_msg']
+            self.last_slave_quad_data = json.loads(air_status_msg['last_quad_msg'])
 
-            self.slave_drone_location = {'lat': self.last_master_quad_data['lat'],
-                                          'lon': self.last_master_quad_data['lon'],
-                                          'alt': self.last_master_quad_data['alt'],
-                                          'yaw': self.last_master_quad_data['yaw']}
+            self.slave_drone_location = {'lat': self.last_slave_quad_data['lat'],
+                                          'lon': self.last_slave_quad_data['lon'],
+                                          'alt': self.last_slave_quad_data['alt'],
+                                          'yaw': self.last_slave_quad_data['yaw']}
 
         else:
             logging.error(f"Got unknown drone role: {air_status_msg['drone_role']}")

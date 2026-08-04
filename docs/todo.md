@@ -13,8 +13,11 @@
 13. run wtih wake word (buddy and team) 
 14. stop summary and describe
 15. instead of TTS use - wav (save what you can)
-16. when moving drone - first go up in altitude and then move to the target (avoid obstacles)
+16. take the alt (drone 1 and 2) to get into from jetson_1
+ 
 
+Did:
+1. when moving drone - first get to alt and then to destination
 
 
 under docs - write run_sim.sh which:

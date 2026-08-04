@@ -104,7 +104,7 @@ class QuadManager:
 
     async def receive_drone_status(self):
 
-
+        logging.info(f'Start receive_drone_status thread on port: {self.quad_url}')
         flag_connection_opened = False
         flag_first_msg         = False
 
@@ -268,15 +268,15 @@ def simple_fly_to_wp():
 
 
 
-async def get_status_message(number_of_iterations):
-    quad_url = f"ws://127.0.0.1:8001/ws/drone-status"
+async def get_status_message(number_of_iterations, port):
+    quad_url = f"ws://127.0.0.1:{port}/ws/drone-status"
     async with websockets.connect(quad_url) as websocket:
         while True:
             try:
                 flag_connection_opened = True
                 message = await websocket.recv()
                 current_status_data = json.loads(message)
-                print(f'{current_status_data}')
+                print(f'[port: {port}] {current_status_data}')
                 number_of_iterations = number_of_iterations - 1
                 if number_of_iterations == 0:
                     break
@@ -315,11 +315,18 @@ def fly_error():
         print(e)
 
 
+async def async_run_code():
+    await asyncio.gather(
+        get_status_message(5, port=8001),
+        get_status_message(5, port=8011),
+    )
 if __name__ == "__main__":
+    asyncio.run(async_run_code())
+    time.sleep(5)
 
-    asyncio.run(get_status_message(1))
-    fly_error()
-    asyncio.run(get_status_message(60))
+    #fly_error()
+    #asyncio.run(get_status_message(60, port=8001))
+
     #simple_get_status_test()
     #simple_flight_test()
     #simple_fly_to_wp()

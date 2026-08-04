@@ -98,13 +98,26 @@ class FullSystemTest():
         logging.info( "✅ ✅ ✅ ✅ ✅ ✅ ✅ ✅ ")
         return result
 
+    def test_team(self):
+        self.mainGround.handle_user_text("Hey team go to building number one")
+        if self.check_if_step_finished_successfully('I have reached the destination.') is False:
+            return False
+        mainGround.handle_user_text("team, return home")
+        result = self.check_errors_in_log()
+
+        logging.info("✅ ✅ ✅ ✅ ✅ ✅ ✅ ✅ ")
+        logging.info(f"✅ Logs: {result} ✅ ")
+        logging.info("✅ TEST FINISHED  ✅ ")
+        logging.info("✅ ✅ ✅ ✅ ✅ ✅ ✅ ✅ ")
+
+
 if __name__ == "__main__":
 
 
     #run_air()
     mainGround = run_ground()
-
     fullSystemTest = FullSystemTest(mainGround)
     mainGround.set_fnc_test_callback(fullSystemTest.wait_for_text_from_air)
-    result = fullSystemTest.test_1()
+    #result = fullSystemTest.test_1()
+    result = fullSystemTest.test_team()
     logging.info(f'\nResult: {result}')

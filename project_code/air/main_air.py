@@ -23,6 +23,7 @@ class MainAir:
         logging.info(f'run_as_master: {app_settings.general.run_as_master}')
         quad_port          = app_settings.general.master_quad_port if app_settings.general.run_as_master else app_settings.general.slave_quad_port
         self.quadManager   = QuadManager(quad_port, self.send_text_to_user)
+        self.quad_port     = quad_port
 
         # ground rest api:
         app.add_url_rule("/ground_command", view_func=self.on_ground_command, methods=["POST"], )
@@ -47,7 +48,7 @@ class MainAir:
             address    = f"http://{app_settings.general.ground_ip}:{app_settings.general.ground_port}/text_to_user"
             drone_role = "Master" if app_settings.general.run_as_master else "Slave"
             response   = requests.post(f"{address}", json={"drone_role": drone_role, "text_to_user": text_to_user})
-            logging.info(f"Send text: {text_to_user} to ground, response: {response.status_code}")
+            logging.info(f"[port: {self.quad_port}] Send text: {text_to_user} to ground, response: {response.status_code}")
         except Exception as e:
             logging.error(f'Error while sending: {text_to_user} to ground. error: {e}')
 
@@ -63,6 +64,7 @@ class MainAir:
 
     def start_air(self):
         air_port = app_settings.general.master_air_port if app_settings.general.run_as_master else app_settings.general.slave_air_port
+        logging.info(f'Start air on port: {air_port}')
         app.run(host="0.0.0.0", port=air_port, debug=False)
 
     def main_air_logic(self):
