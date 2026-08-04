@@ -23,6 +23,7 @@ import numpy as np
 from flask import Flask, jsonify, request
 
 init_logger()
+logging.getLogger("werkzeug").setLevel(logging.ERROR)
 
 app = Flask(__name__)
 
