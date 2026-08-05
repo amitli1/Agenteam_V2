@@ -104,6 +104,17 @@ class MainGround:
         return "OK", 200
 
     def run_tts(self, text_to_user):
+
+        if "OK Flying to the destination" in text_to_user:
+            SoundPlayerManager().get_file_queue().put(f"{app_settings.database.audio_files}/OK_Flying_to_the_destination.wav")
+            return True
+        elif "Hold on, still flying" in text_to_user:
+            SoundPlayerManager().get_file_queue().put(f"{app_settings.database.audio_files}/hold_on_still_flying.wav")
+            return True
+        elif "I have reached the destination." in text_to_user:
+            SoundPlayerManager().get_file_queue().put(f"{app_settings.database.audio_files}/I_have_reached_the_destination.wav")
+            return True
+
         try:
             response = requests.post(f"http://{get_running_ip()}:8002/synthesize/", json={"text": text_to_user})
             data = response.json()

@@ -104,12 +104,16 @@ class MainAir:
             res             = self.quadManager.fly_to_wp(plan_list)
             end_quad_time   = time.time()
             logging.info(f'Handling plan command took : {(end_quad_time - start_quad_time):.2f} seconds')
-            if res is False:
+            if res:
+                self.send_text_to_user("OK Flying to the destination")
+            else:
                 return jsonify({"error": "error while sending wp to quad manager"}), 400
 
         elif data['command'] == 'home':
             res = self.quadManager.call_back_home()
-            if res is False:
+            if res:
+                self.send_text_to_user("OK Flying to the destination")
+            else:
                 return jsonify({"error": "error while sending wp to quad manager"}), 400
 
         elif data['command'] == 'vision':

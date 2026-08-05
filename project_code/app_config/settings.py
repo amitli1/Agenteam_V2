@@ -43,6 +43,7 @@ class Logging_and_records(BaseModel):
 
 class DataBase(BaseModel):
     db_path: str
+    audio_files: str
 
 class Vision(BaseModel):
     use_online: bool

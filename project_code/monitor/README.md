@@ -20,14 +20,15 @@ messages of the master and slave drones in two tables.
     the shape.
 
 - `POST /get_master_status`
-  - JSON body keys (at least): `lat`, `lon`, `alt`
-  - Added to the scatter plot in **green** and appended to the master table.
+  - JSON body keys (at least): `lat`, `lon`, `alt` (any extra fields are kept too).
+  - Added to the scatter plot in **green** and stored as the master status.
 
 - `POST /get_slave_status`
-  - JSON body keys (at least): `lat`, `lon`, `alt`
-  - Added to the scatter plot in **red** and appended to the slave table.
+  - JSON body keys (at least): `lat`, `lon`, `alt` (any extra fields are kept too).
+  - Added to the scatter plot in **red** and stored as the slave status.
 
 - `GET /data` - JSON snapshot of all accumulated points/history (polled by the UI).
+- `POST /clear` - clears all accumulated data (scatter plot points and tables).
 - `GET /` - the web UI.
 
 ## UI
@@ -35,9 +36,13 @@ messages of the master and slave drones in two tables.
 - Radio button to switch the scatter plot between **2D** (lat/lon) and
   **3D** (lat/lon/alt).
 - White background scatter plot with a black grid.
-- Two tables showing the history of `get_master_status` / `get_slave_status`
-  messages.
-- Old data is never cleared - new points/rows are only appended.
+- **Clear** button - clears all samples from the scatter plot and both tables.
+- Two tables (Master drone status / Slave drone status), each with two
+  columns (**Field**, **Value**), showing every field/value from the most
+  recent `get_master_status` / `get_slave_status` message (not just
+  lat/lon/alt).
+- Old data is never cleared automatically - new points/rows are only
+  appended, until the **Clear** button is pressed.
 
 ## Run locally
 
