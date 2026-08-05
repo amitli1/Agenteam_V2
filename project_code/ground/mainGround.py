@@ -144,6 +144,11 @@ class MainGround:
         return "OK", 200
 
     def start_ground(self):
+
+        if self.databaseManager.check_if_db_is_valid() is False:
+            logging.error('Fix Dataset and then try again')
+            return
+
         self.audio_thread = threading.Thread(
             target=self.audioPipeline.run_audio_pipeline,
             daemon=True,

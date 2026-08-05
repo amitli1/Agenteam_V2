@@ -43,6 +43,7 @@ class Logging_and_records(BaseModel):
 
 class DataBase(BaseModel):
     db_path: str
+    max_area_in_meters: int
     audio_files: str
 
 class Vision(BaseModel):
