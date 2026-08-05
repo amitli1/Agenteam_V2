@@ -7,7 +7,7 @@ import logging
 import os
 import pyaudio
 from pydub import AudioSegment
-
+import math
 from openai import OpenAI
 
 from project_code.app_config.settings import app_settings
@@ -16,6 +16,44 @@ import re
 
 from project_code.utils.sound_player import SoundPlayerManager
 
+
+
+
+
+def distance_meters(point1: dict, point2: dict) -> float:
+    """
+    Calculate the 3D distance between two GPS points.
+
+    Args:
+        point1: {"lat": float, "lon": float, "alt": float}
+        point2: {"lat": float, "lon": float, "alt": float}
+
+    Returns:
+        Distance in meters (float).
+    """
+    R = 6371000.0  # Earth's mean radius in meters
+
+    lat1 = math.radians(point1["lat"])
+    lon1 = math.radians(point1["lon"])
+    lat2 = math.radians(point2["lat"])
+    lon2 = math.radians(point2["lon"])
+
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+
+    # Haversine formula
+    a = (
+        math.sin(dlat / 2) ** 2
+        + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2) ** 2
+    )
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    horizontal_distance = R * c
+
+    # Altitude difference
+    altitude_difference = point2["alt"] - point1["alt"]
+
+    # 3D distance
+    return math.sqrt(horizontal_distance**2 + altitude_difference**2)
 
 def check_models():
 
