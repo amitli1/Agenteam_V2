@@ -13,7 +13,10 @@ lets the UI draw the polygon shape (connecting the dots) and place a
 single label near the first point of each group.
 
 Also keeps the raw message history for the master/slave tables shown
-in the UI.
+in the UI, and the full raw payload of the most recent master/slave
+status message (used to render a "field name / value" table).
+
+`clear_all()` resets everything so the UI can start from scratch.
 """
 
 import threading
@@ -30,6 +33,12 @@ slave_points = []
 # Raw message history (for the two tables), each row: {"time": str, "lat": ..., "lon": ..., "alt": ...}
 master_history = []
 slave_history = []
+
+# Full raw payload of the most recent 'get_master_status' / 'get_slave_status'
+# message (all fields, not only lat/lon/alt), plus its timestamp.
+# Used to render the "field name / value" status tables in the UI.
+master_latest = {}
+slave_latest = {}
 
 
 def _now():
@@ -48,16 +57,43 @@ def add_dataset_group(points, entity_type=None, entity_number=None):
         })
 
 
-def add_master_status(lat, lon, alt):
+def add_master_status(lat, lon, alt, raw=None):
+    global master_latest
     with _lock:
         master_points.append({"lat": lat, "lon": lon, "alt": alt})
         master_history.append({"time": _now(), "lat": lat, "lon": lon, "alt": alt})
+        latest = dict(raw) if raw else {}
+        latest.setdefault("lat", lat)
+        latest.setdefault("lon", lon)
+        latest.setdefault("alt", alt)
+        latest["time"] = _now()
+        master_latest = latest
 
 
-def add_slave_status(lat, lon, alt):
+def add_slave_status(lat, lon, alt, raw=None):
+    global slave_latest
     with _lock:
         slave_points.append({"lat": lat, "lon": lon, "alt": alt})
         slave_history.append({"time": _now(), "lat": lat, "lon": lon, "alt": alt})
+        latest = dict(raw) if raw else {}
+        latest.setdefault("lat", lat)
+        latest.setdefault("lon", lon)
+        latest.setdefault("alt", alt)
+        latest["time"] = _now()
+        slave_latest = latest
+
+
+def clear_all():
+    """Reset all accumulated data (scatter plot points and tables)."""
+    global master_latest, slave_latest
+    with _lock:
+        dataset_groups.clear()
+        master_points.clear()
+        slave_points.clear()
+        master_history.clear()
+        slave_history.clear()
+        master_latest = {}
+        slave_latest = {}
 
 
 def snapshot():
@@ -68,6 +104,8 @@ def snapshot():
             "slave_points": list(slave_points),
             "master_history": list(master_history),
             "slave_history": list(slave_history),
+            "master_latest": dict(master_latest),
+            "slave_latest": dict(slave_latest),
         }
 
 

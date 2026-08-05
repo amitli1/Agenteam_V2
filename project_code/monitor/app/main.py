@@ -6,6 +6,7 @@ Flask server exposing:
   POST /get_master_status  - add master drone position (green)
   POST /get_slave_status   - add slave drone position (red)
   GET  /data                - JSON snapshot of all accumulated data (polled by the UI)
+  POST /clear                - clear all accumulated data (scatter plot + tables)
   GET  /                    - the web UI (scatter plot + tables)
 
 Run standalone with:
@@ -109,7 +110,7 @@ def get_master_status():
     if lat is None or lon is None:
         return jsonify({"status": "error", "message": "lat/lon required"}), 400
 
-    state.add_master_status(lat, lon, alt)
+    state.add_master_status(lat, lon, alt, raw=payload)
     logger.info(f"get_master_status: lat={lat} lon={lon} alt={alt}")
     return jsonify({"status": "ok"})
 
@@ -125,7 +126,7 @@ def get_slave_status():
     if lat is None or lon is None:
         return jsonify({"status": "error", "message": "lat/lon required"}), 400
 
-    state.add_slave_status(lat, lon, alt)
+    state.add_slave_status(lat, lon, alt, raw=payload)
     logger.info(f"get_slave_status: lat={lat} lon={lon} alt={alt}")
     return jsonify({"status": "ok"})
 
@@ -133,6 +134,14 @@ def get_slave_status():
 @app.route("/data", methods=["GET"])
 def data():
     return jsonify(state.snapshot())
+
+
+@app.route("/clear", methods=["POST"])
+@app.route("/clear/", methods=["POST"])
+def clear():
+    state.clear_all()
+    logger.info("clear: all data cleared")
+    return jsonify({"status": "ok"})
 
 
 @app.route("/", methods=["GET"])

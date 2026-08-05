@@ -25,9 +25,10 @@ class MonitorCollector:
 
         quad_data = json.loads(air_status_msg['last_quad_msg'])
 
-        drone_location = {'lat': quad_data['lat'],
-                          'lon': quad_data['lon'],
-                          'alt': quad_data['alt']}
+        # drone_location = {'lat': quad_data['lat'],
+        #                   'lon': quad_data['lon'],
+        #                   'alt': quad_data['alt']}
+        drone_location = quad_data
 
         if air_status_msg['drone_role'] == 'master':
             response = requests.post(f"http://{get_running_ip()}:7031/get_master_status/", json=drone_location)
