@@ -145,10 +145,11 @@ class SoundPlayerManager:
                 time.sleep(0.1)
 
             if run_ok_flag:
-                time.sleep(0.1)
-                logging.info(f'Remove file: {file_path}')
-                os.remove(file_path)
-                break
+                if "generated_audio_" in file_path:
+                    time.sleep(0.1)
+                    logging.info(f'Remove file: {file_path}')
+                    os.remove(file_path)
+                    break
             else:
                 card, device = self.get_usb_audio_device()
                 logging.warning(f'Didnt play file: {file_path}')

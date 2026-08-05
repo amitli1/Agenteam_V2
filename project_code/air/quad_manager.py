@@ -107,6 +107,7 @@ class QuadManager:
         logging.info(f'Start receive_drone_status thread on port: {self.quad_url}')
         flag_connection_opened = False
         flag_first_msg         = False
+        flag_log_error         = False
 
         while True:
             try:
@@ -122,6 +123,7 @@ class QuadManager:
                                     logging.info(f'Got first quad message: {message}')
 
                             flag_first_msg         = True
+                            flag_log_error         = False
 
                             current_status_data = json.loads(message)
 
@@ -144,7 +146,9 @@ class QuadManager:
 
 
                         except Exception as e:
-                            logging.error(f'Error while receiving message: {e}')
+                            if flag_log_error is False:
+                                logging.error(f'Error while receiving message: {e}')
+                            flag_log_error = True
 
             except Exception as e:
                 if flag_connection_opened:
