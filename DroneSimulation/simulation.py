@@ -19,11 +19,13 @@ import logging
 import math
 import time
 from pathlib import Path
-from typing import Any, List, Optional
+from typing import List, Optional
 
 import uvicorn
 import yaml
-from fastapi import Body, FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import Body, FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, model_validator
 
 logging.basicConfig(
     level=logging.INFO,
@@ -41,18 +43,28 @@ def load_config() -> dict:
 
 
 
-def _normalize_waypoint(wp) -> dict:
-    """Accept a waypoint either as {"lat":.., "lon":.., "alt":..} or as a
-    plain (lat, lon, alt) list/tuple (as sent by QuadManager.fly_to_wp)."""
-    if isinstance(wp, dict):
-        return {"lat": float(wp["lat"]), "lon": float(wp["lon"]), "alt": float(wp["alt"])}
-    if isinstance(wp, (list, tuple)) and len(wp) == 3:
-        lat, lon, alt = wp
-        return {"lat": float(lat), "lon": float(lon), "alt": float(alt)}
-    raise HTTPException(
-        status_code=422,
-        detail=f"Invalid waypoint format: {wp!r}. Expected {{lat, lon, alt}} or [lat, lon, alt].",
-    )
+class Waypoint(BaseModel):
+    """A single mission waypoint: {"lat": .., "lon": .., "alt": ..}.
+
+    Also accepts the plain [lat, lon, alt] list/tuple form (as sent by
+    QuadManager.fly_to_wp / some legacy callers) for backward compatibility.
+    """
+
+    lat: float
+    lon: float
+    alt: float
+
+    @model_validator(mode="before")
+    @classmethod
+    def _accept_list_form(cls, value):
+        if isinstance(value, (list, tuple)):
+            if len(value) != 3:
+                raise ValueError(
+                    f"Invalid waypoint format: {value!r}. Expected [lat, lon, alt]."
+                )
+            lat, lon, alt = value
+            return {"lat": lat, "lon": lon, "alt": alt}
+        return value
 
 
 def _bearing(a: dict, b: dict) -> float:
@@ -212,11 +224,50 @@ drone = DroneState(config)
 
 app = FastAPI(title="Drone Simulation")
 
+# Allow any origin/host to connect (REST + WebSocket). Without this, some
+# browser based clients would be blocked; it has no effect on plain python
+# `websockets`/`requests` clients but is a safe, harmless default here.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+@app.get("/health")
+async def health():
+    """Simple liveness/readiness probe, also useful to verify the REST API
+    (and therefore the port/network path) is reachable before debugging the
+    WebSocket endpoint."""
+    return {"status": "ok"}
+
+
+
+MISSION_EXAMPLE = [
+    {"lat": 47.641467, "lon": -122.140165, "alt": 10.0},
+    {"lat": 47.642796, "lon": -122.139558, "alt": 20.0},
+]
 
 
 @app.post("/mission")
-async def post_mission(waypoints: List[Any] = Body(...)):
-    wp_dicts = [_normalize_waypoint(wp) for wp in waypoints]
+async def post_mission(
+    waypoints: List[Waypoint] = Body(
+        ...,
+        openapi_examples={
+            "default": {
+                "summary": "List of waypoints",
+                "value": MISSION_EXAMPLE,
+            }
+        },
+    )
+):
+    """Start a mission. Body must be a JSON array of waypoints, e.g.:
+
+    [{"lat": .., "lon": .., "alt": ..}, {"lat": .., "lon": .., "alt": ..}, ...]
+    """
+    wp_dicts = [wp.model_dump() for wp in waypoints]
     await drone.start_mission(wp_dicts)
     return {"status": "ok", "total_waypoints": len(wp_dicts)}
 
@@ -229,20 +280,32 @@ async def post_return():
 
 @app.websocket("/ws/drone-status")
 async def ws_drone_status(websocket: WebSocket):
-    await websocket.accept()
-    logger.info("Telemetry client connected")
+    client = websocket.client
+    try:
+        await websocket.accept()
+    except Exception:
+        logger.exception(f"Failed to accept WebSocket handshake from {client}")
+        return
+
+    logger.info(f"Telemetry client connected: {client}")
     try:
         while True:
             await websocket.send_json(drone.telemetry())
             await asyncio.sleep(1.0)
     except WebSocketDisconnect:
-        logger.info("Telemetry client disconnected")
+        logger.info(f"Telemetry client disconnected: {client}")
+    except Exception:
+        logger.exception(f"Telemetry loop error for client {client}")
 
 
 def main():
     port = int(config["quad_port"])
     logger.info(f"Starting drone simulation on port {port}")
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    logger.info(
+        f"REST:      http://0.0.0.0:{port}/mission | /return | /health\n"
+        f"WebSocket: ws://0.0.0.0:{port}/ws/drone-status"
+    )
+    uvicorn.run(app, host="0.0.0.0", port=port, ws="auto", log_level="info")
 
 
 if __name__ == "__main__":

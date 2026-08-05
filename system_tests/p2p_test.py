@@ -65,25 +65,42 @@ class FullSystemTest():
 
         return True
 
+    def log_test_step(self, step_description):
+        lines = str(step_description).splitlines()
+        width = max(len(line) for line in lines)
+
+        logging.info("┌" + "─" * (width + 2) + "┐")
+        for line in lines:
+            logging.info(f"│ {line:<{width}} │")
+        logging.info("└" + "─" * (width + 2) + "┘")
 
     def test_1(self):
 
+
+        self.log_test_step("Hey buddy go to building number one")
         self.mainGround.handle_user_text("Hey buddy go to building number one")
         if self.check_if_step_finished_successfully('I have reached the destination.') is False:
             return False
 
+        self.log_test_step("Hey buddy point to the car or weapons")
         mainGround.handle_user_text("Hey buddy point to the car or weapons")
 
+        self.log_test_step("buddy, surround the building and tell me what you see")
         mainGround.handle_user_text("buddy, surround the building and tell me what you see")
+
+        self.log_test_step('what should I look for ?')
         if self.check_if_step_finished_successfully('what should I look for ?') is True:
 
+            self.log_test_step("buddy, look for people and weapons")
             mainGround.handle_user_text("buddy, look for people and weapons")
 
             if self.check_if_step_finished_successfully('I have reached the destination.') is False:
                 return False
 
+            self.log_test_step("buddy, describe")
             mainGround.handle_user_text("buddy, describe")
 
+            self.log_test_step("buddy, return home")
             mainGround.handle_user_text("buddy, return home")
 
             result = self.check_errors_in_log()
@@ -122,7 +139,7 @@ if __name__ == "__main__":
     mainGround = run_ground()
     fullSystemTest = FullSystemTest(mainGround)
     mainGround.set_fnc_test_callback(fullSystemTest.wait_for_text_from_air)
-    #result = fullSystemTest.test_1()
+    result = fullSystemTest.test_1()
     #result = fullSystemTest.test_team()
-    result = fullSystemTest.test_fly_to_the_moon()
+    #result = fullSystemTest.test_fly_to_the_moon()
     logging.info(f'\nResult: {result}')
