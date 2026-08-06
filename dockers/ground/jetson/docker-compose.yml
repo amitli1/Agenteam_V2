@@ -1,12 +1,12 @@
 version: "3.9"
 
 services:
-  air:
+  ground:
     build:
       context: ../../..
-      dockerfile: dockers/air/jetson/Dockerfile
-    image: operator_station-air # see under docker images
-    container_name: operator_station-air-container
+      dockerfile: dockers/ground/jetson/Dockerfile
+    image: operator_station-ground # see under docker images
+    container_name: operator_station-ground-container
 
     # Match host user and group for PulseAudio permissions
     user: "${UID}:${GID}"
@@ -36,7 +36,7 @@ services:
 
     working_dir: /app/project_code
 
-    command: python3 air/main_air.py
+    command: python3 ground/mainGround.py
 
 
     # Optional: restart automatically if it crashes
