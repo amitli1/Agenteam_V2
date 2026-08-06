@@ -18,6 +18,7 @@ services:
     # Environment variable tells apps where the PulseAudio socket is
     environment:
       - PULSE_SERVER=unix:/run/user/1000/pulse/native
+      - PYTHONPATH=/app
 
     # Mount the PulseAudio socket and needed folders
     volumes:
@@ -33,9 +34,9 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
-    working_dir: /app
+    working_dir: /app/project_code
 
-    command: python3 project_code/air/main_air.py
+    command: python3 air/main_air.py
 
 
     # Optional: restart automatically if it crashes
