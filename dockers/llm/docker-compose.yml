@@ -17,12 +17,12 @@ services:
       - bash
       - -c
       - |
-        sleep 1 && python3 -m vllm.entrypoints.openai.api_server \
-          --model /models/openai-gpt-oss-20b \
-          --dtype bfloat16 \
-          --gpu-memory-utilization 0.90 \
-          --max-model-len 32768 \
-          --port 8090
+          sleep 1
+          python3 -m vllm.entrypoints.openai.api_server \
+            --model /models/openai-gpt-oss-20b \
+            --gpu-memory-utilization 0.90 \
+            --max-model-len 32768 \
+            --port 8090
 
     volumes:
       - /mnt/nvme/repo/Agenteam_V2/dockers/llm:/models
