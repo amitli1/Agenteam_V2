@@ -11,8 +11,12 @@ import os
 import glob
 
 import uvicorn
+
+from project_code.app_config.settings import app_settings
+
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
-from app_config.settings import app_settings
+
+
 
 app    = FastAPI()
 logger = logging.getLogger()
