@@ -40,7 +40,8 @@ class MainGround:
         self.monitorCollector.start()
 
         self.last_master_quad_data = None
-        self.last_slave_quad_data = None
+        self.last_slave_quad_data  = None
+        self.flask_groundthread    = None
 
         app.add_url_rule("/get_to_destination", view_func=self.on_air_get_to_destination, methods=["POST"], )
         app.add_url_rule("/status",view_func=self.on_air_status_message,methods=["POST"],)
@@ -279,18 +280,24 @@ def run_ground():
     SoundPlayerManager().start()
 
     mainGround = MainGround()
-    flask_groundthread = threading.Thread(
+    mainGround.flask_groundthread = threading.Thread(
         target=lambda: app.run(host="0.0.0.0", port=app_settings.general.ground_port, use_reloader=False),
         daemon=True,
     )
-    flask_groundthread.start()
+    mainGround.flask_groundthread.start()
+    logging.info('Waiting for first message from AIR, before continue')
     mainGround.status_received_event.wait()
+    logging.info('Got first message from AIR, continue')
     return mainGround
 
 
 
 
 if __name__ == "__main__":
-    run_ground()
+    mainGround = run_ground()
+    mainGround.start_ground()
+    mainGround.flask_groundthread.join()
+    mainGround.audio_thread.join()
+
     #time.sleep(10)
     #logging.info('finished')

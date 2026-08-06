@@ -28,6 +28,7 @@ python simulation.py
 
 ```bash
 docker compose up --build
+cd DroneSimulation && docker compose down && docker compose up -d
 ```
 
 ## REST API
