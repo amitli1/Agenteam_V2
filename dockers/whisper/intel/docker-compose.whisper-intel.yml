@@ -1,0 +1,30 @@
+services:
+  whisper-intel:
+    build:
+      context: ../../..
+      dockerfile: dockers/whisper/intel/Dockerfile.whisper-intel
+    image: agenteam-whisper-intel:latest
+    container_name: agenteam-whisper-intel
+    environment:
+      # GPU inference (requires the NVIDIA Container Toolkit + a compatible
+      # driver on the host). faster-whisper's CTranslate2 GPU backend
+      # supports float16.
+      - STT_DEVICE=cuda
+      - STT_COMPUTE_TYPE=float16
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+    ports:
+      # keep in sync with the port used in whisper_service.py (uvicorn.run port)
+      - "8013:8013"
+    # Expose the host GPU(s) to the container (requires the NVIDIA Container
+    # Toolkit installed on the host).
+    runtime: nvidia
+    # NOTE: the model weights are now baked into the image at build time (see
+    # Dockerfile.whisper-intel), so no volume is needed. Do NOT mount a host
+    # `models` directory here unless it is actually populated - an empty bind
+    # mount at /app/models would shadow the baked-in weights and reproduce
+    # the "Repo id must be in the form ..." crash.
+    # volumes:
+    #   - ../../../models:/app/models
+    restart: unless-stopped
+
