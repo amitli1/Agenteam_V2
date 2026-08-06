@@ -1,0 +1,41 @@
+# Dockerfile for the Kokoro TTS service (project_code/audio/tts_service.py)
+# Intel / CPU-only variant - no CUDA/NVIDIA runtime required.
+FROM python:3.11-slim
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    TTS_DEVICE=cpu \
+    PIP_NO_CACHE_DIR=1
+
+WORKDIR /app
+
+# System dependencies required by kokoro / phonemizer (espeak-ng) and audio libs.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        espeak-ng \
+        libsndfile1 \
+        git \
+        curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# CPU-only torch build (no CUDA), plus Intel Extension for PyTorch for extra
+# CPU acceleration on Intel hardware.
+RUN pip install --upgrade pip && \
+    pip install torch --index-url https://download.pytorch.org/whl/cpu && \
+    pip install intel-extension-for-pytorch
+
+# Python dependencies for the service itself.
+RUN pip install \
+        fastapi \
+        uvicorn[standard] \
+        pydantic \
+        numpy \
+        kokoro
+
+# Copy only what's needed to run the TTS service.
+COPY project_code/audio/tts_service.py /app/project_code/audio/tts_service.py
+RUN mkdir -p /app/project_code/audio && touch /app/project_code/__init__.py /app/project_code/audio/__init__.py
+
+EXPOSE 8002
+
+CMD ["python", "project_code/audio/tts_service.py"]
+

@@ -1,0 +1,15 @@
+services:
+  tts-intel:
+    build:
+      context: ../../..
+      dockerfile: dockers/tts/intel/Dockerfile.tts-intel
+    image: agenteam-tts-intel:latest
+    container_name: agenteam-tts-intel
+    environment:
+      # Force CPU inference (no CUDA/NVIDIA GPU required for this variant).
+      - TTS_DEVICE=cpu
+    ports:
+      # keep in sync with the port used in tts_service.py (uvicorn.run port)
+      - "8002:8002"
+    restart: unless-stopped
+
