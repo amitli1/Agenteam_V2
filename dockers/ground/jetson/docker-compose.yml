@@ -1,0 +1,43 @@
+version: "3.9"
+
+services:
+  ground:
+    build:
+      context: ../../..
+      dockerfile: dockers/ground/jetson/Dockerfile
+    image: operator_station-ground # see under docker images
+    container_name: operator_station-ground-container
+
+    # Match host user and group for PulseAudio permissions
+    user: "${UID}:${GID}"
+
+    # Access to audio devices
+    devices:
+      - /dev/snd
+
+    # Environment variable tells apps where the PulseAudio socket is
+    environment:
+      - PULSE_SERVER=unix:/run/user/1000/pulse/native
+      - PYTHONPATH=/app
+
+    # Mount the PulseAudio socket and needed folders
+    volumes:
+      - /mnt/nvme/repo/Agenteam_V2:/app
+      - /run/user/1000/pulse:/run/user/1000/pulse        # PulseAudio socket
+      - /mnt/nvme:/mnt/nvme                              # Audio output files
+      #- /mnt/nvme/repo/Jetson/agenteam-dockers/operator_station/openwakeword_emb_models/models:/usr/local/lib/python3.10/dist-packages/openwakeword/resources/models
+      - /mnt/nvme/outputs:/mnt/nvme/outputs
+
+    group_add:
+      - audio
+
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+    working_dir: /app/project_code
+
+    command: python3 ground/mainGround.py
+
+
+    # Optional: restart automatically if it crashes
+    #restart: unless-stopped # restart: always, unless-stopped
