@@ -9,9 +9,12 @@ import pyaudio
 import time
 from scipy.io.wavfile    import write
 
+from project_code.audio.wakeword_detection_strategies import DetectionOutcome
+from project_code.audio.wakeword_logic import WakewordLogic
+from project_code.utils.audio_utils import get_input_device, get_output_device
 from project_code.utils.logger_utils import CURRENT_DATE
 from project_code.utils.utils import get_running_ip, play_text
-
+from pathlib import Path
 
 class AudioPipeline:
 
@@ -25,82 +28,25 @@ class AudioPipeline:
             inference_framework="onnx",
             enable_speex_noise_suppression=True
         )
-        self.input_device = self.get_input_device()
-        self.output_device = self.get_output_device()
+        self.wakewordLogic = WakewordLogic()
+        self.input_device  = get_input_device()
+        self.output_device = get_output_device()
 
-        self.vad_model = load_silero_vad()
-        self.audio_buffer = deque(maxlen=10)
-        self.CHUNK = app_settings.audio.wakeword.chunk
-        self.FORMAT = pyaudio.paInt16
-        self.CHANNELS = app_settings.audio.wakeword.channels
-        self.MIC_SR = app_settings.audio.wakeword.sample_rate
-        self.audio = pyaudio.PyAudio()
-        self.mic_stream = self.audio.open(format=self.FORMAT,
+        self.vad_model     = load_silero_vad()
+        self.audio_buffer  = deque(maxlen=10)
+        self.CHUNK         = app_settings.audio.wakeword.chunk
+        self.FORMAT        = pyaudio.paInt16
+        self.CHANNELS      = app_settings.audio.wakeword.channels
+        self.MIC_SR        = app_settings.audio.wakeword.sample_rate
+        self.audio         = pyaudio.PyAudio()
+        self.mic_stream    = self.audio.open(format=self.FORMAT,
                                 channels=self.CHANNELS,
                                 rate=self.MIC_SR,
                                 input=True,
                                 input_device_index=self.input_device,
-                                frames_per_buffer=self.CHUNK)
+                                frames_per_buffer=self.CHUNK*10)
 
-    def get_support_sample_rate(self):
-        p = pyaudio.PyAudio()
 
-        for i in range(p.get_device_count()):
-            dev = p.get_device_info_by_index(i)
-            if dev['maxInputChannels'] > 0:  # is input device
-                logging.info(f"Device {i}: {dev['name']}")
-                # Try common sample rates
-                for rate in [8000, 16000, 22050, 44100, 48000, 96000]:
-                    try:
-                        if p.is_format_supported(rate,
-                                                 input_device=dev['index'],
-                                                 input_channels=int(dev['maxInputChannels']),
-                                                 input_format=pyaudio.paInt16):
-                            logging.info(f"  Supported rate: {rate} Hz")
-                    except ValueError:
-                        pass
-
-        p.terminate()
-
-    def get_input_device(self):
-        p = pyaudio.PyAudio()
-
-        for i in range(p.get_device_count()):
-            dev = p.get_device_info_by_index(i)
-            if dev['maxInputChannels'] > 0:  # is input device
-                logging.info(f"Device {i}: {dev['name']}")
-                # Try common sample rates
-                try:
-                    if p.is_format_supported(16000,
-                                             input_device=dev['index'],
-                                             input_channels=int(dev['maxInputChannels']),
-                                             input_format=pyaudio.paInt16):
-                        p.terminate()
-                        return i
-                except ValueError:
-                    pass
-
-        p.terminate()
-
-    def get_output_device(self):
-        p = pyaudio.PyAudio()
-
-        for i in range(p.get_device_count()):
-            dev = p.get_device_info_by_index(i)
-            if dev['maxOutputChannels'] > 0:  # is input device
-                logging.info(f"Device {i}: {dev['name']}")
-                # Try common sample rates
-                try:
-                    if p.is_format_supported(48000,
-                                             input_device=dev['index'],
-                                             input_channels=int(dev['maxInputChannels']),
-                                             input_format=pyaudio.paInt16):
-                        p.terminate()
-                        return i
-                except ValueError:
-                    pass
-
-        p.terminate()
 
     def capture_audio_after_wakeword(self, vad_model, last_audios, silence_threshold=1.0):
 
@@ -129,10 +75,10 @@ class AudioPipeline:
                 logging.error(f"\tError reading from audio stream. (\n{e}\n)")
                 break
 
-        elapsed_time = time.time() - start_time
+        elapsed_time   = time.time() - start_time
         recorded_audio = list(last_audios) + recorded_audio
-        full_audio = np.concatenate(recorded_audio).astype(np.float32) / 32768.0  # Normalize for Whisper
-        audio_len = len(full_audio) / 16000
+        full_audio     = np.concatenate(recorded_audio).astype(np.float32) / 32768.0  # Normalize for Whisper
+        audio_len      = len(full_audio) / 16000
         logging.info(f"[Timing] Audio capturing took {elapsed_time:.2f} seconds. [Audio len: {audio_len:.2F} sec]")
         return full_audio
 
@@ -143,9 +89,29 @@ class AudioPipeline:
         end_time = time.time()
         logging.info(f"\t[{(end_time - start_time):.2f} ms] Write audio (after wakeword) to: {output_folder}")
 
+
+    def detect_wakeword(self, mic_audio):
+        prediction = {}
+        for ww, owwModel in self.wakewordLogic.owwModels.items():
+            patience, threshold = self.wakewordLogic.wakeword_detector.configure(owwModel.models, ww)
+            prediction[ww]      = owwModel.predict(mic_audio, patience=patience, threshold=threshold)
+
+        outcome: DetectionOutcome = self.wakewordLogic.wakeword_detector.decide(prediction)
+        winner_wakeword           = (outcome.winner or "").strip()
+
+        if any(outcome.votes.values()) > 0:
+            formatted_mean_score = {k: f"{v:.3f}" for k, v in outcome.mean_score.items()}
+            logging.info(f"Votes: {outcome.votes}, Mean Score: {formatted_mean_score}")
+
+        if not winner_wakeword:
+            # Fallback: treat as Buddy (keeps old behavior if something was missing)
+            winner_wakeword = self.detected_label
+
     def run_audio_pipeline(self):
         logging.info('\n\n\nStart listen for wakeword')
         file_num          = 0
+
+        SINGLE_MODEL = False
 
         while True:
 
@@ -159,19 +125,48 @@ class AudioPipeline:
             else:
                 mic_audio = np.frombuffer(self.mic_stream.read(self.CHUNK, exception_on_overflow=False), dtype=np.int16)
                 self.audio_buffer.append(mic_audio)
-                prediction = self.owwModel.predict(mic_audio)
 
-                for mdl in prediction.keys():
-                    if prediction[mdl] >= 0.3:
-                        recorded_audio = self.capture_audio_after_wakeword(self.vad_model, self.audio_buffer)
-                        if (len(recorded_audio) / self.MIC_SR) <= 1.05:
-                            self.audio_buffer.clear()
-                            self.owwModel.reset()
-                            logging.info(
-                                f'Wake word detected with: {prediction[mdl]}% but audio is too short: {(len(recorded_audio) / MIC_SR)} seconds')
-                            break
-                        wake_word_detected = True
-                        logging.info(f'Wake word detected with: {prediction[mdl]}%')
+                if SINGLE_MODEL:
+                    prediction = self.owwModel.predict(mic_audio)
+
+                    for mdl in prediction.keys():
+                        if prediction[mdl] >= 0.3:
+                            recorded_audio = self.capture_audio_after_wakeword(self.vad_model, self.audio_buffer)
+                            if (len(recorded_audio) / self.MIC_SR) <= 1.05:
+                                self.audio_buffer.clear()
+                                self.owwModel.reset()
+                                logging.info(
+                                    f'Wake word detected with: {prediction[mdl]}% but audio is too short: {(len(recorded_audio) / MIC_SR)} seconds')
+                                break
+                            wake_word_detected = True
+                            logging.info(f'Wake word detected with: {prediction[mdl]}%')
+                else:
+                    prediction = {}
+                    for ww, owwModel in self.wakewordLogic.owwModels.items():
+                        patience, threshold = self.wakewordLogic.wakeword_detector.configure(owwModel.models, ww)
+                        prediction[ww]      = owwModel.predict(mic_audio, patience=patience, threshold=threshold)
+
+                    outcome: DetectionOutcome = self.wakewordLogic.wakeword_detector.decide(prediction)
+                    winner_wakeword = (outcome.winner or "").strip()  # "Buddy"|"HeyBuddy"|"Team"|"" (fallback handled below)
+
+                    if any(outcome.votes.values()) > 0:
+                        formatted_mean_score = {k: f"{v:.3f}" for k, v in outcome.mean_score.items()}
+                        logging.info(f"Votes: {outcome.votes}, Mean Score: {formatted_mean_score}")
+
+                        # Not triggered → keep listening
+                    if not outcome.trigger:
+                        continue
+
+                    # if not winner_wakeword:
+                    #     # Fallback: treat as Buddy (keeps old behavior if something was missing)
+                    #     winner_wakeword = self.detected_label
+
+                    for owwModel in self.wakewordLogic.owwModels.values():
+                        owwModel.reset()
+
+                    recorded_audio = self.capture_audio_after_wakeword(self.vad_model, self.audio_buffer)
+                    wake_word_detected = True
+
 
             if wake_word_detected:
                 file_num = file_num + 1
@@ -194,3 +189,12 @@ class AudioPipeline:
                 logging.info(f'[Whisper: {(end_stt - start_stt):.2f}] Text: {text}')
                 self.func_handle_user_text(text)
 
+
+
+
+if __name__ == "__main__":
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+
+    audio_pipeline = AudioPipeline(func_handle_user_text=None)
+    audio_pipeline.run_audio_pipeline()

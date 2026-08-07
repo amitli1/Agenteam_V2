@@ -17,6 +17,7 @@ class WakewordConfig(BaseModel):
     channels: int
     chunk: int
     sample_rate: int
+    models_dir: Dict[str, str]
 
 
 class AudioConfig(BaseModel):

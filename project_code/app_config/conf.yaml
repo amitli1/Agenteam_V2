@@ -14,6 +14,11 @@ audio:
     channels: 1
     chunk: 4096
     sample_rate: 16000
+    models_dir:
+      HeyBuddy: "audio/wakeword_models/hey_buddy_models"
+      Buddy: "audio/wakeword_models/buddy_models"
+      Team: "audio/wakeword_models/hey_team_models"
+      HeyJarvis: "audio/wakeword_models/hey_jarvis"
 
 speakers:
   card: -1 #use aplay -l, (-1 - the app will choose the default)
