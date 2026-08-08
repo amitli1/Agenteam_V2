@@ -92,3 +92,42 @@ vllm serve \
 ```
 curl http://localhost:8090/v1/models
 ```
+
+# Tiktoken download (~5.3MB):
+```
+mkdir -p $HOME/.cache/tiktoken
+wget -q https://openaipublic.blob.core.windows.net/encodings/cl100k_base.tiktoken -O $HOME/.cache/tiktoken/cl100k_ba
+wget -q https://openaipublic.blob.core.windows.net/encodings/o200k_base.tiktoken -O $HOME/.cache/tiktoken/o200k_base
+```
+
+# Docker params:
+```
+docker run -d \
+  --name gpt-oss-20b \
+  --runtime=nvidia \
+  --ipc=host \
+  -p 8090:8000 \
+  -v $HOME/.cache/huggingface:/root/.cache/huggingface \
+  -v $HOME/.cache/tiktoken:/etc/encodings \
+  -e TIKTOKEN_ENCODINGS_BASE=/etc/encodings \
+  ghcr.io/nvidia-ai-iot/vllm:latest-jetson-orin \
+  vllm serve openai/gpt-oss-20b \
+    --gpu-memory-utilization 0.85
+    
+    
+-d 	   	                             - detach mode (docker logs -f gpt-oss-20b)
+--name      	                             - Assigns the container the name (docker stop gpt-oss-20b, docker logs gpt-oss-20b) (Without --name, Docker generates a random name.)
+--runtime=nvidia                             - Tells Docker to use the NVIDIA container runtime (not CPU)
+--ipc=host                                   - (PyTorch/vLLM that use shared memory for communication between processes.)
+-p 8090:8000                                 - HOST_PORT:CONTAINER_PORT (listen to 8000 inside the container)
+-v HOST_PATH:CONTAINER_PATH                  - bind mount
+-e TIKTOKEN_ENCODINGS_BASE=/etc/encodings    - (Sets an environment variable inside the container.)
+vllm serve                                   - Starts the vLLM inference server.
+
+
+1. The first time you run the container, the model may be downloaded into $HOME/.cache/huggingface
+2. ghcr.io/nvidia-ai-iot/vllm:latest-jetson-orin (This is the Docker image from which the container is created.)
+3. vllm serve openai/gpt-oss-20b 
+	3.1  It tells vLLM to load the gpt-oss-20b model from the openai namespace on Hugging Face.
+	3.2 The first time it is needed, the model is downloaded into the Hugging Face cache you mounted earlier
+```
