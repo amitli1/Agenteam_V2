@@ -39,12 +39,12 @@ class AudioPipeline:
         self.CHANNELS      = app_settings.audio.wakeword.channels
         self.MIC_SR        = app_settings.audio.wakeword.sample_rate
         self.audio         = pyaudio.PyAudio()
-        self.mic_stream    = self.audio.open(format=self.FORMAT,
-                                channels=self.CHANNELS,
-                                rate=self.MIC_SR,
-                                input=True,
-                                input_device_index=self.input_device,
-                                frames_per_buffer=self.CHUNK*10)
+        self.mic_stream    = self.audio.open(format              = self.FORMAT,
+                                             channels            = self.CHANNELS,
+                                             rate                = self.MIC_SR,
+                                             input               = True,
+                                             input_device_index  = self.input_device,
+                                             frames_per_buffer   = self.CHUNK*10)
 
 
 
