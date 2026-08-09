@@ -139,6 +139,7 @@ class MainGround:
         text_to_user = msg['text_to_user']
         logging.info(f'Got text: {text_to_user} from: {drone_role}')
 
+        self.monitorCollector.update_text_to_user(drone_role, text_to_user)
         if not self.run_tts(text_to_user):
             return f"Error while sending text: {text_to_user} to TTS tool", 400
 
@@ -242,6 +243,10 @@ class MainGround:
         return l_current_command, f"{self.last_text_command} {current_text}"
 
     def handle_user_text(self, text):
+
+        self.monitorCollector.update_user_command("", text)
+
+
         l_commands       = self.llmCommandParser.split_user_command(text)
         l_commands, text = self.merge_current_and_previous_commands(l_commands, text)
 

@@ -110,6 +110,28 @@
                 </table>
             </div>
         </div>
+        <div class="table-box">
+            <h2>User command</h2>
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr><th>Command time</th><th>Drone role</th><th>Text</th></tr>
+                    </thead>
+                    <tbody id="user-command-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="table-box">
+            <h2>Text to user</h2>
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr><th>Recv time</th><th>Drone role</th><th>Text</th></tr>
+                    </thead>
+                    <tbody id="text-to-user-table-body"></tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -287,6 +309,17 @@
             });
         }
 
+        function fillHistoryTable(bodyId, rows) {
+            const tbody = document.getElementById(bodyId);
+            tbody.innerHTML = '';
+            (rows || []).forEach(row => {
+                const tr = document.createElement('tr');
+                const droneRole = (row.drone_role === null || row.drone_role === undefined) ? '' : row.drone_role;
+                tr.innerHTML = `<td>${row.time}</td><td>${droneRole}</td><td>${row.text === null || row.text === undefined ? '' : row.text}</td>`;
+                tbody.appendChild(tr);
+            });
+        }
+
         let lastSnapshot = null;
 
         async function poll() {
@@ -297,6 +330,8 @@
                 render(snapshot);
                 fillStatusTable('master-table-body', snapshot.master_latest);
                 fillStatusTable('slave-table-body', snapshot.slave_latest);
+                fillHistoryTable('user-command-table-body', snapshot.user_command_history);
+                fillHistoryTable('text-to-user-table-body', snapshot.text_to_user_history);
             } catch (e) {
                 console.error('poll failed', e);
             } finally {

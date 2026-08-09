@@ -40,9 +40,17 @@ slave_history = []
 master_latest = {}
 slave_latest = {}
 
+# User command / text-to-user history, each row: {"time": "HH:MM:SS", "text": str}
+user_command_history = []
+text_to_user_history = []
+
 
 def _now():
     return time.strftime("%Y-%m-%d %H:%M:%S")
+
+
+def _now_hms():
+    return time.strftime("%H:%M:%S")
 
 
 def add_dataset_group(points, entity_type=None, entity_number=None):
@@ -83,6 +91,16 @@ def add_slave_status(lat, lon, alt, raw=None):
         slave_latest = latest
 
 
+def add_user_command(text, drone_role=None):
+    with _lock:
+        user_command_history.append({"time": _now_hms(), "text": text, "drone_role": drone_role})
+
+
+def add_text_to_user(text, drone_role=None):
+    with _lock:
+        text_to_user_history.append({"time": _now_hms(), "text": text, "drone_role": drone_role})
+
+
 def clear_all():
     """Reset all accumulated data (scatter plot points and tables)."""
     global master_latest, slave_latest
@@ -94,6 +112,8 @@ def clear_all():
         slave_history.clear()
         master_latest = {}
         slave_latest = {}
+        user_command_history.clear()
+        text_to_user_history.clear()
 
 
 def snapshot():
@@ -106,6 +126,8 @@ def snapshot():
             "slave_history": list(slave_history),
             "master_latest": dict(master_latest),
             "slave_latest": dict(slave_latest),
+            "user_command_history": list(user_command_history),
+            "text_to_user_history": list(text_to_user_history),
         }
 
 

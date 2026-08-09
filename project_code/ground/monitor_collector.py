@@ -24,6 +24,34 @@ class MonitorCollector:
             return False
         return True
 
+    def update_user_command(self, drone_role, user_command):
+
+        try:
+            msg = {"drone_role": drone_role, "text": user_command}
+            response = requests.post(f"http://{get_running_ip()}:7031/user_command/", json=msg)
+            if response.status_code == 200:
+                logging.error(f'Error while sending data to Monitor (user_command): {response.status_code}')
+                return False
+        except Exception as e:
+            logging.error(f'Error while sending data to Monitor (user_command): {e}')
+            return False
+
+        return True
+
+    def update_text_to_user(self, drone_role, text_to_user):
+
+        try:
+            msg = {"drone_role": drone_role, "text": text_to_user}
+            response = requests.post(f"http://{get_running_ip()}:7031/text_to_user/", json=msg)
+            if response.status_code == 200:
+                logging.error(f'Error while sending data to Monitor (text_to_user): {response.status_code}')
+                return False
+        except Exception as e:
+            logging.error(f'Error while sending data to Monitor (text_to_user): {e}')
+            return False
+
+        return True
+
     def update_air_status_msg(self, air_status_msg):
 
         try:

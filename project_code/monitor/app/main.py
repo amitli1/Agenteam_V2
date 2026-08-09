@@ -5,6 +5,8 @@ Flask server exposing:
   POST /get_dataset        - add entity/building/drone dataset points (blue)
   POST /get_master_status  - add master drone position (green)
   POST /get_slave_status   - add slave drone position (red)
+  POST /user_command        - add a row to the "User command" table
+  POST /text_to_user         - add a row to the "Text to user" table
   GET  /data                - JSON snapshot of all accumulated data (polled by the UI)
   POST /clear                - clear all accumulated data (scatter plot + tables)
   GET  /                    - the web UI (scatter plot + tables)
@@ -128,6 +130,34 @@ def get_slave_status():
 
     state.add_slave_status(lat, lon, alt, raw=payload)
     logger.info(f"get_slave_status: lat={lat} lon={lon} alt={alt}")
+    return jsonify({"status": "ok"})
+
+
+@app.route("/user_command", methods=["POST"])
+@app.route("/user_command/", methods=["POST"])
+def user_command():
+    payload = request.get_json(force=True, silent=True) or {}
+    text = payload.get("text")
+    drone_role = payload.get("drone_role")
+    if text is None:
+        return jsonify({"status": "error", "message": "text required"}), 400
+
+    state.add_user_command(text, drone_role=drone_role)
+    logger.info(f"user_command: text={text} drone_role={drone_role}")
+    return jsonify({"status": "ok"})
+
+
+@app.route("/text_to_user", methods=["POST"])
+@app.route("/text_to_user/", methods=["POST"])
+def text_to_user():
+    payload = request.get_json(force=True, silent=True) or {}
+    text = payload.get("text")
+    drone_role = payload.get("drone_role")
+    if text is None:
+        return jsonify({"status": "error", "message": "text required"}), 400
+
+    state.add_text_to_user(text, drone_role=drone_role)
+    logger.info(f"text_to_user: text={text} drone_role={drone_role}")
     return jsonify({"status": "ok"})
 
 
