@@ -1,8 +1,8 @@
 services:
   monitor:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ../../..
+      dockerfile: dockers/monitor/intel/Dockerfile
     image: monitor:latest
     container_name: monitor
     ports:
