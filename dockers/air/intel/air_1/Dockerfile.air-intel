@@ -1,0 +1,44 @@
+# Dockerfile for the "air" service (project_code/air/main_air.py)
+# Intel / CPU-only variant - no CUDA/NVIDIA runtime required.
+FROM python:3.11-slim
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1
+
+WORKDIR /app
+
+# System dependencies:
+#   - build-essential/portaudio19-dev: needed to build/run PyAudio
+#   - libsndfile1: needed by soundfile
+#   - ffmpeg: needed by pydub
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        build-essential \
+        portaudio19-dev \
+        libsndfile1 \
+        ffmpeg \
+        curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY dockers/air/intel/air_1/requirements-air-intel.txt /app/requirements-air-intel.txt
+RUN pip install --upgrade pip && \
+    pip install -r /app/requirements-air-intel.txt
+
+# Application code.
+COPY project_code /app/project_code
+
+# conf.yaml is loaded (by project_code/app_config/settings.py) relative to the
+# process's working directory ("app_config/conf.yaml"), so copy the root config
+# to /app/app_config as well.
+COPY app_config/conf.yaml /app/app_config/conf.yaml
+
+COPY dockers/air/intel/air_1/entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
+# Both master/slave air ports are exposed; only one is used depending on
+# general.run_as_master (see conf.yaml / RUN_AS_MASTER env var).
+EXPOSE 8124 8125
+
+ENTRYPOINT ["/app/entrypoint.sh"]
+CMD ["python", "-m", "project_code.air.main_air"]
+
