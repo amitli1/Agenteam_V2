@@ -1,0 +1,18 @@
+version: '3.8'
+services:
+  tts:
+    build:
+      context: ../../..         # Set context to Jetson/
+      dockerfile: agenteam-dockers/audio/tts_service/Dockerfile
+    ports:
+      - "8002:8002"
+    image: tts-service
+    container_name: tts-service-container
+    volumes:
+      - /mnt/nvme/models/kokoro_model:/models/kokoro_model
+    environment:
+      - PULSE_SERVER=unix:/tmp/pulse/native
+      - PULSE_COOKIE=/tmp/pulse/cookie
+    devices:
+      - /dev/snd
+    restart: always

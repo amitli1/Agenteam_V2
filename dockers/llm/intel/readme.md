@@ -68,4 +68,5 @@ curl http://127.0.0.1:8090/v1/chat/completions \
 ```
 1. "max-model-len" → how long one request is allowed to be (prompt + generated output). 
 2. "max-num-seqs" → how many requests can be processed in parallel.
+3. config.json (model), "max_position_embeddings" → (input + output ≤ max_position_embeddings)
 ```

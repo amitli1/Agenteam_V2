@@ -1,0 +1,18 @@
+version: '3.8'
+services:
+  tts:
+    build:
+      context: ../../..         # Set context to Jetson/
+      dockerfile: agenteam-dockers/audio/whisper_service/Dockerfile
+    ports:
+      - "8013:8013"
+    volumes:
+      #- /mnt/nvme/models/huggingface:/root/.cache/huggingface
+    - /mnt/nvme/models:/models
+    environment:
+      - HF_HOME=/root/.cache/huggingface
+      - TRANSFORMERS_CACHE=/root/.cache/huggingface/transformers
+    image: whisper-service
+    container_name: whisper-service-container
+    restart: always
+
