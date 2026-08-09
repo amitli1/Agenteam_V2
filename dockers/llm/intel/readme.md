@@ -15,31 +15,6 @@ wget -q https://openaipublic.blob.core.windows.net/encodings/o200k_base.tiktoken
 
 ## Step III: Run model (port 8090 & --gpu-memory-utilization 0.90)
 ```
-sudo docker run --rm     --gpus all     --network none     -p 8090:8090     -v ~/repo/Agenteam_V2/dockers/llm/model:/model:ro     -v ~/.cache/tiktoken:/root/.cache/tiktoken:ro     -e HF_HUB_OFFLINE=1     -e TRANSFORMERS_OFFLINE=1     -e TIKTOKEN_CACHE_DIR=/root/.cache/tiktoken     -e TIKTOKEN_RS_CACHE_DIR=/root/.cache/tiktoken/harmony     vllm/vllm-openai:gptoss     --model /model     --served-model-name gpt-oss-20b     --host 0.0.0.0     --port 8090     --gpu-memory-utilization 0.90
-```
-
-## Step IV: Test:
-```
-curl http://localhost:8090/v1/models
-```
-
-```
-curl http://127.0.0.1:8090/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "gpt-oss-20b",
-    "messages": [
-      {
-        "role": "user",
-        "content": "What is 17 multiplied by 23? Explain briefly."
-      }
-    ],
-    "max_tokens": 100,
-    "temperature": 0
-  }'
-```
-## Online
-```
 sudo docker rm -f gpt-oss-20b
 
 sudo docker run -d \
@@ -64,6 +39,28 @@ sudo docker run -d \
   --gpu-memory-utilization 0.95 \
   --max-model-len 32768 \
   --max-num-seqs 32
+```
+
+
+## Step IV: Test:
+```
+curl http://localhost:8090/v1/models
+```
+```
+curl http://127.0.0.1:8090/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-oss-20b",
+    "messages": [
+      {
+        "role": "user",
+        "content": "What is 17 multiplied by 23? Explain briefly."
+      }
+    ],
+    "max_tokens": 100,
+    "temperature": 0
+  }'
+
 ```
 
 
