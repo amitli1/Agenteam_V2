@@ -1,0 +1,15 @@
+flask
+werkzeug
+requests
+websockets
+pydantic
+pyyaml
+numpy
+
+# used transitively by project_code/utils/utils.py (imported by quad_manager / vision_manager)
+sounddevice
+soundfile
+pyaudio
+pydub
+openai
+

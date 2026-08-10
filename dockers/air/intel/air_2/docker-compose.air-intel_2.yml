@@ -1,0 +1,23 @@
+services:
+  air-intel:
+    build:
+      context: ../../../..
+      dockerfile: dockers/air/intel/air_2/Dockerfile.air-intel
+    image: agenteam-air-intel-2:latest
+    container_name: agenteam-air-intel-2
+    environment:
+      # Overrides general.run_as_master in conf.yaml at container start-up
+      # (true -> master drone, false -> slave drone).
+      - RUN_AS_MASTER=false
+    # The air service talks to the quad/ground/vision services over
+    # 127.0.0.1 (see conf.yaml), so it needs to share the host's network.
+    network_mode: host
+    extra_hosts:
+      # get_running_ip() (project_code/utils/utils.py) resolves to
+      # "host.docker.internal" whenever running inside a container. With
+      # network_mode: host there is no separate docker bridge/gateway, so
+      # that hostname is NOT added automatically - map it to 127.0.0.1
+      # explicitly (the container shares the host's network namespace).
+      - "host.docker.internal:127.0.0.1"
+    restart: unless-stopped
+
