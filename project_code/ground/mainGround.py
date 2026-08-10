@@ -106,6 +106,9 @@ class MainGround:
 
     def run_tts(self, text_to_user):
 
+        if self.fnc_test_callback is not None:
+            self.fnc_test_callback(text_to_user)
+
         if "OK Flying to the destination" in text_to_user:
             SoundPlayerManager().get_file_queue().put(f"{app_settings.database.audio_files}/OK_Flying_to_the_destination.wav")
             return True
@@ -126,9 +129,6 @@ class MainGround:
             return False
 
         prepare_audio_for_speech(data)
-
-        if self.fnc_test_callback is not None:
-            self.fnc_test_callback(text_to_user)
 
         return True
 
