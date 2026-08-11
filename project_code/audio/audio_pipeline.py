@@ -44,7 +44,7 @@ class AudioPipeline:
                                              rate                = self.MIC_SR,
                                              input               = True,
                                              input_device_index  = self.input_device,
-                                             frames_per_buffer   = self.CHUNK*10)
+                                             frames_per_buffer   = self.CHUNK*20)
 
 
 

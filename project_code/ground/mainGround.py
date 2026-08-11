@@ -118,6 +118,12 @@ class MainGround:
         elif "I have reached the destination." in text_to_user:
             SoundPlayerManager().get_file_queue().put(f"{app_settings.database.audio_files}/I_have_reached_the_destination.wav")
             return True
+        elif "what should I look for ?" in text_to_user:
+            SoundPlayerManager().get_file_queue().put(f"{app_settings.database.audio_files}/What_should_I_look_for.wav")
+            return True
+        elif "I dont understand please repeat command" in text_to_user:
+            SoundPlayerManager().get_file_queue().put(f"{app_settings.database.audio_files}/I_dont_understand_please_repeat_command.wav")
+            return True
 
         try:
             response = requests.post(f"http://{get_running_ip()}:8002/synthesize/", json={"text": text_to_user})
