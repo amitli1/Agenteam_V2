@@ -2,6 +2,7 @@ import logging
 from collections         import deque
 import numpy as np
 import requests
+import torch
 from silero_vad          import load_silero_vad, get_speech_timestamps
 from project_code.app_config.settings import app_settings
 import openwakeword
@@ -33,7 +34,7 @@ class AudioPipeline:
         self.output_device = get_output_device()
 
         self.vad_model     = load_silero_vad()
-        self.audio_buffer  = deque(maxlen=10)
+        self.audio_buffer  = deque(maxlen=20)
         self.CHUNK         = app_settings.audio.wakeword.chunk
         self.FORMAT        = pyaudio.paInt16
         self.CHANNELS      = app_settings.audio.wakeword.channels
@@ -46,6 +47,57 @@ class AudioPipeline:
                                              input_device_index  = self.input_device,
                                              frames_per_buffer   = self.CHUNK*20)
 
+    def get_speech_status(self, audio_chunk, sample_rate=app_settings.audio.vad.sample_rate):
+        audio_chunk = audio_chunk.astype(np.float32) / 32768.0
+        speech_prob = self.vad_model(torch.from_numpy(audio_chunk), sample_rate).item()
+        return speech_prob > app_settings.audio.vad.vad_threshold
+
+    def source_capture_audio_after_wakeword_jetson(self, last_audios):
+        recorded_audio = []
+        for audio_history in last_audios:
+            recorded_audio.append(audio_history)
+        silence_duration = 0
+        silence_threshold = 0.4
+        grace_period = 0.8
+        grace_time_elapsed = 0.0
+        speech_detected = False
+
+        #logging.info("[***] Capturing speech... (online process)")
+        start_time = time.time()
+
+        while True:
+            try:
+                mic_audio = np.frombuffer(
+                    self.mic_stream.read(app_settings.audio.vad.vad_chunk, exception_on_overflow=False),
+                    dtype=np.int16
+                )
+            except IOError:
+                logging.error("Error reading from audio stream.")
+                break
+            recorded_audio.append(mic_audio)
+
+            if not speech_detected:
+                if self.get_speech_status(mic_audio):
+                    speech_detected = True
+                    #logging.info(f"[pid = {os.getpid()}] Speech detected. Now monitoring for silence.")
+                else:
+                    grace_time_elapsed += app_settings.audio.vad.vad_chunk / app_settings.audio.vad.sample_rate
+                    if grace_time_elapsed >= grace_period:
+                        logging.info("No speech detected during grace period. Stopping capture.")
+                        break
+            else:
+                if not self.get_speech_status(mic_audio):
+                    silence_duration += app_settings.audio.vad.vad_chunk / app_settings.audio.vad.sample_rate
+                    if silence_duration >= silence_threshold:
+                        logging.info("Silence detected, stopping capture.")
+                        break
+                else:
+                    silence_duration = 0
+
+        elapsed_time = time.time() - start_time
+        logging.info(f"[***] Audio capturing took {elapsed_time:.2f} seconds.")
+        full_audio = np.concatenate(recorded_audio).astype(np.float32)
+        return full_audio
 
 
     def capture_audio_after_wakeword(self, vad_model, last_audios, silence_threshold=1.0):
@@ -64,12 +116,14 @@ class AudioPipeline:
                 recorded_audio.append(mic_audio)
                 samples = np.concatenate(recorded_audio, axis=0)
                 if len(samples) < (silence_threshold * 16000):
+                    #logging.info("\tToo few samples, continue to listen...")
                     continue
-                samples = samples.astype(np.float32) / 32768.0
-                tail_audio = samples[-int(silence_threshold * 16000):]
+                samples           = samples.astype(np.float32) / 32768.0
+                tail_audio        = samples[-int(silence_threshold * 16000):]
                 speech_timestamps = get_speech_timestamps(tail_audio, vad_model, sampling_rate=16000)
-                is_silence = len(speech_timestamps) == 0
+                is_silence        = len(speech_timestamps) == 0
                 if is_silence:
+                    logging.info("\tDetect silence")
                     break
             except Exception as e:
                 logging.error(f"\tError reading from audio stream. (\n{e}\n)")
@@ -135,8 +189,7 @@ class AudioPipeline:
                             if (len(recorded_audio) / self.MIC_SR) <= 1.05:
                                 self.audio_buffer.clear()
                                 self.owwModel.reset()
-                                logging.info(
-                                    f'Wake word detected with: {prediction[mdl]}% but audio is too short: {(len(recorded_audio) / MIC_SR)} seconds')
+                                logging.info(f'Wake word detected with: {prediction[mdl]}% but audio is too short: {(len(recorded_audio) / self.MIC_SR)} seconds')
                                 break
                             wake_word_detected = True
                             logging.info(f'Wake word detected with: {prediction[mdl]}%')
@@ -161,10 +214,14 @@ class AudioPipeline:
                     #     # Fallback: treat as Buddy (keeps old behavior if something was missing)
                     #     winner_wakeword = self.detected_label
 
+
+                    recorded_audio     = self.capture_audio_after_wakeword(self.vad_model, self.audio_buffer)
+                    #recorded_audio = self.source_capture_audio_after_wakeword_jetson(self.audio_buffer)
+
                     for owwModel in self.wakewordLogic.owwModels.values():
                         owwModel.reset()
 
-                    recorded_audio = self.capture_audio_after_wakeword(self.vad_model, self.audio_buffer)
+
                     wake_word_detected = True
 
 
