@@ -29,7 +29,7 @@ class MonitorCollector:
         try:
             msg = {"drone_role": drone_role, "text": user_command}
             response = requests.post(f"http://{get_running_ip()}:7031/user_command/", json=msg)
-            if response.status_code == 200:
+            if response.status_code != 200:
                 logging.error(f'Error while sending data to Monitor (user_command): {response.status_code}')
                 return False
         except Exception as e:
@@ -43,7 +43,7 @@ class MonitorCollector:
         try:
             msg = {"drone_role": drone_role, "text": text_to_user}
             response = requests.post(f"http://{get_running_ip()}:7031/text_to_user/", json=msg)
-            if response.status_code == 200:
+            if response.status_code != 200:
                 logging.error(f'Error while sending data to Monitor (text_to_user): {response.status_code}')
                 return False
         except Exception as e:
