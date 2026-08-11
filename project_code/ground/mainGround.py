@@ -106,6 +106,8 @@ class MainGround:
 
     def run_tts(self, text_to_user):
 
+        self.monitorCollector.update_text_to_user("", text_to_user)
+
         if self.fnc_test_callback is not None:
             self.fnc_test_callback(text_to_user)
 
@@ -145,7 +147,6 @@ class MainGround:
         text_to_user = msg['text_to_user']
         logging.info(f'Got text: {text_to_user} from: {drone_role}')
 
-        self.monitorCollector.update_text_to_user(drone_role, text_to_user)
         if not self.run_tts(text_to_user):
             return f"Error while sending text: {text_to_user} to TTS tool", 400
 
@@ -183,6 +184,7 @@ class MainGround:
 
             if result['status'] == "error":
                 logging.error(f"Got error llmMissionPlanner.get_way_points: {result['error']}")
+                self.run_tts(result['error'])
             else:
                 logging.info(f"Got plan from LLM. status: {result['status']}, action: {result['action']}, team_member: {result['team_member']}")
             if result['status'] == "success":
