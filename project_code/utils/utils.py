@@ -17,7 +17,15 @@ import re
 from project_code.utils.sound_player import SoundPlayerManager
 
 
-
+def log_boxed(title: str, lines: list[str]):
+    content = [title] + lines
+    width = max(len(s) for s in content) + 2
+    border = "+" + "-" * width + "+"
+    log_lines = [border]
+    for s in content:
+        log_lines.append(f"| {s.ljust(width - 2)} |")
+    log_lines.append(border)
+    logging.info("\n" + "\n".join(log_lines))
 
 
 def distance_meters(point1: dict, point2: dict) -> float:

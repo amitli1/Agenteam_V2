@@ -4,6 +4,7 @@
 4. "ok flying to the destination x2"
 5. I have reached the destination x2
 6. what should I look for
+7. 'body' 
 
 4. monitor
 3. vision
