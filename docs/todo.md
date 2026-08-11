@@ -1,4 +1,11 @@
-2. monitor
+1. cant find lcation
+2. 'go to another one'' (whisper)
+3. 'go to Bill 1'''
+4. "ok flying to the destination x2"
+5. I have reached the destination x2
+6. what should I look for
+
+4. monitor
 3. vision
 4. on jetson
 5. system tests

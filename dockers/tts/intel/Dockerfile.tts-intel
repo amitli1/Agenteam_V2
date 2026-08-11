@@ -5,7 +5,8 @@ FROM python:3.11-slim
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     TTS_DEVICE=cpu \
-    PIP_NO_CACHE_DIR=1
+    PIP_NO_CACHE_DIR=1 \
+    HF_HOME=/app/.cache/huggingface
 
 WORKDIR /app
 
@@ -30,6 +31,25 @@ RUN pip install \
         pydantic \
         numpy \
         kokoro
+
+# Pre-download the Kokoro model weights/config AND the voice pack(s) used by
+# tts_service.py at BUILD time (network access is available during build).
+# Voice packs (e.g. 'am_adam') are lazily downloaded from the Hub on first
+# use, not when KPipeline() is constructed, so we run one real synthesis to
+# force that download too. This avoids a runtime dependency on
+# huggingface.co, which can be unreachable / flaky from inside the running
+# container (docker-compose network, offline host, corporate proxy, etc.)
+# and previously caused: "RuntimeError: Cannot send a request, as the client
+# has been closed" / "cannot find the requested files in the local cache".
+RUN python -c "\
+from kokoro import KPipeline; \
+p = KPipeline(lang_code='a', device='cpu'); \
+list(p('warmup', voice='am_adam'))"
+
+# Force fully offline mode at runtime: never attempt network calls to the
+# HuggingFace Hub, always use the cache populated above.
+ENV HF_HUB_OFFLINE=1 \
+    TRANSFORMERS_OFFLINE=1
 
 # Copy only what's needed to run the TTS service.
 COPY project_code/audio/tts_service.py /app/project_code/audio/tts_service.py
