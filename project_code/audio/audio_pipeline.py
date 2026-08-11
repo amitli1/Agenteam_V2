@@ -1,14 +1,15 @@
-import logging
-from collections         import deque
-import numpy as np
-import requests
-import torch
-from silero_vad          import load_silero_vad, get_speech_timestamps
+import numpy                          as np
+from collections                      import deque
+from silero_vad                       import load_silero_vad, get_speech_timestamps
 from project_code.app_config.settings import app_settings
+from scipy.io.wavfile                 import write
 import openwakeword
 import pyaudio
 import time
-from scipy.io.wavfile    import write
+import re
+import logging
+import requests
+import torch
 
 from project_code.audio.wakeword_detection_strategies import DetectionOutcome
 from project_code.audio.wakeword_logic import WakewordLogic
@@ -289,6 +290,9 @@ class AudioPipeline:
                               f"Time : {(end_stt - start_stt):.2f} sec",
                                 f"Text : {text}",
                             ])
+
+                text = re.sub(r'\b(body|budy|betty|bety)\b', 'buddy', text, flags=re.IGNORECASE)
+                logging.info(f'Fix whisper transcription: {text}')
                 self.func_handle_user_text(text)
 
 
