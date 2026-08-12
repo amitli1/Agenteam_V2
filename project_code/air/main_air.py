@@ -10,9 +10,11 @@ import threading
 import time
 import requests
 
+from project_code.utils.logger_utils import init_logger
 from project_code.utils.utils import log_boxed, _flatten_for_log
 from project_code.vision.vision_manager import VisionManager
 
+init_logger(jetson_type="air")
 logging.getLogger("werkzeug").setLevel(logging.ERROR)
 
 app = Flask(__name__)
@@ -130,12 +132,6 @@ class MainAir:
 
 
 if __name__ == "__main__":
-
-    logging.basicConfig(
-        level=logging.INFO,  # or DEBUG
-        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
-    )
-    logger = logging.getLogger(__name__)
 
     mainAir = MainAir()
     mainAir.start_air()

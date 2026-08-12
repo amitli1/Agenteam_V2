@@ -11,7 +11,16 @@ def get_timestamp_string():
 
 CURRENT_DATE = get_timestamp_string()
 
-def init_logger():
+def init_logger(jetson_type):
+
+    prefix = ""
+    if jetson_type == "ground":
+        prefix = "ground_"
+    elif jetson_type == "air":
+        drone_role = "Master" if app_settings.general.run_as_master else "Slave"
+        prefix = f"air_{drone_role}_"
+    else:
+        prefix = f"log_"
 
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
@@ -22,7 +31,7 @@ def init_logger():
 
     # # File handler
     #os.makedirs("logs", exist_ok=True)
-    log_name     = f"{app_settings.logging_and_records.output_path}/log_{CURRENT_DATE}.txt"
+    log_name     = f"{app_settings.logging_and_records.output_path}/{prefix}{CURRENT_DATE}.txt"
     file_handler = logging.FileHandler(log_name)
     file_handler.setFormatter(formatter)
 

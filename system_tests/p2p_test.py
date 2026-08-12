@@ -4,7 +4,7 @@ import time
 
 from flask import Flask
 
-from project_code.air.main_air import MainAir
+
 from project_code.app_config.settings import app_settings
 from project_code.ground.mainGround import MainGround, run_ground
 from project_code.utils.logger_utils import init_logger, CURRENT_DATE
@@ -13,14 +13,6 @@ from project_code.utils.utils import create_output_folder
 import logging
 
 app                 = Flask(__name__)
-
-
-
-def run_air():
-    mainAir = MainAir()
-    air_thread = threading.Thread(target=mainAir.start_air, daemon=True)
-    air_thread.start()
-
 
 class FullSystemTest():
 

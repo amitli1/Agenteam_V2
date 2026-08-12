@@ -291,7 +291,7 @@ class AudioPipeline:
                                 f"Text : {text}",
                             ])
 
-                text = re.sub(r'\b(body|budy|betty|bety)\b', 'buddy', text, flags=re.IGNORECASE)
+                text = re.sub(r'\b(body|budy|betty|badi|bety)\b', 'buddy', text, flags=re.IGNORECASE)
                 logging.info(f'Fix whisper transcription: {text}')
                 self.func_handle_user_text(text)
 

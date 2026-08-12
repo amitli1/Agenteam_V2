@@ -1,4 +1,5 @@
-1. surround- not works sometimes (+ add logs to air with box)
+1. air - logs (file)
+2. surround- not works sometimes (+ add logs to air with box)
 3. vision
 4. on jetson
 5. system tests

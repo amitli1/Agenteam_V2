@@ -2,7 +2,6 @@ import json
 
 from pydub import AudioSegment
 
-from project_code.air.main_air import MainAir
 from project_code.app_config.settings import app_settings
 from project_code.audio.audio_pipeline import AudioPipeline
 from project_code.db.database_manager import DatabaseManager
@@ -22,7 +21,7 @@ import requests
 import numpy as np
 from flask import Flask, jsonify, request
 
-init_logger()
+init_logger(jetson_type="ground")
 logging.getLogger("werkzeug").setLevel(logging.ERROR)
 
 app = Flask(__name__)

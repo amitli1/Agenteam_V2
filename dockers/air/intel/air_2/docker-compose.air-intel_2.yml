@@ -5,6 +5,8 @@ services:
       dockerfile: dockers/air/intel/air_2/Dockerfile.air-intel
     image: agenteam-air-intel-2:latest
     container_name: agenteam-air-intel-2
+    volumes:
+      - /home/amitli/repo/Agenteam_V2/outputs:/home/amitli/repo/Agenteam_V2/outputs
     environment:
       # Overrides general.run_as_master in conf.yaml at container start-up
       # (true -> master drone, false -> slave drone).
