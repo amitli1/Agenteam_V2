@@ -79,6 +79,12 @@
         <label>
             <input type="radio" name="mode" value="3d"> 3D (lat/lon/alt)
         </label>
+        <label>
+            <input type="radio" name="track-mode" value="track" checked> Show drone track
+        </label>
+        <label>
+            <input type="radio" name="track-mode" value="dot"> Current location only
+        </label>
         <span class="dataset-color">&#9679; Dataset</span> &nbsp;
         <span class="master-color">&#9679; Master drone</span> &nbsp;
         <span class="slave-color">&#9679; Slave drone</span>
@@ -136,10 +142,16 @@
 
     <script>
         let mode = "2d";
+        let trackMode = "track";
 
         function getMode() {
             const checked = document.querySelector('input[name="mode"]:checked');
             return checked ? checked.value : "2d";
+        }
+
+        function getTrackMode() {
+            const checked = document.querySelector('input[name="track-mode"]:checked');
+            return checked ? checked.value : "track";
         }
 
         document.querySelectorAll('input[name="mode"]').forEach(el => {
@@ -149,15 +161,26 @@
             });
         });
 
+        document.querySelectorAll('input[name="track-mode"]').forEach(el => {
+            el.addEventListener('change', () => {
+                trackMode = getTrackMode();
+                render(lastSnapshot);
+            });
+        });
+
         function makeTrace(points, name, color) {
-            const lat = points.map(p => p.lat);
-            const lon = points.map(p => p.lon);
-            const alt = points.map(p => (p.alt === null || p.alt === undefined) ? 0 : p.alt);
+            // "dot" mode: only show the drone's current (last) location, no track line.
+            const usedPoints = (trackMode === "dot" && points.length > 0) ? [points[points.length - 1]] : points;
+
+            const lat = usedPoints.map(p => p.lat);
+            const lon = usedPoints.map(p => p.lon);
+            const alt = usedPoints.map(p => (p.alt === null || p.alt === undefined) ? 0 : p.alt);
+            const plotMode = trackMode === "dot" ? 'markers' : 'lines+markers';
 
             if (mode === "3d") {
                 return {
                     x: lat, y: lon, z: alt,
-                    mode: 'lines+markers',
+                    mode: plotMode,
                     type: 'scatter3d',
                     name: name,
                     line: { color: color },
@@ -166,7 +189,7 @@
             }
             return {
                 x: lat, y: lon,
-                mode: 'lines+markers',
+                mode: plotMode,
                 type: 'scatter',
                 name: name,
                 line: { color: color },
