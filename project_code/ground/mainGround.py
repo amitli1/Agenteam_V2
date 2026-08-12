@@ -104,9 +104,9 @@ class MainGround:
         self.status_received_event.set()
         return "OK", 200
 
-    def run_tts(self, text_to_user):
+    def run_tts(self, text_to_user, drone_role=""):
 
-        self.monitorCollector.update_text_to_user("", text_to_user)
+        self.monitorCollector.update_text_to_user(drone_role, text_to_user)
 
         if self.fnc_test_callback is not None:
             self.fnc_test_callback(text_to_user)
@@ -118,6 +118,7 @@ class MainGround:
             SoundPlayerManager().get_file_queue().put(f"{app_settings.database.audio_files}/hold_on_still_flying.wav")
             return True
         elif "I have reached the destination." in text_to_user:
+            logging.info(f'Put I_have_reached_the_destination.wav into the Q')
             SoundPlayerManager().get_file_queue().put(f"{app_settings.database.audio_files}/I_have_reached_the_destination.wav")
             return True
         elif "what should I look for ?" in text_to_user:
@@ -147,7 +148,7 @@ class MainGround:
         text_to_user = msg['text_to_user']
         logging.info(f'Got text: {text_to_user} from: {drone_role}')
 
-        if not self.run_tts(text_to_user):
+        if not self.run_tts(text_to_user, drone_role):
             return f"Error while sending text: {text_to_user} to TTS tool", 400
 
         return "OK", 200
@@ -184,7 +185,7 @@ class MainGround:
 
             if result['status'] == "error":
                 logging.error(f"Got error llmMissionPlanner.get_way_points: {result['error']}")
-                self.run_tts(result['error'])
+                self.run_tts(result['error'], "ground")
             else:
                 logging.info(f"Got plan from LLM. status: {result['status']}, action: {result['action']}, team_member: {result['team_member']}")
             if result['status'] == "success":
@@ -264,7 +265,7 @@ class MainGround:
             if command['vision_command'] != '':
                 vision_result_ = self.handle_vision_command(text, command)
                 if vision_result_['need_more_data']:
-                    self.run_tts("what should I look for ?")
+                    self.run_tts("what should I look for ?", "ground")
                     self.last_fly_command    = command['fly_command']
                     self.last_vision_command = vision_result_['vision_command']
                     self.last_text_command   = text
