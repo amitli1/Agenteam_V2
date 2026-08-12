@@ -1,0 +1,18 @@
+services:
+  vision-simulator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: vision-simulator:latest
+    container_name: vision-simulator
+    ports:
+      - "8003:8003"   # point (pointing-agent) service
+      - "6000:6000"   # hold (alert) service
+      - "8080:8080"   # summary service
+    environment:
+      - POINT_PORT=8003
+      - HOLD_PORT=6000
+      - SUMMARY_PORT=8080
+      - HOST=0.0.0.0
+    restart: unless-stopped
+
