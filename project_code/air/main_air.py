@@ -9,6 +9,8 @@ from flask import Flask, jsonify, request
 import threading
 import time
 import requests
+
+from project_code.utils.utils import log_boxed, _flatten_for_log
 from project_code.vision.vision_manager import VisionManager
 
 logging.getLogger("werkzeug").setLevel(logging.ERROR)
@@ -96,7 +98,7 @@ class MainAir:
     def on_ground_command(self):
         start_time = time.time()
         data       = request.get_json(silent=True)
-        logging.info(f"Received request for command: {data}")
+        log_boxed("Ground Command Received", _flatten_for_log(data))
 
         if data['command'] == 'plan':
             plan_list = data['plan_list']
