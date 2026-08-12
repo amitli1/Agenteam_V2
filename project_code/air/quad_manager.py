@@ -321,8 +321,8 @@ def fly_error():
 
 async def async_run_code():
     await asyncio.gather(
-        get_status_message(5, port=8001),
-        #get_status_message(5, port=8011),
+        #get_status_message(5, port=8001),
+        get_status_message(5, port=8011),
     )
 
 

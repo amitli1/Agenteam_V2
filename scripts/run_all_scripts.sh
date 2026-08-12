@@ -12,6 +12,7 @@
 #   5. air 2      -> dockers/air/intel/air_2
 #   6. vision     -> VisionSimulator
 #   7. quad_sim_1 -> DroneSimulation
+#   8. drone sim 2 -> DroneSimulation (docker-compose.2.yml, quad_port 8011)
 #
 # Usage:
 #   ./scripts/run_all_scripts.sh
@@ -32,6 +33,7 @@ RUN_AIR_1=true
 RUN_AIR_2=true
 RUN_VISION=true
 RUN_QUAD_SIM_1=true
+RUN_QUAD_SIM_2=true
 
 # Resolve the Agenteam_V2 repo root (this script lives in <repo>/scripts).
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -57,6 +59,7 @@ CMD_AIR_1="bash -c 'cd \"${AIR_1_DIR}\" && sudo docker compose -f docker-compose
 CMD_AIR_2="bash -c 'cd \"${AIR_2_DIR}\" && sudo docker compose -f docker-compose.air-intel_2.yml up --build; exec bash'"
 CMD_VISION="bash -c 'cd \"${VISION_SIM_DIR}\" && sudo docker compose up --build; exec bash'"
 CMD_QUAD_SIM_1="bash -c 'cd \"${QUAD_SIM_DIR}\" && sudo docker compose up --build; exec bash'"
+CMD_QUAD_SIM_2="bash -c 'cd \"${QUAD_SIM_DIR}\" && sudo docker compose -f docker-compose.2.yml up --build; exec bash'"
 
 # ---------------------------------------------------------------------------
 # Build the gnome-terminal argument list, honoring the RUN_* toggles above.
@@ -83,6 +86,7 @@ if [ "${RUN_AIR_1}" = true ];      then add_tab "air 1"      "${CMD_AIR_1}";    
 if [ "${RUN_AIR_2}" = true ];      then add_tab "air 2"      "${CMD_AIR_2}";      fi
 if [ "${RUN_VISION}" = true ];     then add_tab "vision"     "${CMD_VISION}";     fi
 if [ "${RUN_QUAD_SIM_1}" = true ]; then add_tab "quad_sim_1" "${CMD_QUAD_SIM_1}"; fi
+if [ "${RUN_QUAD_SIM_2}" = true ]; then add_tab "drone sim 2" "${CMD_QUAD_SIM_2}"; fi
 
 if [ "${#TERM_ARGS[@]}" -eq 0 ]; then
     echo "No tabs enabled - nothing to run. Enable at least one RUN_* flag." >&2
