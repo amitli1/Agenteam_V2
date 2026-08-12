@@ -1,6 +1,4 @@
-4. "ok flying to the destination x2"
-5. I have reached the destination x2
-6. what should I look for
+1. surround- not works sometimes (+ add logs to air with box)
 3. vision
 4. on jetson
 5. system tests
@@ -9,16 +7,13 @@
 9. hold ? say on what ? ("Hold the junction and look for weapons))
 10. vision and fly - async (call to llm and run) (not sure - what to focus on)
 12. LLM params from config file
-13. run wtih wake word (buddy and team) 
 14. stop summary and describe
-16. take the alt (drone 1 and 2) to get into from jetson_1
-17. monitor - dockers
 18.     #
     # download open wake word models to:
     # /mnt/nvme/python_venvs/agentVenv/lib/python3.10/site-packages/openwakeword/resources/models/
     #
     openwakeword.utils.download_models()
-19. remove SINGLE_MODEL
+
  
 
 Did:
