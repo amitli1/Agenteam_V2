@@ -1,0 +1,14 @@
+services:
+  drone-simulation-2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: agenteam-drone-simulation-2:latest
+    container_name: agenteam-drone-simulation-2
+    ports:
+      # keep in sync with quad_port in simulation_2.yaml
+      - "8011:8011"
+    volumes:
+      - ./simulation_2.yaml:/app/simulation.yaml
+    restart: unless-stopped
+
