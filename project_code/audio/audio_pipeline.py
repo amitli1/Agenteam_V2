@@ -194,11 +194,14 @@ class AudioPipeline:
         return full_audio
 
     def write_samples(self, fname, audio, samplerate=16000):
-        start_time = time.time()
-        output_folder = f'{app_settings.logging_and_records.output_path}/{CURRENT_DATE}/{fname}.wav'
-        write(output_folder, samplerate, audio)
-        end_time = time.time()
-        logging.info(f"\t[{(end_time - start_time):.2f} ms] Write audio (after wakeword) to: {output_folder}")
+        try:
+            start_time = time.time()
+            output_folder = f'{app_settings.logging_and_records.output_path}/{CURRENT_DATE}/{fname}.wav'
+            write(output_folder, samplerate, audio)
+            end_time = time.time()
+            logging.info(f"\t[{(end_time - start_time):.2f} ms] Write audio (after wakeword) to: {output_folder}")
+        except Exception as e:
+            logging.error(f'Cannot write audio to: {output_folder}')
 
 
     def detect_wakeword(self, mic_audio):
