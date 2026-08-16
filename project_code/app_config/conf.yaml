@@ -2,7 +2,7 @@ audio:
   language: en
   vad_threshold: 0.6
   stt:
-    model_size: large-v3-turbo # ivrit-ai/faster-whisper-v2-d4 #large-v3-turbo #large-v3-turbo #/models/faster-whisper-large-v3 faster-whisper-large-v3-turbo
+    model_size: openai/whisper-large-v3-turbo # ivrit-ai/faster-whisper-v2-d4 #large-v3-turbo #large-v3-turbo #/models/faster-whisper-large-v3 faster-whisper-large-v3-turbo
     num_beams: 5
     confidence_threshold: 0.36
     compression_ratio_threshold: 2.4

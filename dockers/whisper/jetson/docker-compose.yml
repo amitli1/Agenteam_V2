@@ -1,18 +1,73 @@
-version: '3.8'
+version: "3.8"
+
 services:
-  tts:
+
+  whisper:
     build:
-      context: ../../..         # Set context to Jetson/
-      dockerfile: agenteam-dockers/audio/whisper_service/Dockerfile
+      context: ../../..
+      dockerfile: dockers/whisper/jetson/Dockerfile
+
+    image: whisper-service:latest
+    container_name: whisper-service-container
+
     ports:
       - "8013:8013"
-    volumes:
-      #- /mnt/nvme/models/huggingface:/root/.cache/huggingface
-    - /mnt/nvme/models:/models
-    environment:
-      - HF_HOME=/root/.cache/huggingface
-      - TRANSFORMERS_CACHE=/root/.cache/huggingface/transformers
-    image: whisper-service
-    container_name: whisper-service-container
-    restart: always
 
+    volumes:
+
+      # ---------------------------------------------------
+      # Persistent Whisper model
+      #
+      # Host:
+      #   /mnt/nvme/models
+      #
+      # Container:
+      #   /models
+      #
+      # The downloaded model will therefore live at:
+      #
+      #   /mnt/nvme/models/whisper-large-v3-turbo/
+      # ---------------------------------------------------
+      - /mnt/nvme/models:/models
+
+      # ---------------------------------------------------
+      # Persistent Hugging Face cache
+      #
+      # This is useful for any additional HF downloads,
+      # but the Whisper model itself is stored directly
+      # under /models.
+      # ---------------------------------------------------
+      - /mnt/nvme/models/huggingface:/root/.cache/huggingface
+
+    environment:
+
+      # ---------------------------------------------------
+      # Hugging Face paths
+      # ---------------------------------------------------
+      HF_HOME: /root/.cache/huggingface
+      HF_HUB_CACHE: /root/.cache/huggingface/hub
+      TRANSFORMERS_CACHE: /root/.cache/huggingface/transformers
+
+      # ---------------------------------------------------
+      # Faster-whisper model
+      # ---------------------------------------------------
+      WHISPER_MODEL_REPO: mobiuslabsgmbh/faster-whisper-large-v3-turbo
+      WHISPER_MODEL_DIR: /models/whisper-large-v3-turbo
+
+      # ---------------------------------------------------
+      # Python
+      # ---------------------------------------------------
+      PYTHONPATH: /app
+
+      # ---------------------------------------------------
+      # FIRST RUN:
+      #   0 = internet allowed
+      #
+      # OFFLINE RUN:
+      #   1 = absolutely no HF network requests
+      #
+      # Change this to 1 after the first successful download.
+      # ---------------------------------------------------
+      HF_HUB_OFFLINE: "1"
+
+    restart: always

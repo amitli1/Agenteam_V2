@@ -1,35 +1,27 @@
 # Whisper docker
 
-## 🧪 Introduction
-
-1. Download model with huggingface-cli (via venv):
-   ``` 
-    huggingface-cli download mobiuslabsgmbh/faster-whisper-large-v3-turbo --cache-dir /mnt/nvme/models/faster-whisper-large-v3-turbo
-   ```
-   ```
-    huggingface-cli download openai/whisper-large-v3-turbo --cache-dir /mnt/nvme/models/huggingface
-   ```
-2. Assumptions:
-    ```
-    1. Folder: /mnt/nvme/repo/Jetson
-    2. Models: /mnt/nvme/models/ 
-    ```
-
-3.  build:
+## step 1:
 ```
-     docker compose up --build
+sudo docker compose -f docker-compose.yml up --build
+```
+Model download to: '/mnt/nvme/models/whisper-large-v3-turbo/'
+
+## step 2:
+```
+Under docker-compose.yaml change HF_HUB_OFFLINE to 1
 ```
 
-4.  Test (online):
-    ```
-    run test_docker_whisper.py
-    ```
-    
-6.  Test (offline):
-    ```
-    1. turn off wifi & restart jetson
-    2. run test_docker_whisper.py (to be sure it run without internet)
-    ```
+## step 3:
+```
+sudo docker compose -f docker-compose.yml up 
+```
+
+## step 4:
+```
+curl -X POST \
+  http://localhost:8013/transcribe \
+  -F "file=@/mnt/nvme/repo/Agenteam_V2/dockers/whisper/jetson/1.wav"
+```
    
 
 

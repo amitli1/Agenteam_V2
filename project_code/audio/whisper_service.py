@@ -5,7 +5,7 @@ from faster_whisper import WhisperModel
 import numpy as np
 import time
 import math
-import torch
+#import torch
 import logging
 import os
 import glob
@@ -22,39 +22,26 @@ app    = FastAPI()
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-logger.info(f"CUDA: {torch.cuda.is_available()}")
+#logger.info(f"CUDA: {torch.cuda.is_available()}")
 
 # Load model once at startup
 NUM_BEAMS  = app_settings.audio.stt.num_beams
 language   = app_settings.audio.language
 model_size = app_settings.audio.stt.model_size
 
-
-
-logging.info(f"CUDA available:  {torch.cuda.is_available()}")
-logging.info(f"CUDA version  : {torch.version.cuda}")
-logging.info(f"cuDNN version :{torch.backends.cudnn.version()}")
 logging.info(f"Run with: {model_size}, NUM_BEAMS: {NUM_BEAMS}, language: {language}")
 
 
-def in_docker():
- return os.path.exists("/.dockerenv") or os.path.exists("/run/.dockerenv")
-
-# Run on GPU with FP16
-# if in_docker():
-#
-#     model_path = r"/app/models/whisper/faster-whisper-large-v3-turbo"
-#     model_path = "large-v3-turbo"
-#     model = WhisperModel(model_path, device="cuda", compute_type="float16")
-# else:
-
-if in_docker():
-    model_size = '/app/models/faster-whisper-large-v3-turbo/models--mobiuslabsgmbh--faster-whisper-large-v3-turbo/snapshots/0a363e9161cbc7ed1431c9597a8ceaf0c4f78fcf/'
-
 logger.info(f'Load: {model_size}')
-model = WhisperModel(model_size, device="cuda", compute_type="float16")
-
-
+model_path = os.environ.get(
+    "WHISPER_MODEL_DIR",
+    "/models/whisper-large-v3-turbo"
+)
+model = WhisperModel(
+    model_path,
+    device="cuda",
+    compute_type="float16"
+)
 
 
 @app.post("/transcribe/")
