@@ -35,7 +35,7 @@ snapshot_download(
   '
 ```
 
-# Step IV :
+# Step IV (with internet):
 
 
 this:
@@ -43,7 +43,6 @@ this:
 docker run --rm \
   --runtime nvidia \
   -p 8090:8000 \
-  --network host \
   -v /mnt/nvme/models/gpt-oss-20b-local:/models:ro \
   -v /mnt/nvme/models/tiktoken_encodings:/root/.cache/tiktoken_encodings:ro \
   -e TIKTOKEN_ENCODINGS_BASE=/root/.cache/tiktoken_encodings \
@@ -53,7 +52,10 @@ docker run --rm \
   --host 0.0.0.0 \
   --port 8000 \
   --gpu-memory-utilization 0.5
+
 ```
+
+
 
 not this:
 ```
@@ -82,7 +84,6 @@ docker run -d \
   --name vllm_gpt_oss \
   --runtime nvidia \
   -p 8090:8000 \
-  --network none \
   -v /mnt/nvme/models/gpt-oss-20b-local:/models:ro \
   -v /mnt/nvme/models/tiktoken_encodings:/root/.cache/tiktoken_encodings:ro \
   -e HF_HUB_OFFLINE=1 \
@@ -94,29 +95,9 @@ docker run -d \
   --host 0.0.0.0 \
   --port 8000 \
   --gpu-memory-utilization 0.5
-```
 
-not this:
-```
-docker run -d \
-  --restart unless-stopped \
-  --name vllm_gpt_oss \
-  --runtime nvidia \
-  -p 8090:8000 \
-  --network none \
-  -v /mnt/nvme/models/gpt-oss-20b:/models:ro \
-  -v /mnt/nvme/models/tiktoken_encodings:/root/.cache/tiktoken_encodings:ro \
-  -e TIKTOKEN_ENCODINGS_BASE=/root/.cache/tiktoken_encodings \
-  --ipc=host \
-  ghcr.io/nvidia-ai-iot/vllm:latest-jetson-orin \
-  vllm serve /models \
-  --host 0.0.0.0 \
-  --port 8000 \
-  --gpu-memory-utilization 0.5
 
 ```
-
-
 
 
 # Step VI (Test):
@@ -127,21 +108,23 @@ curl http://127.0.0.1:8090/v1/models
 or
 
 ```
-curl http://127.0.0.1:8090/v1/chat/completions \
+curl http://localhost:8090/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "openai/gpt-oss-20b",
+    "model": "/models",
     "messages": [
       {
         "role": "user",
         "content": "What is the capital of France?"
       }
     ],
-    "max_tokens": 100
+    "max_tokens": 50
   }'
 
 ```
 
+# Remove:
+docker rm -f vllm_gpt_oss
 
 
 # Params:
