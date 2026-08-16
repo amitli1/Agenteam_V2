@@ -16,7 +16,7 @@ wget -O /mnt/nvme/models/tiktoken_encodings/cl100k_base.tiktoken \
 mkdir -p /mnt/nvme/models/gpt-oss-20b
 ```
 
-# Step III (Download model):
+# Step III (Download model to /mnt/nvme/models/gpt-oss-20b-local/):
 
 ```
 docker run --rm \
@@ -36,6 +36,26 @@ snapshot_download(
 ```
 
 # Step IV :
+
+
+this:
+```
+docker run --rm \
+  --runtime nvidia \
+  -p 8090:8000 \
+  --network host \
+  -v /mnt/nvme/models/gpt-oss-20b-local:/models:ro \
+  -v /mnt/nvme/models/tiktoken_encodings:/root/.cache/tiktoken_encodings:ro \
+  -e TIKTOKEN_ENCODINGS_BASE=/root/.cache/tiktoken_encodings \
+  --ipc=host \
+  ghcr.io/nvidia-ai-iot/vllm:latest-jetson-orin \
+  vllm serve /models \
+  --host 0.0.0.0 \
+  --port 8000 \
+  --gpu-memory-utilization 0.5
+```
+
+not this:
 ```
 docker run --rm \
   --runtime nvidia \
@@ -55,6 +75,28 @@ docker run --rm \
 
 
 # Step V (no internet) :
+this:
+```
+docker run -d \
+  --restart unless-stopped \
+  --name vllm_gpt_oss \
+  --runtime nvidia \
+  -p 8090:8000 \
+  --network none \
+  -v /mnt/nvme/models/gpt-oss-20b-local:/models:ro \
+  -v /mnt/nvme/models/tiktoken_encodings:/root/.cache/tiktoken_encodings:ro \
+  -e HF_HUB_OFFLINE=1 \
+  -e TRANSFORMERS_OFFLINE=1 \
+  -e TIKTOKEN_ENCODINGS_BASE=/root/.cache/tiktoken_encodings \
+  --ipc=host \
+  ghcr.io/nvidia-ai-iot/vllm:latest-jetson-orin \
+  vllm serve /models \
+  --host 0.0.0.0 \
+  --port 8000 \
+  --gpu-memory-utilization 0.5
+```
+
+not this:
 ```
 docker run -d \
   --restart unless-stopped \
