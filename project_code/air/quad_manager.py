@@ -114,9 +114,12 @@ class QuadManager:
                 async with websockets.connect(self.quad_url) as websocket:
                     while True:
                         try:
+
+                            if flag_connection_opened is False:
+                                logging.info('Connection to QUAD API established')
+
                             flag_connection_opened = True
                             message                = await websocket.recv()
-
                             if flag_first_msg is False:
                                 if self.fnc_send_text_to_user:
                                     self.fnc_send_text_to_user('Start getting drone status')
@@ -152,7 +155,7 @@ class QuadManager:
 
             except Exception as e:
                 if flag_connection_opened:
-                    logging.info(f'Cant connect to: {e}')
+                    logging.info(f'Connection to QUAD API disconnect: {e}')
                 flag_connection_opened = False
 
 
