@@ -23,6 +23,7 @@ class SoundPlayerManager:
                     cls._instance.thread   = threading.Thread(target=cls._instance.run, daemon=True)
                     cls._instance.running  = threading.Event()
                     cls._instance.out_name = cls._instance.get_output_device_name()
+                    logging.info(f'Use output device: {cls._instance.out_name}')
         return cls._instance
 
     def get_file_queue(self):

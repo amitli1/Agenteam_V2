@@ -1,18 +1,26 @@
 import logging
 from openai import OpenAI
 import json
-
+import re
 from project_code.app_config.settings import app_settings
-
+from project_code.utils.utils import is_intel
 
 
 class LlmCommandParser:
     def __init__(self):
+
+        base_url   = app_settings.llm.base_url
+        self.model = app_settings.llm.llm_model
+
+        if is_intel() is False:
+            base_url   = re.sub(r'(localhost|127\.0\.0\.1)', 'host.docker.internal', base_url)
+            self.model = "/models"
+
         self.client = OpenAI(
             api_key=app_settings.llm.api_key,
-            base_url=app_settings.llm.base_url
+            base_url=base_url
         )
-        self.model = app_settings.llm.llm_model
+
         with open("llm/prompt_split_command.txt", "r", encoding="utf-8") as f:
             self.split_user_command_prompt = f.read()
 

@@ -13,7 +13,7 @@ from project_code.llm.llm_vision_parser import VisionParser
 from project_code.utils.logger_utils import init_logger
 from project_code.utils.sound_player import SoundPlayerManager
 from project_code.utils.utils import create_output_folder, check_models, warmup, get_running_ip, \
-    prepare_audio_for_speech
+    prepare_audio_for_speech, is_intel
 import logging
 import threading
 import time
@@ -285,8 +285,10 @@ class MainGround:
 def run_ground():
     create_output_folder()
     if check_models() is False:
-        # exit(0)
-        None
+        if is_intel() is False:
+            #logging.info('EXIT')
+            #exit(0)
+            None
     else:
         warmup()
 

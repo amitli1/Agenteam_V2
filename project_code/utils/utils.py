@@ -79,15 +79,37 @@ def distance_meters(point1: dict, point2: dict) -> float:
     # 3D distance
     return math.sqrt(horizontal_distance**2 + altitude_difference**2)
 
+
+def is_llm_read(base_url):
+    try:
+        r = requests.get(
+            f"{base_url}/models",
+            timeout=2,
+        )
+        r.raise_for_status()
+
+        models = r.json().get("data", [])
+        return len(models) > 0
+
+    except (requests.RequestException, ValueError):
+        return False
+
 def check_models():
 
     # 1. check LLM
-    client = OpenAI(
-        api_key=app_settings.llm.api_key,
-        base_url=app_settings.llm.base_url
-    )
+    base_url = app_settings.llm.base_url
+    if is_intel() is False:
+        base_url = re.sub(r'(localhost|127\.0\.0\.1)', 'host.docker.internal', base_url)
+
+    logging.info(f'Open openAI client to: {base_url}')
+    # client = OpenAI(
+    #     api_key=app_settings.llm.api_key,
+    #     base_url=base_url
+    # )
     llm_model = app_settings.llm.llm_model
-    if llm_model_loaded(client, llm_model):
+
+    #if llm_model_loaded(client, llm_model):
+    if is_llm_read(base_url):
         logging.info(f"Model: {llm_model} is ready")
     else:
         logging.info(f"Model: {llm_model} is not ready")
@@ -104,7 +126,7 @@ def check_models():
     try:
         response = requests.post("http://127.0.0.1:8002/synthesize/", timeout=2)
     except requests.exceptions.ConnectionError:
-        logging.info(f"Whisper Model is not ready")
+        logging.info(f"TTS Model is not ready")
         return False
 
 
@@ -115,7 +137,8 @@ def llm_model_loaded(client, model_name):
     try:
         models = client.models.list()
         return any(m.id == model_name for m in models.data)
-    except Exception:
+    except Exception as e:
+        logging.error(f'Model lists error: {e}')
         return False
 
 
