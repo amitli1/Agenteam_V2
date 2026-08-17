@@ -1,21 +1,19 @@
-1. air - logs (file)
+# Todo (before integration):
 2. surround- not works sometimes (+ add logs to air with box)
-3. vision
-4. on jetson
-5. system tests
-6. check handle_message_from_master_drone (air to air)
-7. handle hold (team and master
-9. hold ? say on what ? ("Hold the junction and look for weapons))
-10. vision and fly - async (call to llm and run) (not sure - what to focus on)
-12. LLM params from config file
-14. stop summary and describe
-18.     #
-    # download open wake word models to:
-    # /mnt/nvme/python_venvs/agentVenv/lib/python3.10/site-packages/openwakeword/resources/models/
-    #
-    openwakeword.utils.download_models()
+2. vision (air)
+3. system tests
+4. check handle_message_from_master_drone (air to air)
+5. vision and fly - async (call to llm and run) (not sure - what to focus on)
+6. stop summary and describe
 
- 
+# Todo (after integration):
+1. whisper - input is too long
+2. LLM (x2) how much tokens are needed
+3. collect LLM TTS (1/2 drones master/slave)
+4. hey jarvis
+
+# IPs:
+1. AIR(1) 192.168.144.114
 
 Did:
 1. when moving drone - first get to alt and then to destination
