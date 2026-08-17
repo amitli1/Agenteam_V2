@@ -2,6 +2,9 @@
 import logging
 import pyaudio
 
+from project_code.utils.utils import is_intel
+
+
 def get_support_sample_rate():
     p = pyaudio.PyAudio()
 
@@ -36,9 +39,19 @@ def get_input_device():
                                          input_device   = dev['index'],
                                          input_channels = int(dev['maxInputChannels']),
                                          input_format   = pyaudio.paInt16):
-                    logging.info(f"\tInput Device {i}: {dev['name']} support SR=16000")
-                    p.terminate()
-                    return i
+
+                    if is_intel():
+                        logging.info(f"\tInput Device {i}: {dev['name']} support SR=16000")
+                        p.terminate()
+                        return i
+                    else:
+                        #  jetson:
+                        if "usb" not in dev['name'].lower():
+                            continue
+
+                        logging.info(f"\tUSB input Device {i}: {dev['name']} support SR=16000")
+                        p.terminate()
+                        return i
             except ValueError:
                 pass
 

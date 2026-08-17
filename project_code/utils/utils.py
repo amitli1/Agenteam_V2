@@ -13,6 +13,7 @@ from openai import OpenAI
 from project_code.app_config.settings import app_settings
 from project_code.utils.logger_utils import CURRENT_DATE
 import re
+import platform
 
 from project_code.utils.sound_player import SoundPlayerManager
 
@@ -245,3 +246,14 @@ def get_last_generated_file():
                 latest_file = fname
 
     return max_num
+
+
+
+
+def is_intel() -> bool:
+    """
+    Returns True if running on an Intel (x86_64) machine,
+    False if running on Jetson (aarch64/arm) or any other architecture.
+    """
+    machine = platform.machine().lower()
+    return machine in ("x86_64", "amd64")
