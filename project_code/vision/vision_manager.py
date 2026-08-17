@@ -192,7 +192,7 @@ class VisionManager(object):
         if self.is_online is False:
             return
 
-        logging.info('Start listing for summery status')
+        logging.info('Start listing for summary status')
         got_status_msg = False
 
         while True:
