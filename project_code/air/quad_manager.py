@@ -104,7 +104,7 @@ class QuadManager:
 
     async def receive_drone_status(self):
 
-        logging.info(f'Start receive_drone_status thread on port: {self.quad_url}')
+        logging.info(f'Start listening on port: {self.quad_url}')
         flag_connection_opened = False
         flag_first_msg         = False
         flag_log_error         = False
