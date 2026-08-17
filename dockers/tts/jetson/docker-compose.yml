@@ -1,18 +1,78 @@
-version: '3.8'
+version: "3.8"
+
 services:
+
   tts:
     build:
-      context: ../../..         # Set context to Jetson/
-      dockerfile: agenteam-dockers/audio/tts_service/Dockerfile
+      context: ../../..
+      dockerfile: dockers/tts/jetson/Dockerfile
+
+    image: tts-service:latest
+    container_name: tts-service-container
+
     ports:
       - "8002:8002"
-    image: tts-service
-    container_name: tts-service-container
+
     volumes:
-      - /mnt/nvme/models/kokoro_model:/models/kokoro_model
+
+      # ---------------------------------------------------
+      # Persistent Kokoro model
+      #
+      # Host:
+      #   /mnt/nvme/models
+      #
+      # Container:
+      #   /models
+      #
+      # The downloaded model will therefore live at:
+      #
+      #   /mnt/nvme/models/kokoro-82m/
+      # ---------------------------------------------------
+      - /mnt/nvme/models:/models
+
+      # ---------------------------------------------------
+      # Persistent Hugging Face cache
+      #
+      # This is useful for any additional HF downloads,
+      # but the Kokoro model itself is stored directly
+      # under /models.
+      # ---------------------------------------------------
+      - /mnt/nvme/models/huggingface:/root/.cache/huggingface
+
     environment:
-      - PULSE_SERVER=unix:/tmp/pulse/native
-      - PULSE_COOKIE=/tmp/pulse/cookie
-    devices:
-      - /dev/snd
+
+      # ---------------------------------------------------
+      # Hugging Face paths
+      # ---------------------------------------------------
+      HF_HOME: /root/.cache/huggingface
+      HF_HUB_CACHE: /root/.cache/huggingface/hub
+      TRANSFORMERS_CACHE: /root/.cache/huggingface/transformers
+
+      # ---------------------------------------------------
+      # Kokoro model
+      # ---------------------------------------------------
+      TTS_MODEL_REPO: hexgrad/Kokoro-82M
+      TTS_MODEL_DIR: /models/kokoro-82m
+
+      # ---------------------------------------------------
+      # TTS device: cuda / cpu
+      # ---------------------------------------------------
+      TTS_DEVICE: cuda
+
+      # ---------------------------------------------------
+      # Python
+      # ---------------------------------------------------
+      PYTHONPATH: /app
+
+      # ---------------------------------------------------
+      # FIRST RUN:
+      #   0 = internet allowed
+      #
+      # OFFLINE RUN:
+      #   1 = absolutely no HF network requests
+      #
+      # Change this to 1 after the first successful download.
+      # ---------------------------------------------------
+      HF_HUB_OFFLINE: "0"
+
     restart: always

@@ -1,12 +1,30 @@
-# Download:
+# TTS docker (Kokoro)
+
+## step 1:
 ```
-hf download hexgrad/Kokoro-82M --local-dir /mnt/nvme/models/kokoro_model
+sudo docker compose -f docker-compose.yml up --build
+```
+Model download to: '/mnt/nvme/models/kokoro-82m/'
+
+## step 2:
+```
+Under docker-compose.yaml change HF_HUB_OFFLINE to 1
 ```
 
-# Test:
+## step 3:
 ```
- curl -X POST 192.168.144.113:8123/text_to_user   -H "Content-Type: application/json"   -d '{"text": "Hello, this is a test message!"}'
+sudo docker compose -f docker-compose.yml up
 ```
+
+## step 4:
+```
+curl -X POST \
+  http://localhost:8002/synthesize/ \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Hello, this is a test message!"}'
+```
+
 ```
 curl -v http://localhost:8002/docs
-``` 
+```
+
