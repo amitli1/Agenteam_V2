@@ -4,7 +4,7 @@ import json
 import re
 from project_code.app_config.settings import app_settings
 from project_code.utils.utils import is_intel
-
+import time
 
 class LlmCommandParser:
     def __init__(self):
@@ -46,6 +46,7 @@ class LlmCommandParser:
 
     def split_user_command(self, user_command):
 
+        start_time = time.time()
         response = self.client.chat.completions.create(
             model=self.model,
             messages=[
@@ -60,6 +61,8 @@ class LlmCommandParser:
             temperature=0.0,
             max_tokens=1000,
         )
+        end_time = time.time()
+        logging.info(f'Split user command (with LLM) took {(end_time - start_time):.2f} seconds')
 
         raw_output = response.choices[0].message.content
         parsed_output = json.loads(raw_output)

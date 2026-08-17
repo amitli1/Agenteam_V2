@@ -124,8 +124,13 @@ class AudioPipeline:
                 winner_wakeword = (outcome.winner or "").strip()  # "Buddy"|"HeyBuddy"|"Team"|"" (fallback handled below)
 
                 if any(outcome.votes.values()) > 0:
-                    formatted_mean_score = {k: f"{v:.3f}" for k, v in outcome.mean_score.items()}
-                    logging.info(f"Votes: {outcome.votes}, Mean Score: {formatted_mean_score}")
+                    winner = max(outcome.votes, key=outcome.votes.get)
+                    score = outcome.mean_score.get(winner, 0.0)
+
+                    logging.info(
+                        f"Keyword detection | Winner: {winner} | "
+                        f"Votes: {outcome.votes[winner]} | Score: {score:.3f}"
+                    )
 
                     # Not triggered → keep listening
                 if not outcome.trigger:
