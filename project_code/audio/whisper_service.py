@@ -38,7 +38,7 @@ model_path = os.environ.get(
     "/models/whisper-large-v3-turbo"
 )
 model = WhisperModel(
-    model_path,
+    model_path, # /mnt/nvme/models/whisper-large-v3-turbo/
     device="cuda",
     compute_type="float16"
 )
