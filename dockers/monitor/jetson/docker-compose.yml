@@ -1,0 +1,14 @@
+services:
+  monitor:
+    build:
+      context: ../../..
+      dockerfile: dockers/monitor/jetson/Dockerfile
+    image: monitor:latest
+    container_name: monitor
+    ports:
+      - "7031:7031"
+    environment:
+      - PORT=7031
+      - HOST=0.0.0.0
+    restart: unless-stopped
+

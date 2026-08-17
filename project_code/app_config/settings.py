@@ -64,6 +64,7 @@ class General(BaseModel):
     slave_air_port: int
     ground_ip: str
     ground_port: int
+    wait_for_first_air_message: bool
 
 class FLightPath(BaseModel):
   default_drone_altitude: float

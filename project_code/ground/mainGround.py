@@ -298,9 +298,12 @@ def run_ground():
         daemon=True,
     )
     mainGround.flask_groundthread.start()
-    logging.info('Waiting for first message from AIR, before continue')
-    mainGround.status_received_event.wait()
-    logging.info('Got first message from AIR, continue')
+    if app_settings.general.wait_for_first_air_message:
+        logging.info('Waiting for first message from AIR, before continue')
+        mainGround.status_received_event.wait()
+        logging.info('Got first message from AIR, continue')
+    else:
+        logging.info("I'm not waiting for first message from AIR")
     return mainGround
 
 

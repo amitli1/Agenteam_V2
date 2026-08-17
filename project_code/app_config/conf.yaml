@@ -38,6 +38,8 @@ general:
   ground_ip: 127.0.0.1
   ground_port: 8123
 
+  wait_for_first_air_message: false
+
 flightPath:
   default_drone_altitude: 20.0
   spatial_distance: 5.0
@@ -57,7 +59,7 @@ vision:
   pointing_settings_file: app_config/pointing_settings.json
 
 logging_and_records:
-  output_path: ../outputs
+  output_path: /mnt/nvme/outputs
 
 database:
     db_path: app_config/airsim_poly_db.csv

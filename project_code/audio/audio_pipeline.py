@@ -41,6 +41,8 @@ class AudioPipeline:
         self.CHANNELS      = app_settings.audio.wakeword.channels
         self.MIC_SR        = app_settings.audio.wakeword.sample_rate
         self.audio         = pyaudio.PyAudio()
+
+        logging.info(f'Open audio input with device index: {self.input_device}')
         self.mic_stream    = self.audio.open(format              = self.FORMAT,
                                              channels            = self.CHANNELS,
                                              rate                = self.MIC_SR,
@@ -228,7 +230,6 @@ class AudioPipeline:
         while True:
 
             wake_word_detected = False
-
             if app_settings.test.run_in_test_mode is True:
                 wake_word_detected = True
                 # recorded_audio = TesterManager().run_next_test_step()
