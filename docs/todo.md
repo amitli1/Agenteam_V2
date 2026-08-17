@@ -11,6 +11,7 @@
 2. LLM (x2) how much tokens are needed
 3. collect LLM TTS (1/2 drones master/slave)
 4. hey jarvis
+5. ip & is_alive - if not intel (use default) 
 
 # IPs:
 1. AIR(1) 192.168.144.114
