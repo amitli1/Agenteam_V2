@@ -13,7 +13,7 @@ import torch
 
 from project_code.audio.wakeword_detection_strategies import DetectionOutcome
 from project_code.audio.wakeword_logic import WakewordLogic
-from project_code.utils.audio_utils import get_input_device, get_output_device
+from project_code.utils.audio_utils import get_input_device
 from project_code.utils.logger_utils import CURRENT_DATE
 from project_code.utils.utils import get_running_ip, play_text, log_boxed
 from pathlib import Path
@@ -23,16 +23,10 @@ class AudioPipeline:
     def __init__(self, func_handle_user_text):
 
         self.func_handle_user_text = func_handle_user_text
-        openwakeword.utils.download_models(['embedding_model', 'hey_jarvis_v0.1', 'melspectrogram', 'silero_vad'])
+        #openwakeword.utils.download_models(['embedding_model', 'hey_jarvis_v0.1', 'melspectrogram', 'silero_vad'])
 
-        self.owwModel = openwakeword.Model(
-            wakeword_models=["hey_jarvis"],
-            inference_framework="onnx",
-            enable_speex_noise_suppression=True
-        )
         self.wakewordLogic = WakewordLogic()
         self.input_device  = get_input_device()
-        self.output_device = get_output_device()
 
         self.vad_model     = load_silero_vad()
         self.audio_buffer  = deque(maxlen=10)
