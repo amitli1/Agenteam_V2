@@ -321,6 +321,7 @@ def run_ground():
         warmup()
 
     SoundPlayerManager().start()
+    time.sleep(0.1)
 
     mainGround = MainGround()
     mainGround.flask_groundthread = threading.Thread(

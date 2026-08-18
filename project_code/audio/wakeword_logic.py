@@ -28,6 +28,7 @@ class WakewordLogic():
                 onnx_paths = sorted([str(p) for p in ww_models_dir.glob("*.onnx")])
                 # logging.info(f"[WAKEWORD] {ww} ONNX list:\n  " + "\n  ".join(onnx_paths))
 
+                logging.info(f'{ww} Models:')
                 good = []
                 for p in onnx_paths:
                     try:
@@ -38,6 +39,7 @@ class WakewordLogic():
                             vad_threshold=app_settings.audio.vad.vad_threshold,
                         )
                         good.append(p)
+                        logging.info(f"\t{p.split('wakeword_models', 1)[1]}")
                     except Exception as e:
                         logging.error(f"[WAKEWORD] Skipping bad ONNX: {p} :: {e}")
 

@@ -21,6 +21,9 @@ class MonitorCollector:
         threading.Thread(target=self._process_status, daemon=True).start()
 
     def start(self):
+
+        self._clear_monitor()
+
         databaseManager = DatabaseManager()
         df              = databaseManager.get_db()
         try:
@@ -32,6 +35,12 @@ class MonitorCollector:
             logging.error(f'Error while sending data to Monitor (get_dataset): {e}')
             return False
         return True
+
+    def _clear_monitor(self):
+        response = requests.post("http://localhost:7031/clear")
+        if response.status_code != 200:
+            logging.error(f'Error while sending clear to Monitor: {response.status_code}')
+
 
     # ---------- FIFO worker (user_command / text_to_user) ----------
     def _process_msg_queue(self):
