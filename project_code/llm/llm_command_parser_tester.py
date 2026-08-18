@@ -116,8 +116,6 @@ def test_7(parser, text):
     ]
     return _check(result, expected, text)
 
-
-
 def test_8(parser, text):
 
     # hey jarvis, describe the person near the car
@@ -128,6 +126,20 @@ def test_8(parser, text):
             "team_member": "jarvis",
             "fly_command": "",
             "vision_command": "describe the person near the car",
+        }
+    ]
+    return _check(result, expected, text)
+
+def test_9(parser, text):
+
+    # hey jarvis, surround building number 3 and look for people and weapons
+
+    result = parser.split_user_command(text)
+    expected = [
+        {
+            "team_member": "jarvis",
+            "fly_command": "surround building number 3",
+            "vision_command": "look for people and weapons",
         }
     ]
     return _check(result, expected, text)
@@ -144,6 +156,7 @@ def run_all_tests():
         (test_6, "hey team, hold the building and look for man with blue shirt"),
         (test_7, "hey jarvis, point to the car or cow"),
         (test_8, "hey jarvis, describe the person near the car"),
+        (test_9, "hey jarvis, surround building number 3 and look for people and weapons"),
     ]
 
     results = []
