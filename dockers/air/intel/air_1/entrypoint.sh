@@ -6,6 +6,10 @@ set -e
 
 CONF_FILE="/app/app_config/conf.yaml"
 
+# Ensure the logging output directory (mounted from the host) exists,
+# otherwise logging.FileHandler() fails with FileNotFoundError.
+mkdir -p /mnt/nvme/outputs
+
 if [ -n "${RUN_AS_MASTER}" ]; then
     python - "$CONF_FILE" "$RUN_AS_MASTER" <<'PYEOF'
 import sys

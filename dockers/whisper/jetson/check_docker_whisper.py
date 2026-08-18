@@ -35,8 +35,11 @@ def test_multiple_files():
             print(f"File: {file_path}, Response: {json.loads(response.text)['transcription']}")
 
 def test_with_audio_buffer():
-    full_path = r'/mnt/nvme/repo/Agenteam_V2/dockers/whisper/jetson'
-    audio_input = load_file(rf'{full_path}/1.wav')
+    #full_path = r'/mnt/nvme/repo/Agenteam_V2/dockers/whisper/jetson'
+    #full_path = r'/home/amitli/repo/Agenteam_V2/dockers/whisper/jetson'
+    full_path = r'/home/amitli/repo/Agenteam_V2/project_code/audio/audio_files/I_have_reached_the_destination.wav'
+    #audio_input = load_file(rf'{full_path}/1.wav')
+    audio_input = load_file(full_path)
     response = requests.post(f"http://0.0.0.0:8013/transcribe/", json={"audio_input": list(audio_input)})
     print(f"Response: {json.loads(response.text)['transcription']}")
 

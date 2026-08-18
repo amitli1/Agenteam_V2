@@ -9,7 +9,7 @@ import math
 import logging
 import os
 import glob
-
+import platform
 import uvicorn
 
 from project_code.app_config.settings import app_settings
@@ -31,12 +31,14 @@ model_size = app_settings.audio.stt.model_size
 
 logging.info(f"Run with: {model_size}, NUM_BEAMS: {NUM_BEAMS}, language: {language}")
 
-
-logger.info(f'Load: {model_size}')
-model_path = os.environ.get(
-    "WHISPER_MODEL_DIR",
-    "/models/whisper-large-v3-turbo"
-)
+if  platform.machine().lower() in ("x86_64", "amd64"):
+    model_path = app_settings.audio.stt.model_size
+else:
+    model_path = os.environ.get(
+        "WHISPER_MODEL_DIR",
+        "/models/whisper-large-v3-turbo"
+    )
+logger.info(f'Load: {model_path}')
 model = WhisperModel(
     model_path, # /mnt/nvme/models/whisper-large-v3-turbo/
     device="cuda",

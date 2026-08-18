@@ -168,7 +168,6 @@ class AudioPipeline:
                     logging.error(f"Error during Whisper transcription: {e}")
                     text = ""
                 end_stt     = time.time()
-                #logging.info(f'[Whisper: {(end_stt - start_stt):.2f}] Text: {text}')
                 log_boxed("Whisper Transcription", [
                               f"Time : {(end_stt - start_stt):.2f} sec",
                                 f"Text : {text}",

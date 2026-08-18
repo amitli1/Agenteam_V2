@@ -126,6 +126,12 @@ class MainGround:
         elif "I dont understand please repeat command" in text_to_user:
             SoundPlayerManager().get_file_queue().put(f"{app_settings.database.audio_files}/I_dont_understand_please_repeat_command.wav")
             return True
+        elif text_to_user.lower() == "NO_MASTER_DRONE: master drone location is not available.".lower():
+            SoundPlayerManager().get_file_queue().put(f"{app_settings.database.audio_files}/I_dont_understand_please_repeat_command.wav")
+            return True
+        elif text_to_user.lower() == "NO_SLAVE_DRONE: slave drone is not available.".lower():
+            SoundPlayerManager().get_file_queue().put(f"{app_settings.database.audio_files}/I_dont_understand_please_repeat_command.wav")
+            return True
 
         try:
             response = requests.post(f"http://{get_running_ip()}:8002/synthesize/", json={"text": text_to_user})

@@ -40,18 +40,22 @@ RUN pip install \
         faster-whisper \
         huggingface_hub
 
-# Bake the faster-whisper model weights into the image, at the exact local
-# cache path whisper_service.py hardcodes when running inside a container
-# (see in_docker() in project_code/audio/whisper_service.py). Doing this at
-# build time means the container works without any external volume, and
-# avoids an empty/host bind mount silently shadowing the model directory -
-# which is what caused the
-# "Repo id must be in the form 'repo_name' or 'namespace/repo_name'" crash
-# (faster-whisper only treats model_size_or_path as a HF repo id when the
-# local path does not already exist as a directory).
+# Bake the faster-whisper model weights into the image as a flat local
+# directory (using huggingface_hub's `local_dir`, not `cache_dir`). This
+# matters because whisper_service.py (on x86_64) passes the model *name*
+# ("large-v3-turbo", from conf.yaml) straight to WhisperModel(). At runtime
+# faster-whisper only skips the Hugging Face download when
+# os.path.isdir(model_size_or_path) is True - a HF "cache_dir" layout
+# (blobs/snapshots/refs) is NOT a plain model dir, so at runtime it was still
+# calling huggingface_hub.snapshot_download(), which requires network access
+# and failed inside the container with IncompleteSnapshotError. Downloading
+# to a flat `local_dir` avoids that entirely, and conf.yaml below is patched
+# to point model_size at this local directory so no network call happens at
+# all when the container starts.
+ENV WHISPER_MODEL_DIR=/app/models/faster-whisper-large-v3-turbo
 RUN python3 -c "\
 from huggingface_hub import snapshot_download; \
-snapshot_download(repo_id='mobiuslabsgmbh/faster-whisper-large-v3-turbo', revision='0a363e9161cbc7ed1431c9597a8ceaf0c4f78fcf', cache_dir='/app/models/faster-whisper-large-v3-turbo')"
+snapshot_download(repo_id='mobiuslabsgmbh/faster-whisper-large-v3-turbo', revision='0a363e9161cbc7ed1431c9597a8ceaf0c4f78fcf', local_dir='${WHISPER_MODEL_DIR}')"
 
 # Application code.
 COPY project_code /app/project_code
@@ -62,6 +66,13 @@ COPY project_code /app/project_code
 # copy the root app_config package (settings.py + conf.yaml) here too.
 COPY app_config/settings.py /app/app_config/settings.py
 COPY app_config/conf.yaml /app/app_config/conf.yaml
+
+# Point conf.yaml's stt.model_size at the local, baked-in model directory
+# instead of the bare "large-v3-turbo" name, so whisper_service.py's
+# `model_path = app_settings.audio.stt.model_size` (x86_64 branch) resolves
+# to an existing directory and faster-whisper loads it directly, without
+# ever attempting a Hugging Face Hub lookup at container startup.
+RUN sed -i "s|model_size: .*|model_size: ${WHISPER_MODEL_DIR}|" /app/app_config/conf.yaml
 
 EXPOSE 8013
 
