@@ -45,6 +45,10 @@ if __name__ == "__main__":
     #run_tts("what should I look for ?",f'/home/amitli/repo/Agenteam_V2/project_code/audio/audio_files/What_should_I_look_for.wav')
     #run_tts("I don't understand, please repeat command.",f'/home/amitli/repo/Agenteam_V2/project_code/audio/audio_files/I_dont_understand_please_repeat_command.wav')
 
-    run_tts("no master drone: master drone location is not available.",f'/home/amitli/repo/Agenteam_V2/project_code/audio/audio_files/No_master_drone.wav')
-    run_tts("no slave drone: slave drone is not available.",f'/home/amitli/repo/Agenteam_V2/project_code/audio/audio_files/No_slave_drone.wav')
+    #run_tts("no master drone: master drone location is not available.",f'/home/amitli/repo/Agenteam_V2/project_code/audio/audio_files/No_master_drone.wav')
+    #run_tts("no slave drone: slave drone is not available.",f'/home/amitli/repo/Agenteam_V2/project_code/audio/audio_files/No_slave_drone.wav')
+    run_tts("Destination not found",f'/home/amitli/repo/Agenteam_V2/project_code/audio/audio_files/Destination_not_found.wav')
+
+
+
 

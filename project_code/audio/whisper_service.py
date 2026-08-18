@@ -47,29 +47,34 @@ model = WhisperModel(
 
 
 @app.post("/transcribe/")
-async def transcribe_api(file: UploadFile = File(None), request: Request = None):
+async def transcribe_api(request: Request):
     start = time.perf_counter()
-    if file:
+    content_type = request.headers.get("content-type", "")
+
+    if content_type.startswith("multipart/form-data"):
         logging.info("Received file to transcribe")
+        form = await request.form()
+        file = form.get("file")
+        if file is None:
+            return {"error": "No file provided."}
         temp_path = f"{file.filename}"
         with open(temp_path, "wb") as f:
             f.write(await file.read())
         audio_input = temp_path
 
-    elif request:
+    elif content_type.startswith("application/json"):
         logging.info("Received audio request to transcribe")
-        data             = await request.json()
+        data = await request.json()
         audio_input_data = data.get("audio_input")
 
         if isinstance(audio_input_data, str):
-            audio_input = audio_input_data  # treat as path
+            audio_input = audio_input_data
         elif isinstance(audio_input_data, list):
             audio_input = np.array(audio_input_data, dtype=np.float32)
         else:
             return {"error": "Invalid audio_input format. Must be path or list of floats."}
     else:
         return {"error": "No input provided."}
-
     # === Actual transcription logic starts here ===
     try:
         logging.info('Starting transcription')

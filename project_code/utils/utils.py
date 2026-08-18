@@ -191,7 +191,7 @@ def warmup():
     # --- WHISPER
     try:
         logging.info('Start WHISPER warmup')
-        audio       = AudioSegment.from_wav(f"{os.getcwd()}/audio_files/Please_say_again.wav")
+        audio       = AudioSegment.from_wav(f"{os.getcwd()}/audio/audio_files/I_dont_understand_please_repeat_command.wav")
         samples     = np.array(audio.get_array_of_samples())
         samples     = samples / 32768.0
         audio_input = samples.tolist()

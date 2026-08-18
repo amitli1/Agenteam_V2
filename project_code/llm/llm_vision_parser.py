@@ -70,8 +70,12 @@ class VisionParser:
                     "guided_json": self.vision_command_schema,
                 },
                 temperature=0.0,
-                max_tokens=500,
+                max_tokens=150,
             )
+
+            if response.choices[0].finish_reason != "stop":
+                logging.error(f"LLM response finish reason: {response.choices[0].finish_reason}")
+
             raw_output = response.choices[0].message.content
             return json.loads(raw_output)
         except Exception as e:

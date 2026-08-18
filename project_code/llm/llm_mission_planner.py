@@ -167,8 +167,11 @@ class MissionPlannerAgent:
                     "guided_json": self._intent_schema,
                 },
                 temperature=0.0,
-                max_tokens=300,
+                max_tokens=200,
             )
+            if response.choices[0].finish_reason != "stop":
+                logging.error(f"LLM response finish reason: {response.choices[0].finish_reason}")
+
             raw = response.choices[0].message.content
             data = json.loads(raw)
             # Normalise the number (words -> digits) just in case.

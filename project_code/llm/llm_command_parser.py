@@ -21,7 +21,7 @@ class LlmCommandParser:
             base_url=base_url
         )
 
-        with open("llm/prompt_split_command.txt", "r", encoding="utf-8") as f:
+        with open("llm/prompt_split_command_concise.txt", "r", encoding="utf-8") as f:
             self.split_user_command_prompt = f.read()
 
         # JSON schema used to constrain the model output (guided decoding).
@@ -46,23 +46,36 @@ class LlmCommandParser:
 
     def split_user_command(self, user_command):
 
-        start_time = time.time()
-        response = self.client.chat.completions.create(
-            model=self.model,
-            messages=[
-                {"role": "system", "content": self.split_user_command_prompt},
-                {"role": "user", "content": f"USER COMMAND: {user_command}"}
-            ],
-            extra_body={
-                "reasoning_effort": "low",
-                "seed": 0,
-                "guided_json": self.split_command_schema,
-            },
-            temperature=0.0,
-            max_tokens=1000,
-        )
-        end_time = time.time()
+        try:
+            start_time = time.time()
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": self.split_user_command_prompt},
+                    {"role": "user", "content": f"USER COMMAND: {user_command}"}
+                ],
+                extra_body={
+                    "reasoning_effort": "low",
+                    "seed": 0,
+                    "guided_json": self.split_command_schema,
+                },
+                temperature=0.0,
+                max_tokens=100,
+            )
+            end_time = time.time()
+        except Exception as e:
+            logging.error(f"Error while calling llm: {e}")
+            return []
+
+        # usage = response.usage
+        # logging.info(
+        #     f"tokens - prompt: {usage.prompt_tokens}, "
+        #     f"completion: {usage.completion_tokens}, "
+        #     f"total: {usage.total_tokens}"
+        # )
         logging.info(f'Split user command (with LLM) took {(end_time - start_time):.2f} seconds')
+        if response.choices[0].finish_reason != "stop":
+            logging.error(f"LLM response finish reason: {response.choices[0].finish_reason}")
 
         raw_output = response.choices[0].message.content
         parsed_output = json.loads(raw_output)
