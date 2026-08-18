@@ -264,6 +264,17 @@ class MainGround:
 
         return l_current_command, f"{self.last_text_command} {current_text}"
 
+    def log_wait_for_next_command(self):
+
+        text = "Waiting for next user speech command"
+        lines = str(text).splitlines()
+        width = max(len(line) for line in lines)
+
+        logging.info("┌" + "─" * (width + 2) + "┐")
+        for line in lines:
+            logging.info(f"│ {line:<{width}} │")
+        logging.info("└" + "─" * (width + 2) + "┘")
+
     def handle_user_text(self, text):
 
         self.monitorCollector.update_user_command("", text)
@@ -282,6 +293,7 @@ class MainGround:
                     self.last_fly_command    = command['fly_command']
                     self.last_vision_command = vision_result_['vision_command']
                     self.last_text_command   = text
+                    self.log_wait_for_next_command()
                     return
 
             if command['fly_command'] != '':
@@ -291,6 +303,8 @@ class MainGround:
         self.last_fly_command    = None
         self.last_vision_command = None
         self.last_text_command   = None
+
+        self.log_wait_for_next_command()
 
 
 
