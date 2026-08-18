@@ -8,6 +8,7 @@ from project_code.db.database_manager import DatabaseManager
 from project_code.ground.monitor_collector import MonitorCollector
 from project_code.llm.drone_navigation_agent import DroneNavigationAgent
 from project_code.llm.llm_command_parser import LlmCommandParser
+from project_code.llm.llm_command_parser_v2 import LlmCommandParser_V2
 from project_code.llm.llm_mission_planner import MissionPlannerAgent
 from project_code.llm.llm_vision_parser import VisionParser
 from project_code.utils.logger_utils import init_logger
@@ -32,6 +33,7 @@ class MainGround:
     def __init__(self):
         self.audioPipeline        = AudioPipeline(self.handle_user_text)
         self.llmCommandParser     = LlmCommandParser()
+        self.llmCommandParser_v2  = LlmCommandParser_V2()
         self.llmMissionPlanner    = MissionPlannerAgent()
         self.databaseManager      = DatabaseManager()
         self.DroneNavigationAgent = DroneNavigationAgent()
@@ -174,6 +176,13 @@ class MainGround:
         self.audio_thread.start()
 
     def handle_fly_command(self, command):
+        """
+           command = {
+               "fly_command": "home",
+               "team_member": "team"
+           }
+        """
+
         if 'home' in command['fly_command']:
             if (command['team_member'] == "team") or (command['team_member'] == "buddy"):
                 r = requests.post(self.master_drone_url, json={"command": "home"})
@@ -256,6 +265,15 @@ class MainGround:
 
         return result_obj
 
+    def remove_wakewords(self, current_text):
+        # remove wake word from last text command
+        wake_words = ["hey buddy", "buddy", "jarvis", "team"]
+        cleaned_current_text = current_text.lower()
+        for w in wake_words:
+            cleaned_current_text = re.sub(rf"\b{re.escape(w)}\b", "", cleaned_current_text, flags=re.IGNORECASE)
+        cleaned_current_text = re.sub(r"\s+", " ", cleaned_current_text).strip()
+        return cleaned_current_text
+
     def merge_current_and_previous_commands(self, l_current_command, current_text):
         if self.last_fly_command is None and self.last_vision_command is None:
             return l_current_command, current_text
@@ -264,11 +282,7 @@ class MainGround:
         l_current_command[0]['vision_command'] = f"{self.last_vision_command} {current_text}"
 
         # remove wake word from last text command
-        wake_words           = ["hey buddy", "buddy", "jarvis", "team"]
-        cleaned_current_text = current_text.lower()
-        for w in wake_words:
-            cleaned_current_text = re.sub(rf"\b{re.escape(w)}\b", "", cleaned_current_text, flags=re.IGNORECASE)
-        cleaned_current_text = re.sub(r"\s+", " ", cleaned_current_text).strip()
+        cleaned_current_text = self.remove_wakewords(current_text)
 
         # return values
         return l_current_command, f"{self.last_text_command} {cleaned_current_text}"
@@ -283,6 +297,35 @@ class MainGround:
         for line in lines:
             logging.info(f"│ {line:<{width}} │")
         logging.info("└" + "─" * (width + 2) + "┘")
+
+    def handle_user_text_2(self, text):
+        self.monitorCollector.update_user_command("", text)
+
+        text        = f"{self.last_text_command} {text}"
+        llm_command = self.llmCommandParser_v2.split_user_command(text)
+
+        if llm_command['need_more_data']:
+            self.run_tts("what should I look for ?", "ground")
+            text                     = self.remove_wakewords(text)
+            self.last_text_command   = text
+            self.log_wait_for_next_command()
+            return
+
+        if llm_command['vision_command']['fly_cmd_type'] != "":
+            command_to_air = {
+                "vision_command"  : llm_command['vision_command']['fly_cmd_type'],
+                "objects_to_focus": llm_command['vision_command']['objects']
+            }
+
+            r = requests.post(self.master_drone_url, json={"command": "vision", "vision_command": command_to_air})
+            r.raise_for_status()
+
+        if llm_command['fly_command']['vision_cmd_type'] != "":
+            self.handle_fly_command(llm_command['fly_command'])
+
+        logging.info(f'Clear last_text_command')
+        self.last_text_command = ""
+        self.log_wait_for_next_command()
 
     def handle_user_text(self, text):
 
