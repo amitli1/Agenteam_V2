@@ -13,6 +13,7 @@ import platform
 import uvicorn
 
 from project_code.app_config.settings import app_settings
+from project_code.utils.platform_utils import is_intel
 
 sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
@@ -31,7 +32,7 @@ model_size = app_settings.audio.stt.model_size
 
 logging.info(f"Run with: {model_size}, NUM_BEAMS: {NUM_BEAMS}, language: {language}")
 
-if  platform.machine().lower() in ("x86_64", "amd64"):
+if is_intel():
     model_path = app_settings.audio.stt.model_size
 else:
     model_path = os.environ.get(

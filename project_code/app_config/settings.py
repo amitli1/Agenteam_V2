@@ -2,6 +2,9 @@ from typing import Dict
 from pydantic import BaseModel
 import yaml
 
+from project_code.utils.platform_utils import is_intel
+
+
 class STTConfig(BaseModel):
     model_size: str
     num_beams: int
@@ -87,10 +90,22 @@ class Settings(BaseModel):
     speakers: Speakers
     monitor: Monitor
 
-# amitli
+
+
+def _apply_jetson_ip_overrides(data: dict) -> dict:
+
+    if not is_intel():
+        general = data.get("general", {})
+        general["master_air_ip"] = "192.168.144.113"
+        general["slave_air_ip"] = "192.168.144.114"
+        data["general"]         = general
+    return data
+
 def load_config(path: str = "app_config/conf.yaml") -> Settings:
     with open(path, "r") as f:
         data = yaml.safe_load(f)
+
+    data = _apply_jetson_ip_overrides(data)
     return Settings(**data)
 
 app_settings = load_config()
