@@ -4,6 +4,7 @@
 3. check handle_message_from_master_drone (air to air)
 4. vision and fly - async (call to llm and run) (not sure - what to focus on)
 5. stop summary and describe
+6. Extract wakeword by myseld and not with LLM (faster)
 
 
 # IPs:
