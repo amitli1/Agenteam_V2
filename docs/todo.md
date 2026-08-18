@@ -1,14 +1,10 @@
 # Todo (before integration):
-2. surround- not works sometimes (+ add logs to air with box)
-2. vision (air)
-3. system tests
-4. check handle_message_from_master_drone (air to air)
-5. vision and fly - async (call to llm and run) (not sure - what to focus on)
-6. stop summary and describe
+1. vision (air)
+2. system tests
+3. check handle_message_from_master_drone (air to air)
+4. vision and fly - async (call to llm and run) (not sure - what to focus on)
+5. stop summary and describe
 
-# Todo (after integration):
-4. hey jarvis
-5. ip & is_alive - if not intel (use default) 
 
 # IPs:
 1. AIR(1) 192.168.144.114
