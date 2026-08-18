@@ -575,28 +575,6 @@ def parse_coords(s):
         raise ValueError("Odd number of coordinates")
     return list(zip(nums[::2], nums[1::2]))
 
-def init_monitor(base_url, df, master, slave):
-
-    _post(base_url, "/api/reset", {})
-
-
-    post_master_pos(base_url, lat=master['lat'], lon=master['lon'], alt=master['alt'])
-    post_slave_pos(base_url, lat=slave['lat'], lon=slave['lon'], alt=slave['alt'])
-
-
-    for i in range(len(df)):
-        entity_name = df.iloc[i]["entity_type"]
-        entity_number = df.iloc[i]["entity_number"]
-        entity = f"{entity_name}_{entity_number}"
-        lat = df.iloc[i]["lat"]
-        lon = df.iloc[i]["lon"]
-        alt = df.iloc[i]["alt"]
-
-        str_cords = df.iloc[i]['geometry']
-        coords = parse_coords(str_cords)
-        for coord in coords:
-            post_waypoint(base_url, lat=coord[0], lon=coord[1], alt=15, title=entity)
-
 
 if __name__ == "__main__":
     # Use the real project DatabaseManager (reads the CSV configured in
@@ -614,9 +592,6 @@ if __name__ == "__main__":
     # slave = {"lat": 47.6399949, "lon": -122.1416133, "alt": 0, "yaw": 0}
     master = {"lat": 47.6399500, "lon": -122.1416800, "alt": 0}
     slave = {"lat": 47.6399949, "lon": -122.1416133, "alt": 0}
-
-    #init_monitor(base_url, db.get_db(), master, slave)
-
 
     tests = [
         ("return home", "team", master, None),
