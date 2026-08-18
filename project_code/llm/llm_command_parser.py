@@ -3,7 +3,7 @@ from openai import OpenAI
 import json
 import re
 from project_code.app_config.settings import app_settings
-from project_code.utils.utils import is_intel
+from project_code.utils.utils import is_intel, log_boxed
 import time
 
 class LlmCommandParser:
@@ -44,6 +44,17 @@ class LlmCommandParser:
         }
 
 
+    def log_nicely(self, user_command, parsed_output, total_time):
+        lines = [
+            f"[{i}] team_member={cmd.get('team_member')!r}, "
+            f"fly_command={cmd.get('fly_command')!r}, "
+            f"vision_command={cmd.get('vision_command')!r}"
+            for i, cmd in enumerate(parsed_output)
+        ]
+        lines.append(f"llm_time: {total_time:.2f} seconds")
+        log_boxed(f"Parsed split_user_command for: '{user_command}'", lines)
+
+
     def split_user_command(self, user_command):
 
         try:
@@ -73,12 +84,15 @@ class LlmCommandParser:
         #     f"completion: {usage.completion_tokens}, "
         #     f"total: {usage.total_tokens}"
         # )
-        logging.info(f'Split user command (with LLM) took {(end_time - start_time):.2f} seconds')
+        #logging.info(f'Split user command (with LLM) took {(end_time - start_time):.2f} seconds')
         if response.choices[0].finish_reason != "stop":
             logging.error(f"LLM response finish reason: {response.choices[0].finish_reason}")
 
         raw_output = response.choices[0].message.content
         parsed_output = json.loads(raw_output)
+
+        self.log_nicely(user_command, parsed_output, (end_time - start_time))
+
         return parsed_output
 
 

@@ -37,7 +37,7 @@ import json
 import math
 import logging
 from typing import Optional, List, Dict, Any, Tuple
-
+import time
 from openai import OpenAI
 
 # ---------------------------------------------------------------------------
@@ -45,6 +45,7 @@ from openai import OpenAI
 # ---------------------------------------------------------------------------
 from google.adk import Agent
 
+from project_code.utils.utils import log_boxed
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -151,10 +152,20 @@ class MissionPlannerAgent:
             intent = self._parse_with_rules(text_command)
         return intent
 
+    def log_nicely(self, user_command: str, parsed_output: Dict[str, str], total_time: float):
+        lines = [
+            f"action={parsed_output.get('action')!r}",
+            f"entity_type={parsed_output.get('entity_type')!r}",
+            f"entity_number={parsed_output.get('entity_number')!r}",
+            f"llm_time: {total_time:.2f} seconds",
+        ]
+        log_boxed(f"Parsed mission intent for: '{user_command}'", lines)
+
     def _parse_with_llm(self, text_command: str) -> Optional[Dict[str, str]]:
         if self.client is None:
             return None
         try:
+            start_time = time.time()
             response = self.client.chat.completions.create(
                 model=self.model_name,
                 messages=[
@@ -169,6 +180,7 @@ class MissionPlannerAgent:
                 temperature=0.0,
                 max_tokens=200,
             )
+            end_time = time.time()
             if response.choices[0].finish_reason != "stop":
                 logging.error(f"LLM response finish reason: {response.choices[0].finish_reason}")
 
@@ -177,11 +189,13 @@ class MissionPlannerAgent:
             # Normalise the number (words -> digits) just in case.
             number = str(data.get("entity_number", "")).strip().lower()
             number = _WORD_TO_NUM.get(number, number)
-            return {
+            result = {
                 "action": str(data.get("action", "unknown")).strip().lower(),
                 "entity_type": str(data.get("entity_type", "")).strip().lower(),
                 "entity_number": number,
             }
+            self.log_nicely(text_command, result, end_time - start_time)
+            return result
         except Exception as exc:
             logging.warning("LLM intent parsing failed, using fallback: %s", exc)
             return None

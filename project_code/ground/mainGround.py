@@ -220,10 +220,16 @@ class MainGround:
 
         # {'vision_commands': [{'command': 'point', 'need_more_data': False, 'objects': 'red car, blue truck'}]}
         llm_result       = self.vision_parser.parse(text)
-        llm_result       = llm_result['vision_commands'][0]
-        vision_command   = llm_result['command']
-        need_more_data   = llm_result['need_more_data']
-        objects_to_focus = llm_result['objects']
+        try:
+            llm_result       = llm_result['vision_commands'][0]
+            vision_command   = llm_result['command']
+            need_more_data   = llm_result['need_more_data']
+            objects_to_focus = llm_result['objects']
+        except Exception as e:
+            logging.error(f"Error while parsing vision command: {e}")
+            result_obj['success']        = False
+            result_obj['need_more_data'] = False
+            return result_obj
 
         # save vision command in the return result
         result_obj['vision_command'] = vision_command

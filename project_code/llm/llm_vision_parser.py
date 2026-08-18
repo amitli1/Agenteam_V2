@@ -2,6 +2,9 @@ import json
 import logging
 
 from openai import OpenAI
+import time
+
+from project_code.utils.utils import log_boxed
 
 logger = logging.getLogger(__name__)
 
@@ -56,8 +59,23 @@ class VisionParser:
             "additionalProperties": False,
         }
 
+    def log_nicely(self, user_command, parsed_output, total_time):
+        commands = parsed_output.get("vision_commands", [])
+        if not commands:
+            lines = ["No vision commands parsed."]
+        else:
+            lines = [
+                f"[{i}] command={cmd.get('command')!r}, "
+                f"objects={cmd.get('objects')!r}, "
+                f"need_more_data={cmd.get('need_more_data')!r}"
+                for i, cmd in enumerate(commands)
+            ]
+        lines.append(f"llm_time: {total_time:.2f} seconds")
+        log_boxed(f"Parsed vision_commands for: '{user_command}'", lines)
+
     def parse(self, user_command: str) -> dict:
         try:
+            start_time = time.time()
             response = self.client.chat.completions.create(
                 model=self.model_name,
                 messages=[
@@ -72,12 +90,14 @@ class VisionParser:
                 temperature=0.0,
                 max_tokens=150,
             )
-
+            end_time = time.time()
             if response.choices[0].finish_reason != "stop":
                 logging.error(f"LLM response finish reason: {response.choices[0].finish_reason}")
 
-            raw_output = response.choices[0].message.content
-            return json.loads(raw_output)
+            raw_output    = response.choices[0].message.content
+            parsed_output = json.loads(raw_output)
+            self.log_nicely(user_command, parsed_output, end_time - start_time)
+            return parsed_output
         except Exception as e:
             logger.error(f"VisionParser.parse failed: {e}")
             return {"vision_commands": []}
