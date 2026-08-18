@@ -33,14 +33,22 @@ def _flatten_for_log(data: dict) -> list[str]:
             lines.append(f"{k}: {v}")
     return lines
 
+def log_version():
+    version_path = os.path.join(os.path.dirname(__file__), "version.txt")
+    try:
+        with open(version_path, "r", encoding="utf-8") as f:
+            lines = [line.strip() for line in f if line.strip()]
+        log_boxed("Version Info", lines)
+    except Exception as e:
+        logging.error(f"Failed to read version file: {e}")
+
 def log_boxed(title: str, lines: list[str]):
     content = [title] + lines
-    width = max(len(s) for s in content) + 2
-    border = "+" + "-" * width + "+"
-    log_lines = [border]
+    width = max(len(s) for s in content)
+    log_lines = ["┌" + "─" * (width + 2) + "┐"]
     for s in content:
-        log_lines.append(f"| {s.ljust(width - 2)} |")
-    log_lines.append(border)
+        log_lines.append(f"│ {s:<{width}} │")
+    log_lines.append("└" + "─" * (width + 2) + "┘")
     logging.info("\n" + "\n".join(log_lines))
 
 

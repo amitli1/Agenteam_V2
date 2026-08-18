@@ -11,7 +11,7 @@ import time
 import requests
 
 from project_code.utils.logger_utils import init_logger
-from project_code.utils.utils import log_boxed, _flatten_for_log
+from project_code.utils.utils import log_boxed, _flatten_for_log, log_version
 from project_code.vision.vision_manager import VisionManager
 
 init_logger(jetson_type="air")
@@ -133,6 +133,7 @@ class MainAir:
 
 if __name__ == "__main__":
 
+    log_version()
     mainAir = MainAir()
     mainAir.start_air()
 
