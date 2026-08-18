@@ -3,7 +3,7 @@ import time
 from project_code.air.air_share_fields import quad_last_status_data, quad_isMissionInProgress, \
     quad_last_status_data_lock
 from project_code.app_config.settings import app_settings
-from project_code.utils.utils import get_running_ip
+from project_code.utils.utils import get_running_ip, log_boxed
 import websockets
 import logging
 import threading
@@ -123,7 +123,10 @@ class QuadManager:
                             if flag_first_msg is False:
                                 if self.fnc_send_text_to_user:
                                     self.fnc_send_text_to_user('Start getting drone status')
+                                    #lines = [f"{k}: {v}" for k, v in current_status_data.items()]
+                                    #log_boxed("Got first quad message", lines)
                                     logging.info(f'Got first quad message: {message}')
+
 
                             flag_first_msg         = True
                             flag_log_error         = False

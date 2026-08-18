@@ -36,7 +36,7 @@ def _uniform(keys, val):
 
 
 class HeyJarvisDetector(DetectionStrategy):
-    def __init__(self, patience_frames: int = 2, model_threshold: float = 0.25):
+    def __init__(self, patience_frames: int = 1, model_threshold: float = 0.20):
         self.patience_frames = patience_frames
         self.model_threshold = model_threshold
         self.wake_words = ["HeyJarvis"]
