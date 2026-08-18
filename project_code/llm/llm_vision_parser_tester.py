@@ -75,6 +75,14 @@ def run_all_tests():
             "describe the people",
             [{"command": "describe", "objects": "people", "need_more_data": False}],
         ),
+        (
+            "Hey buddy, surround the building and tell me what you see. Hey buddy, look for people and weapons",
+            [{"command": "summary", "objects": "", "need_more_data": True}],
+        ),
+        (
+            "Hey buddy, surround the building and tell me what you see. look for people and weapons",
+            [{"command": "summary", "objects": "people, weapons", "need_more_data": False}],
+        ),
     ]
 
     results = []

@@ -20,6 +20,7 @@ import time
 import requests
 import numpy as np
 from flask import Flask, jsonify, request
+import re
 
 init_logger(jetson_type="ground")
 logging.getLogger("werkzeug").setLevel(logging.ERROR)
@@ -210,7 +211,7 @@ class MainGround:
                 except Exception as e:
                     logging.error(f"Error while sending plan to drone: {e}")
 
-    def handle_vision_command(self, text, command):
+    def handle_vision_command(self, text):
 
         result_obj = {
             "success"       : True,
@@ -262,7 +263,15 @@ class MainGround:
         l_current_command[0]['fly_command']    = self.last_fly_command
         l_current_command[0]['vision_command'] = f"{self.last_vision_command} {current_text}"
 
-        return l_current_command, f"{self.last_text_command} {current_text}"
+        # remove wake word from last text command
+        wake_words           = ["hey buddy", "buddy", "jarvis", "team"]
+        cleaned_current_text = current_text.lower()
+        for w in wake_words:
+            cleaned_current_text = re.sub(rf"\b{re.escape(w)}\b", "", cleaned_current_text, flags=re.IGNORECASE)
+        cleaned_current_text = re.sub(r"\s+", " ", cleaned_current_text).strip()
+
+        # return values
+        return l_current_command, f"{self.last_text_command} {cleaned_current_text}"
 
     def log_wait_for_next_command(self):
 
@@ -287,7 +296,7 @@ class MainGround:
             logging.info(command)
 
             if command['vision_command'] != '':
-                vision_result_ = self.handle_vision_command(text, command)
+                vision_result_ = self.handle_vision_command(text)
                 if vision_result_['need_more_data']:
                     self.run_tts("what should I look for ?", "ground")
                     self.last_fly_command    = command['fly_command']
