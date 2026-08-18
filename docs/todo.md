@@ -7,9 +7,6 @@
 6. stop summary and describe
 
 # Todo (after integration):
-1. whisper - input is too long
-2. LLM (x2) how much tokens are needed
-3. collect LLM TTS (1/2 drones master/slave)
 4. hey jarvis
 5. ip & is_alive - if not intel (use default) 
 
