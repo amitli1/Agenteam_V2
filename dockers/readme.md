@@ -10,3 +10,8 @@ docker stop agenteam-whisper-intel
 docker rm agenteam-whisper-intel
 docker compose -f dockers/whisper/intel/docker-compose.whisper-intel.yml up --remove-orphans
 ```
+
+# Delete all stopped containers
+```
+docker container prune
+```

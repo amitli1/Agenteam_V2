@@ -6,6 +6,9 @@
 5. stop summary and describe
 6. Extract wakeword by myseld and not with LLM (faster)
 
+# v2 LLM
+1. if just "hey buddy" - no "waht sould I look for" - then just say "yes" and wait for next command
+2. hey jarvis
 
 # IPs:
 1. AIR(1) 192.168.144.114

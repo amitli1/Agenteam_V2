@@ -31,7 +31,7 @@ app = Flask(__name__)
 class MainGround:
 
     def __init__(self):
-        self.audioPipeline        = AudioPipeline(self.handle_user_text)
+        self.audioPipeline        = AudioPipeline(self.handle_user_text_2)
         self.llmCommandParser     = LlmCommandParser()
         self.llmCommandParser_v2  = LlmCommandParser_V2()
         self.llmMissionPlanner    = MissionPlannerAgent()
@@ -45,9 +45,9 @@ class MainGround:
         self.last_slave_quad_data  = None
         self.flask_groundthread    = None
 
-        app.add_url_rule("/get_to_destination", view_func=self.on_air_get_to_destination, methods=["POST"], )
-        app.add_url_rule("/status",view_func=self.on_air_status_message,methods=["POST"],)
-        app.add_url_rule("/text_to_user", view_func=self.on_air_text_to_user, methods=["POST"], )
+        app.add_url_rule("/get_to_destination" , view_func=self.on_air_get_to_destination  , methods=["POST"], )
+        app.add_url_rule("/status"             , view_func=self.on_air_status_message      ,methods=["POST"],)
+        app.add_url_rule("/text_to_user"       , view_func=self.on_air_text_to_user        , methods=["POST"], )
         self.status_received_event = threading.Event()
 
         self.master_drone_location = None
@@ -305,23 +305,31 @@ class MainGround:
         llm_command = self.llmCommandParser_v2.split_user_command(text)
 
         if llm_command['need_more_data']:
+            if (llm_command['vision_command']['vision_cmd_type'] == "") and (llm_command['vision_command']['vision_cmd_type'] == ""):
+                self.last_text_command = ""
+                self.log_wait_for_next_command()
+                return
+
             self.run_tts("what should I look for ?", "ground")
             text                     = self.remove_wakewords(text)
             self.last_text_command   = text
             self.log_wait_for_next_command()
             return
 
-        if llm_command['vision_command']['fly_cmd_type'] != "":
+        if llm_command['vision_command']['vision_cmd_type'] != "":
             command_to_air = {
-                "vision_command"  : llm_command['vision_command']['fly_cmd_type'],
+                "vision_command"  : llm_command['vision_command']['vision_cmd_type'],
                 "objects_to_focus": llm_command['vision_command']['objects']
             }
 
             r = requests.post(self.master_drone_url, json={"command": "vision", "vision_command": command_to_air})
             r.raise_for_status()
 
-        if llm_command['fly_command']['vision_cmd_type'] != "":
-            self.handle_fly_command(llm_command['fly_command'])
+        if llm_command['fly_command']['fly_cmd_type'] != "":
+            fly_command_to_air                 = {}
+            fly_command_to_air['team_member']  = llm_command['team_member']
+            fly_command_to_air['fly_command']  = f"{llm_command['fly_command']['fly_cmd_type']} {llm_command['fly_command']['location']}"
+            self.handle_fly_command(fly_command_to_air)
 
         logging.info(f'Clear last_text_command')
         self.last_text_command = ""

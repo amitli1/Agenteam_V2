@@ -66,14 +66,14 @@ class LlmCommandParser_V2:
         vision_command = parsed_output.get("vision_command", {})
 
         lines = [
-            f"team_member={parsed_output.get('team_member')!r}",
-            f"fly_cmd_type={fly_command.get('fly_cmd_type')!r}, "
-            f"location={fly_command.get('location')!r}",
-            f"vision_cmd_type={vision_command.get('vision_cmd_type')!r}, "
-            f"objects={vision_command.get('objects')!r}",
-            f"need_more_data={parsed_output.get('need_more_data')!r}",
+            f"llm_time        = {total_time:.2f} seconds",
+            f"team_member     = {parsed_output.get('team_member')!r}",
+            f"fly_cmd_type    = {fly_command.get('fly_cmd_type')!r}, "
+            f"location        = {fly_command.get('location')!r}",
+            f"vision_cmd_type = {vision_command.get('vision_cmd_type')!r}, "
+            f"objects         = {vision_command.get('objects')!r}",
+            f"need_more_data  = {parsed_output.get('need_more_data')!r}",
         ]
-        lines.append(f"llm_time: {total_time:.2f} seconds")
         log_boxed(f"Parsed split_user_command for: '{user_command}'", lines)
 
     def split_user_command(self, user_command):
