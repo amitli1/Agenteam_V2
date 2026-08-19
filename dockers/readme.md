@@ -15,3 +15,18 @@ docker compose -f dockers/whisper/intel/docker-compose.whisper-intel.yml up --re
 ```
 docker container prune
 ```
+
+
+# make sure /etc/docker/daemon.json on the Jetson host has:
+```
+{
+  "runtimes": {
+    "nvidia": {
+      "path": "nvidia-container-runtime",
+      "runtimeArgs": []
+    }
+  },
+  "default-runtime": "nvidia"
+}
+```
+

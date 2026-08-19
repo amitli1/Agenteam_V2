@@ -39,6 +39,7 @@ services:
       # ---------------------------------------------------
       - /mnt/nvme/models/huggingface:/root/.cache/huggingface
 
+    runtime: nvidia
     environment:
 
       # ---------------------------------------------------
