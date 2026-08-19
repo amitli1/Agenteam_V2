@@ -64,7 +64,7 @@ logging_and_records:
 database:
     db_path: app_config/airsim_poly_db.csv
     max_area_in_meters: 2500
-    audio_files: audio/audio_files
+    audio_files: audio/audio_files/English
 
 monitor:
   monitor_port: 7031

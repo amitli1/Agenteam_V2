@@ -1,0 +1,49 @@
+version: "3.8"
+
+services:
+
+  hebrew_tts:
+    build:
+      context: ../../..
+      dockerfile: dockers/hebrew_tts/jetson/Dockerfile
+
+    image: hebrew-tts-service:latest
+    container_name: hebrew-tts-service-container
+
+    ports:
+      - "8003:8002"
+
+    volumes:
+
+      # ---------------------------------------------------
+      # Hebrew Piper model (host disk -> container)
+      #
+      # Host:
+      #   /home/amitli/Documents/Hebrew_TTS_Model
+      #
+      # Container:
+      #   /models/hebrew_tts
+      #
+      # The model files therefore live at:
+      #
+      #   /models/hebrew_tts/he_IL-saspeech-medium.onnx
+      #   /models/hebrew_tts/he_IL-saspeech-medium.onnx.json
+      # ---------------------------------------------------
+      - /home/amitli/Documents/Hebrew_TTS_Model:/models/hebrew_tts
+
+    environment:
+
+      # ---------------------------------------------------
+      # Hebrew TTS model
+      # ---------------------------------------------------
+      HEBREW_TTS_MODEL_DIR: /models/hebrew_tts
+      HEBREW_TTS_MODEL_FILE: he_IL-saspeech-medium.onnx
+      HEBREW_TTS_MODEL_PATH: /models/hebrew_tts/he_IL-saspeech-medium.onnx
+
+      # ---------------------------------------------------
+      # Python
+      # ---------------------------------------------------
+      PYTHONPATH: /app
+
+    restart: always
+
