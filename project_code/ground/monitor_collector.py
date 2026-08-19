@@ -37,9 +37,12 @@ class MonitorCollector:
         return True
 
     def _clear_monitor(self):
-        response = requests.post("http://localhost:7031/clear")
-        if response.status_code != 200:
-            logging.error(f'Error while sending clear to Monitor: {response.status_code}')
+        try:
+            response = requests.post("http://localhost:7031/clear")
+            if response.status_code != 200:
+                logging.error(f'Error while sending clear to Monitor: {response.status_code}')
+        except Exception as e:
+            logging.error(f"Error while sending clear to Monitor: {e}")
 
 
     # ---------- FIFO worker (user_command / text_to_user) ----------
