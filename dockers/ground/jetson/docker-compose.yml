@@ -25,8 +25,9 @@ services:
       - /mnt/nvme/repo/Agenteam_V2:/app
       - /run/user/1000/pulse:/run/user/1000/pulse        # PulseAudio socket
       - /mnt/nvme:/mnt/nvme                              # Audio output files
-      #- /mnt/nvme/repo/Jetson/agenteam-dockers/operator_station/openwakeword_emb_models/models:/usr/local/lib/python3.10/dist-packages/openwakeword/resources/models
       - /mnt/nvme/outputs:/mnt/nvme/outputs
+      # Mount custom OpenWakeWord models
+      - /mnt/nvme/repo/Agenteam_V2/project_code/audio/wakeword_models/wakeword_models:/usr/local/lib/python3.10/dist-packages/openwakeword/resources/models
 
     group_add:
       - audio
