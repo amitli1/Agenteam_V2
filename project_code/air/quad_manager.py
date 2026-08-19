@@ -123,9 +123,8 @@ class QuadManager:
                             if flag_first_msg is False:
                                 if self.fnc_send_text_to_user:
                                     self.fnc_send_text_to_user('Start getting drone status')
-                                    #lines = [f"{k}: {v}" for k, v in current_status_data.items()]
-                                    #log_boxed("Got first quad message", lines)
-                                    logging.info(f'Got first quad message: {message}')
+                                    lines = [f"{k}: {v}" for k, v in json.loads(message).items()]
+                                    log_boxed("Got first quad message", lines)
 
 
                             flag_first_msg         = True
