@@ -174,6 +174,17 @@ def test_12(parser, text):
     return _check(result, expected, text, elapsed)
 
 
+def test_13(parser, text):
+    # Hey team, walk around the building and describe to me what you see
+    result, elapsed = _run(parser, text)
+    expected = {
+        "fly_command": {"fly_cmd_type": "surround", "location": "building"},
+        "vision_command": {"vision_cmd_type": "summary", "objects": ""},
+        "team_member": "team",
+        "need_more_data": True,
+    }
+    return _check(result, expected, text, elapsed)
+
 def run_all_tests():
     parser = LlmCommandParser_V2()
 
@@ -190,6 +201,7 @@ def run_all_tests():
         (test_10, "buddy describe the person in the car"),
         (test_11, "hey jarvis point at the yellow car"),
         (test_12, "hey jarvis surround the building and tell me what you see hey jarvis look for birds"),
+        (test_13, "Hey team, walk around the building and describe to me what you see")
     ]
 
     results = []

@@ -79,7 +79,10 @@ async def transcribe_api(request: Request):
     # === Actual transcription logic starts here ===
     try:
         logging.info('Starting transcription')
-        segments, info = model.transcribe(audio_input, beam_size=NUM_BEAMS, language=language)
+        if language == "he":
+            segments, info = model.transcribe(audio_input, beam_size=NUM_BEAMS, language=language, task="translate")
+        else:
+            segments, info = model.transcribe(audio_input, beam_size=NUM_BEAMS, language=language)
         
         # Get first segment separately if needed
         try:

@@ -26,7 +26,14 @@ Output keys description:
     2.4 if the command is 'follow' - must have objects to follow on, if not - need_more_data = True
     2.5 'hold' - Does not have to contain objects, if not - need_more_data = False
     2.6 'describe' - Does not have to contain objects, if not - need_more_data = False
-    2.7 A vision_command must ONLY be set when the user explicitly asks for a visual/observation action
+    2.7 Distinguish 'describe' from 'summary':
+     - 'summary' applies when the user asks for a general observation report while flying/surrounding/patrolling
+       an area, using phrasing like "tell me/describe what you see", "report", "look around and tell me",
+       regardless of whether the literal word "describe" is used — the presence of a flight/movement command
+       (fly, surround, walk/patrol around) combined with an open-ended "what you see" request means 'summary'.
+     - 'describe' applies only when there is no accompanying flight/movement command, or the user asks to
+       describe a specific object/entity in view (e.g. "describe the person in the car").
+    2.8 A vision_command must ONLY be set when the user explicitly asks for a visual/observation action
         (e.g. "tell me what you see", "look for ...", "report", or a point/hold/follow/describe request).
         A fly_cmd_type of 'fly', 'surround' or 'follow' on its own does NOT imply a vision_command.
         If the user only gave a flight instruction (e.g. "surround the junction") with no visual request,
@@ -117,3 +124,9 @@ Output: {"fly_command": {"fly_cmd_type": "surround", "location": "moon"},
          "vision_command":  {"vision_cmd_type": "", "objects": ""},
          "team_member": "team",
          "need_more_data": false}
+
+Input: "Hey jarvis, walk around the junction and describe to me what you see"
+Output: {"fly_command": {"fly_cmd_type": "surround", "location": "junction"},
+         "vision_command":  {"vision_cmd_type": "summary", "objects": ""},
+         "team_member": "jarvis",
+         "need_more_data": true}

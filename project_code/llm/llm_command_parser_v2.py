@@ -78,6 +78,13 @@ class LlmCommandParser_V2:
 
     def split_user_command(self, user_command):
 
+        empty_results = {
+            "fly_command": {"fly_cmd_type": "", "location": ""},
+            "vision_command": {"vision_cmd_type": "", "objects": ""},
+            "team_member": "",
+            "need_more_data": False
+        }
+
         try:
             start_time = time.time()
             response = self.client.chat.completions.create(
@@ -97,15 +104,19 @@ class LlmCommandParser_V2:
             end_time = time.time()
         except Exception as e:
             logging.error(f"Error while calling llm: {e}")
-            return []
+            return empty_results
 
         if response.choices[0].finish_reason != "stop":
             logging.error(f"LLM response finish reason: {response.choices[0].finish_reason}")
 
-        raw_output = response.choices[0].message.content
-        parsed_output = json.loads(raw_output)
+        try:
+            raw_output = response.choices[0].message.content
+            parsed_output = json.loads(raw_output)
 
-        self.log_nicely(user_command, parsed_output, (end_time - start_time))
+            self.log_nicely(user_command, parsed_output, (end_time - start_time))
+        except Exception as e:
+            logging.error(f"Error while parsing llm results: {response.choices[0].message.content}, error: {e}")
+            return empty_results
 
         return parsed_output
 
