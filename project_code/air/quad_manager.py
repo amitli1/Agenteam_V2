@@ -17,6 +17,7 @@ class QuadManager:
         self.fnc_send_text_to_user = fnc_send_text_to_user
         self.quad_port             = quad_port
         self.target_ip             = get_running_ip()
+        self.last_status_msg       = None
 
         self.quad_url  = f"ws://{self.target_ip}:{self.quad_port}/ws/drone-status"
         self._thread   = threading.Thread(
@@ -24,6 +25,7 @@ class QuadManager:
             daemon=True,  # thread dies when main program exits
         )
         self._thread.start()
+
 
     def _run_status_loop(self):
         # each thread needs its own event loop to run async code
@@ -102,6 +104,22 @@ class QuadManager:
         response = requests.post(f"{address}", json={"drone_role": drone_role})
         logging.info(f"Send get_to_destination message to ground, response: {response.status_code}")
 
+    def print_new_status(self, prev_status_data, current_status_data):
+
+        fields_to_watch = ['in_air', 'flight_mode', 'is_armed',
+                           'is_mission_finished', 'mission_progress']
+        changed_lines = []
+
+        for field in fields_to_watch:
+            prev_val = prev_status_data.get(field)
+            curr_val = current_status_data.get(field)
+            if prev_val != curr_val:
+                changed_lines.append(f"{field}: before={prev_val}, current={curr_val}")
+
+        if changed_lines:
+            log_boxed("Drone status changed", changed_lines)
+
+
     async def receive_drone_status(self):
 
         logging.info(f'Start listening on port: {self.quad_url}')
@@ -145,9 +163,16 @@ class QuadManager:
                             #print(json.loads(message))
                             self.check_mission_progress(flight_mode, is_mission_finished, mission_progress)
 
+                            # log changes
+                            if self.last_status_msg:
+                                self.print_new_status(self.last_status_msg, current_status_data)
+
                             # save last msg
                             with quad_last_status_data_lock:
                                 quad_last_status_data.update(json.loads(message))
+                            self.last_status_msg = current_status_data
+
+
 
 
                         except Exception as e:

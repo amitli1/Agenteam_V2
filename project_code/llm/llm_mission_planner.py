@@ -178,7 +178,7 @@ class MissionPlannerAgent:
                     "guided_json": self._intent_schema,
                 },
                 temperature=0.0,
-                max_tokens=200,
+                max_tokens=500,
             )
             end_time = time.time()
             if response.choices[0].finish_reason != "stop":

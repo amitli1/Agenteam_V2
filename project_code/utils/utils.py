@@ -222,7 +222,7 @@ def warmup():
         response = client.chat.completions.create(
             model=app_settings.llm.llm_model,
             messages=[{"role": "user", "content": "Hi"}],
-            max_tokens=20
+            max_tokens=500
         )
         logging.info(f'End LLM warmup, response: {response.choices[0].message.content}')
     except Exception as e:

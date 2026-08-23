@@ -71,7 +71,7 @@ class LlmCommandParser:
                     "guided_json": self.split_command_schema,
                 },
                 temperature=0.0,
-                max_tokens=150,
+                max_tokens=500,
             )
             end_time = time.time()
         except Exception as e:
