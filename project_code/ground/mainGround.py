@@ -2,7 +2,7 @@ import json
 
 from pydub import AudioSegment
 
-from project_code.app_config.settings import app_settings
+from project_code.app_config.settings import app_settings, log_app_settings
 from project_code.audio.audio_pipeline import AudioPipeline
 from project_code.db.database_manager import DatabaseManager
 from project_code.ground.monitor_collector import MonitorCollector
@@ -404,6 +404,8 @@ def run_ground():
 
 
 if __name__ == "__main__":
+    log_version()
+    log_app_settings()
     mainGround = run_ground()
     mainGround.start_ground()
     mainGround.flask_groundthread.join()

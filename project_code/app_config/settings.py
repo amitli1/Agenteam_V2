@@ -96,8 +96,9 @@ def _apply_jetson_ip_overrides(data: dict) -> dict:
 
     if not is_intel():
         general = data.get("general", {})
-        general["master_air_ip"] = "192.168.144.113"
-        general["slave_air_ip"]  = "192.168.144.114"
+        general["ground_ip"]     = "192.168.144.113"
+        general["master_air_ip"] = "192.168.144.114"
+        general["slave_air_ip"]  = "192.168.144.115"
 
         vision = data.get("vision", {})
         vision["use_online"] = True
@@ -111,6 +112,31 @@ def load_config(path: str = "app_config/conf.yaml") -> Settings:
         data = yaml.safe_load(f)
 
     data = _apply_jetson_ip_overrides(data)
+
     return Settings(**data)
+
+def _flatten_for_log(data: dict, indent: int = 0) -> list[str]:
+    lines = []
+    pad = "  " * indent
+    for k, v in (data or {}).items():
+        if isinstance(v, dict):
+            lines.append(f"{pad}{k}:")
+            lines.extend(_flatten_for_log(v, indent + 1))
+        elif isinstance(v, list):
+            lines.append(f"{pad}{k}:")
+            for i, item in enumerate(v):
+                if isinstance(item, dict):
+                    lines.append(f"{pad}  [{i}]:")
+                    lines.extend(_flatten_for_log(item, indent + 2))
+                else:
+                    lines.append(f"{pad}  [{i}] {item}")
+        else:
+            lines.append(f"{pad}{k}: {v}")
+    return lines
+
+def log_app_settings():
+    settings_dict = app_settings.model_dump()  # pydantic v2 (use .dict() if pydantic v1)
+    from project_code.utils.utils import log_boxed
+    log_boxed("App Settings", _flatten_for_log(settings_dict))
 
 app_settings = load_config()

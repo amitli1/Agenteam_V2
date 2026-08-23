@@ -3,7 +3,7 @@ import json
 from project_code.air import air_share_fields
 from project_code.air.air_share_fields import quad_last_status_data
 from project_code.air.quad_manager import QuadManager
-from project_code.app_config.settings import app_settings
+from project_code.app_config.settings import app_settings, log_app_settings
 import logging
 from flask import Flask, jsonify, request
 import threading
@@ -134,6 +134,7 @@ class MainAir:
 if __name__ == "__main__":
 
     log_version()
+    log_app_settings()
     mainAir = MainAir()
     mainAir.start_air()
 
