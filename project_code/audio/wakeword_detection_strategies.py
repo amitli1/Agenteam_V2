@@ -45,7 +45,11 @@ class HeyJarvisDetector(DetectionStrategy):
         return self.wake_words
 
     def configure(self, model_names: Mapping[str, object], wake_word: str = None):
-        return _uniform(model_names.keys(), self.patience_frames), _uniform(model_names.keys(), self.model_threshold)
+        #return _uniform(model_names.keys(), self.patience_frames), _uniform(model_names.keys(), self.model_threshold)
+
+        # Return empty dicts -> disables the patience-gating block in editable_predict,
+        # so the model's raw/default score is used as-is
+        return {}, {}
 
     def decide(self, prediction: Dict[str, dict]) -> DetectionOutcome:
 
@@ -59,10 +63,10 @@ class HeyJarvisDetector(DetectionStrategy):
         scores = list(prediction.values())
         mean_score = float(np.mean(scores))
         votes = 0
-        if mean_score > 0.5:
+        if mean_score > self.model_threshold:
             votes = 1
         return DetectionOutcome(
-            trigger=mean_score>0.5,
+            trigger=mean_score>self.model_threshold,
             votes={self.wake_words[0] : votes},
             mean_score={self.wake_words[0] : mean_score},
             save_clip_on_activity=True,

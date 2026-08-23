@@ -120,6 +120,10 @@ class AudioPipeline:
                     patience, threshold = self.wakewordLogic.wakeword_detector.configure(owwModel.models, ww)
                     prediction[ww]      = owwModel.predict(mic_audio, patience=patience, threshold=threshold)
 
+                # hey_jarvis = prediction['HeyJarvis']['hey_jarvis_v0.1']
+                # if hey_jarvis >= 0.05:
+                #     logging.info(f'Hey jarvis: {hey_jarvis}')
+
                 outcome: DetectionOutcome = self.wakewordLogic.wakeword_detector.decide(prediction)
                 winner_wakeword = (outcome.winner or "").strip()  # "Buddy"|"HeyBuddy"|"Team"|"" (fallback handled below)
 
