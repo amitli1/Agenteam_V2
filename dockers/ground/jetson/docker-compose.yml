@@ -28,6 +28,9 @@ services:
       - /mnt/nvme/outputs:/mnt/nvme/outputs
       # Mount custom OpenWakeWord models
       - /mnt/nvme/repo/Agenteam_V2/project_code/audio/wakeword_models/wakeword_models:/usr/local/lib/python3.10/dist-packages/openwakeword/resources/models
+      - ${HOME}/.config/pulse/cookie:/root/.config/pulse/cookie
+      - /tmp/pulse:/tmp/pulse
+
 
     group_add:
       - audio
