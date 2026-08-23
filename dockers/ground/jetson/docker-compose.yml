@@ -7,7 +7,7 @@ services:
       dockerfile: dockers/ground/jetson/Dockerfile
     image: operator_station-ground # see under docker images
     container_name: operator_station-ground-container
-
+    network_mode: host
     # Match host user and group for PulseAudio permissions
     user: "${UID}:${GID}"
 
