@@ -14,6 +14,7 @@
 V 6. llm_mission_planner - __parse_with_json - llm intent fail
 7. log file
 8. Stack after go back home
+9. r.raise()
 
 # v2 LLM
 1. if just "hey buddy" - no "waht sould I look for" - then just say "yes" and wait for next command

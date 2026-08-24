@@ -14,7 +14,7 @@ from project_code.llm.llm_vision_parser import VisionParser
 from project_code.utils.logger_utils import init_logger
 from project_code.utils.sound_player import SoundPlayerManager
 from project_code.utils.utils import create_output_folder, check_models, warmup, get_running_ip, \
-    prepare_audio_for_speech, is_intel, log_version
+    prepare_audio_for_speech, is_intel, log_version, log_distances
 import logging
 import threading
 import time
@@ -56,12 +56,14 @@ class MainGround:
         self.master_drone_url = f"http://{app_settings.general.master_air_ip}:{app_settings.general.master_air_port}/ground_command"
         self.slave_drone_url  = f"http://{app_settings.general.slave_air_ip}:{app_settings.general.slave_air_port}/ground_command"
 
-        self.get_to_destination  = False
-        self.fnc_test_callback   = None
-        self.last_fly_command    = None
-        self.last_vision_command = None
-        self.last_text_command   = None
-        self.last_destination    = None
+        self.get_to_destination        = False
+        self.fnc_test_callback         = None
+        self.last_fly_command          = None
+        self.last_vision_command       = None
+        self.last_text_command         = None
+        self.last_destination          = None
+        self.log_master_drone_distance = False
+        self.log_slave_drone_distance  = False
 
     def set_fnc_test_callback(self, fnc):
         self.fnc_test_callback = fnc
@@ -89,6 +91,10 @@ class MainGround:
                                           'alt': self.last_master_quad_data['alt'],
                                           'yaw': self.last_master_quad_data['yaw']}
 
+            if self.log_master_drone_distance is False:
+                log_distances("Master Drone Distances:", self.master_drone_location, self.databaseManager.get_db())
+                self.log_master_drone_distance = True
+
 
         elif air_status_msg['drone_role'] == 'slave':
             self.last_slave_quad_data = json.loads(air_status_msg['last_quad_msg'])
@@ -97,6 +103,10 @@ class MainGround:
                                           'lon': self.last_slave_quad_data['lon'],
                                           'alt': self.last_slave_quad_data['alt'],
                                           'yaw': self.last_slave_quad_data['yaw']}
+
+            if self.log_slave_drone_distance is False:
+                log_distances("Slave Drone Distances:", self.slave_drone_location, self.databaseManager.get_db())
+                self.log_slave_drone_distance = True
 
         else:
             logging.error(f"Got unknown drone role: {air_status_msg['drone_role']}")

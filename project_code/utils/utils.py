@@ -43,6 +43,26 @@ def log_version():
     except Exception as e:
         logging.error(f"Failed to read version file: {e}")
 
+
+def log_distances(title: str, current_drone: dict, df) -> None:
+    """
+    Log the distances (meters) between current_drone and each row in df.
+
+    Args:
+        title: title for the log_boxed header
+        current_drone: {"lat": float, "lon": float, "alt": float}
+        df: DataFrame from DatabaseManager.get_db(), expected columns:
+            entity_type, entity_number, lat, lon, alt
+    """
+    lines = []
+    for _, row in df.iterrows():
+        target = {"lat": row["lat"], "lon": row["lon"], "alt": row["alt"]}
+        dist = distance_meters(current_drone, target)
+        entity = f"{row.get('entity_type', '')}_{row.get('entity_number', '')}"
+        lines.append(f"{entity}: {dist:.2f} m")
+
+    log_boxed(title, lines)
+
 def log_boxed(title: str, lines: list[str]):
     content = [title] + lines
     width = max(len(s) for s in content)
