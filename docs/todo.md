@@ -7,10 +7,9 @@
 6. Extract wakeword by myseld and not with LLM (faster)
 
 # Bugs:
-1. no sound (err)
-V 2. I dont understand (file) whisper 
 3. support no 16k
 ?(distance) 4. quad_manager - fly_to_wp (err 502) (send this to ground ?)
+? print (on first status) - (or on mission) - distances
 5. air /status (when failed) ? - Q
 V 6. llm_mission_planner - __parse_with_json - llm intent fail
 7. log file
