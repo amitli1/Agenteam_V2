@@ -39,6 +39,9 @@ import logging
 from typing import Optional, List, Dict, Any, Tuple
 import time
 from openai import OpenAI
+from project_code.app_config.settings import app_settings
+from project_code.utils.utils import is_intel, log_boxed
+import re
 
 # ---------------------------------------------------------------------------
 # Google ADK (agents / tools). ADK is a mandatory dependency of this module.
@@ -73,17 +76,24 @@ class MissionPlannerAgent:
     # Construction
     # ------------------------------------------------------------------ #
     def __init__(
-        self,
-        model_name: str = "openai/gpt-oss-20b",
-        base_url: str = "http://localhost:8090/v1",
-        api_key: str = "EMPTY",
+        self
     ):
-        self.model_name = model_name
-        self.base_url = base_url
+
+
+        self.base_url   = app_settings.llm.base_url
+        self.model_name = app_settings.llm.llm_model
+
+        if is_intel() is False:
+            self.base_url = re.sub(r'(localhost|127\.0\.0\.1)', 'host.docker.internal', base_url)
+            self.model_name = "/models"
+
 
         # OpenAI-compatible client pointing at the local vLLM server.
         try:
-            self.client = OpenAI(api_key=api_key, base_url=base_url)
+            self.client = OpenAI(
+                api_key=app_settings.llm.api_key,
+                base_url=self.base_url
+            )
         except Exception as exc:  # pragma: no cover
             logging.error("Could not create OpenAI client: %s", exc)
             self.client = None

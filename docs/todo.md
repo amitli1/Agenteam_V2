@@ -6,6 +6,16 @@
 5. stop summary and describe
 6. Extract wakeword by myseld and not with LLM (faster)
 
+# Bugs:
+1. no sound (err)
+V 2. I dont understand (file) whisper 
+3. support no 16k
+?(distance) 4. quad_manager - fly_to_wp (err 502) (send this to ground ?)
+5. air /status (when failed) ? - Q
+V 6. llm_mission_planner - __parse_with_json - llm intent fail
+7. log file
+8. Stack after go back home
+
 # v2 LLM
 1. if just "hey buddy" - no "waht sould I look for" - then just say "yes" and wait for next command
 

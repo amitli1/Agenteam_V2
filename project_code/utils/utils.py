@@ -200,7 +200,7 @@ def warmup():
     # --- WHISPER
     try:
         logging.info('Start WHISPER warmup')
-        audio       = AudioSegment.from_wav(f"{os.getcwd()}/audio/audio_files/I_dont_understand_please_repeat_command.wav")
+        audio       = AudioSegment.from_wav(f"{os.getcwd()}/audio/audio_files/English/I_dont_understand_please_repeat_command.wav")
         samples     = np.array(audio.get_array_of_samples())
         samples     = samples / 32768.0
         audio_input = samples.tolist()
@@ -215,12 +215,20 @@ def warmup():
     # --- LLM:
     try:
         logging.info('Start LLM warmup')
+
+        base_url   = app_settings.llm.base_url
+        model_name = app_settings.llm.llm_model
+
+        if is_intel() is False:
+            base_url = re.sub(r'(localhost|127\.0\.0\.1)', 'host.docker.internal', base_url)
+            model_name = "/models"
+
         client = OpenAI(
             api_key=app_settings.llm.api_key,
-            base_url=app_settings.llm.base_url
+            base_url=base_url
         )
         response = client.chat.completions.create(
-            model=app_settings.llm.llm_model,
+            model=model_name,
             messages=[{"role": "user", "content": "Hi"}],
             max_tokens=500
         )

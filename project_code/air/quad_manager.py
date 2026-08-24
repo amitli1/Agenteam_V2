@@ -63,7 +63,7 @@ class QuadManager:
                 quad_isMissionInProgress.clear()
                 return False
         except Exception as e:
-            logging.exception(f"Failed to fly to wp: {e}")
+            logging.exception(f"Exception Failed to fly to wp: {e}")
             quad_isMissionInProgress.clear()
             return False
 
