@@ -41,10 +41,10 @@ class QuadManager:
                 timeout=5,
             )
             status_code = r.status_code
-            logging.info(f"Status code: {status_code}")
+            logging.info(f"Status code: {status_code} text = {r.text})")
             return status_code
         except Exception as e:
-            logging.exception(f"[quad_api_return] Failed calling /return: {e}")
+            logging.exception(f"[quad_api_return] Failed calling /return: {e} (status_code = {r.status_code}) text = {r.text})")
             return 500
 
     def fly_to_wp(self, l_wp):
@@ -59,11 +59,11 @@ class QuadManager:
                 timeout=10,  # a bit more than 5 helps when mavsdk is slow
             )
             if r.status_code != 200:
-                logging.error(f"Failed to fly to wp, status code: {r.status_code}")
+                logging.error(f"Failed to fly to wp, status code: {r.status_code} (status_code = {r.status_code}) text = {r.text})")
                 quad_isMissionInProgress.clear()
                 return False
         except Exception as e:
-            logging.exception(f"Exception Failed to fly to wp: {e}")
+            logging.exception(f"Exception Failed to fly to wp: {e} (status_code = {r.status_code}) text = {r.text})")
             quad_isMissionInProgress.clear()
             return False
 
