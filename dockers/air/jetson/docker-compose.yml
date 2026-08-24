@@ -40,4 +40,4 @@ services:
 
 
     # Optional: restart automatically if it crashes
-    #restart: unless-stopped # restart: always, unless-stopped
+    restart: unless-stopped # restart: always, unless-stopped
