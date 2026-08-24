@@ -94,7 +94,7 @@ class MainAir:
 
             except Exception as e:
                 if print_err is False:
-                    logging.error(f'Got exception while sending status to ground: {e} (status_code = {r.status_code}) text = {r.text})')
+                    logging.error(f'Got exception while sending status to ground: {e}')
                 print_err = True
 
     def on_ground_command(self):
