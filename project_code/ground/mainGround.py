@@ -232,7 +232,7 @@ class MainGround:
                         plan_list = result['plan']['jarvis']
                         r         = requests.post(self.slave_drone_url, json={"command": "plan", "plan_list": plan_list})
                 except Exception as e:
-                    logging.error(f"Error while sending plan to drone: {e}")
+                    logging.error(f"Error while sending plan to drone: {e}  (status_code = {r.status_code}) text = {r.text})")
 
     def handle_vision_command(self, text):
 

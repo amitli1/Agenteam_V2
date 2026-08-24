@@ -90,7 +90,7 @@ class VisionManager(object):
             logging.info(f'------------------------------------------------------------')
             return success
         except Exception as e:
-            logging.error(f'Error sending request for process-video: {e}')
+            logging.error(f'Error sending request for process-video: {e}  (status_code = {r.status_code}) text = {r.text})')
 
 
     def handle_point_status(self, data, last_is_active, last_agent_status):
@@ -269,7 +269,7 @@ class VisionManager(object):
             r.raise_for_status()
             res = r.json()
         except Exception as e:
-            logging.info(f'Failed to send alert-start (start hold), error:\n{e}\n')
+            logging.info(f'Failed to send alert-start (start hold), error:\n{e}\n (status_code = {r.status_code}) text = {r.text})\n')
             res = None
 
         return res
@@ -286,7 +286,7 @@ class VisionManager(object):
             res = r.json()
 
         except Exception as e:
-            logging.error(f'Error while sending stop hold(alert-stop) message: {e}')
+            logging.error(f'Error while sending stop hold(alert-stop) message: {e}  (status_code = {r.status_code}) text = {r.text})')
             res = None
         return res
 
@@ -308,7 +308,7 @@ class VisionManager(object):
             else:
                 res = False
         except Exception as e:
-            logging.error(f'Error while sending get_ready message: {e}')
+            logging.error(f'Error while sending get_ready message: {e}  (status_code = {r.status_code}) text = {r.text})')
             res = False
         return res
 
@@ -327,7 +327,7 @@ class VisionManager(object):
             res = r.json()
             logging.info(f'Start summary response: {res}')
         except Exception as e:
-            logging.error(f'Error while sending start_summarizing message: {e}')
+            logging.error(f'Error while sending start_summarizing message: {e}  (status_code = {r.status_code}) text = {r.text})')
             res = None
         return res
 
@@ -343,7 +343,7 @@ class VisionManager(object):
             r.raise_for_status()
             res = r.json()
         except Exception as e:
-            logging.error(f'Error sending stop_summarizing: {e}')
+            logging.error(f'Error sending stop_summarizing: {e}  (status_code = {r.status_code}) text = {r.text})')
             res = ""
 
         logging.info(f'Got stop_summarizing message: {res}')
@@ -368,7 +368,7 @@ class VisionManager(object):
             self.fnc_send_text_to_user(desc)
             res = desc
         except Exception as e:
-            logging.error(f'Error while sending describe message: {e}')
+            logging.error(f'Error while sending describe message: {e}  (status_code = {r.status_code}) text = {r.text})')
             res = None
         return res
 
