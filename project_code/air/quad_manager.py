@@ -134,7 +134,7 @@ class QuadManager:
                         try:
 
                             if flag_connection_opened is False:
-                                logging.info('Connection to QUAD API established')
+                                log_boxed("Connection to QUAD API established", [])
 
                             flag_connection_opened = True
                             message                = await websocket.recv()
@@ -171,9 +171,6 @@ class QuadManager:
                             with quad_last_status_data_lock:
                                 quad_last_status_data.update(json.loads(message))
                             self.last_status_msg = current_status_data
-
-
-
 
                         except Exception as e:
                             if flag_log_error is False:
