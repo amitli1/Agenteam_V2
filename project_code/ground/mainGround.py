@@ -113,6 +113,10 @@ class MainGround:
         if self.fnc_test_callback is not None:
             self.fnc_test_callback(text_to_user)
 
+        if "Startup finished" in text_to_user:
+            SoundPlayerManager().get_file_queue().put(f"{app_settings.database.audio_files}/Startup_finished.wav")
+            return True
+
         if "OK Flying to the destination" in text_to_user:
             SoundPlayerManager().get_file_queue().put(f"{app_settings.database.audio_files}/OK_Flying_to_the_destination.wav")
             return True
@@ -398,6 +402,8 @@ def run_ground():
         logging.info('Got first message from AIR, continue')
     else:
         logging.info("I'm not waiting for first message from AIR")
+
+    mainGround.run_tts("Startup finished")
     return mainGround
 
 

@@ -84,7 +84,7 @@ class MissionPlannerAgent:
         self.model_name = app_settings.llm.llm_model
 
         if is_intel() is False:
-            self.base_url = re.sub(r'(localhost|127\.0\.0\.1)', 'host.docker.internal', base_url)
+            self.base_url = re.sub(r'(localhost|127\.0\.0\.1)', 'host.docker.internal', self.base_url)
             self.model_name = "/models"
 
 

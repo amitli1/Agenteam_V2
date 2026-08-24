@@ -19,9 +19,11 @@ services:
     environment:
       - PULSE_SERVER=unix:/run/user/1000/pulse/native
       - PYTHONPATH=/app
+      - HOME=/home/appuser
 
     # Mount the PulseAudio socket and needed folders
     volumes:
+      - ${HOME}/.config/pulse/cookie:/home/appuser/.config/pulse/cookie:ro
       - /mnt/nvme/repo/Agenteam_V2:/app
       - /run/user/1000/pulse:/run/user/1000/pulse        # PulseAudio socket
       - /mnt/nvme:/mnt/nvme                              # Audio output files
