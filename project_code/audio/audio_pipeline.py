@@ -3,7 +3,8 @@ from collections                      import deque
 from silero_vad                       import load_silero_vad, get_speech_timestamps
 from project_code.app_config.settings import app_settings
 from scipy.io.wavfile                 import write
-import openwakeword
+from scipy.signal                     import resample_poly
+import math
 import pyaudio
 import time
 import re
@@ -13,7 +14,7 @@ import torch
 
 from project_code.audio.wakeword_detection_strategies import DetectionOutcome
 from project_code.audio.wakeword_logic import WakewordLogic
-from project_code.utils.audio_utils import get_input_device
+from project_code.utils.audio_utils import get_input_device, get_input_device_all_sr, get_input_device_sr
 from project_code.utils.logger_utils import CURRENT_DATE
 from project_code.utils.utils import get_running_ip, play_text, log_boxed
 from pathlib import Path
@@ -23,18 +24,22 @@ class AudioPipeline:
     def __init__(self, func_handle_user_text):
 
         self.func_handle_user_text = func_handle_user_text
-        #openwakeword.utils.download_models(['embedding_model', 'hey_jarvis_v0.1', 'melspectrogram', 'silero_vad'])
 
         self.wakewordLogic = WakewordLogic()
         self.input_device  = get_input_device()
+        #self.input_device = get_input_device_all_sr()
 
         self.vad_model     = load_silero_vad()
         self.audio_buffer  = deque(maxlen=10)
         self.CHUNK         = app_settings.audio.wakeword.chunk
         self.FORMAT        = pyaudio.paInt16
+        self.MIC_SR        = get_input_device_sr(self.input_device)
         self.CHANNELS      = app_settings.audio.wakeword.channels
-        self.MIC_SR        = app_settings.audio.wakeword.sample_rate
+        self.TARGET_SR     = app_settings.audio.wakeword.sample_rate
         self.audio         = pyaudio.PyAudio()
+
+        self.READ_CHUNK    = int(round(self.CHUNK * self.MIC_SR / self.TARGET_SR))
+        #self.READ_CHUNK    = self.CHUNK
 
         logging.info(f'Open audio input with device index: {self.input_device}')
         self.mic_stream    = self.audio.open(format              = self.FORMAT,
@@ -42,7 +47,28 @@ class AudioPipeline:
                                              rate                = self.MIC_SR,
                                              input               = True,
                                              input_device_index  = self.input_device,
-                                             frames_per_buffer   = self.CHUNK*10)
+                                             frames_per_buffer   = self.READ_CHUNK*10)
+
+    def convert_sr(self, audio: np.ndarray, orig_sr: int, target_sr: int = 16000, target_len: int = None) -> np.ndarray:
+        """Resample int16 mono audio from orig_sr to target_sr.
+           If target_len is given, the output is padded/truncated to exactly that many samples
+           (to compensate for rounding introduced by resample_poly)."""
+        if orig_sr == target_sr:
+            resampled = audio
+        else:
+            gcd = math.gcd(orig_sr, target_sr)
+            up = target_sr // gcd
+            down = orig_sr // gcd
+            resampled = resample_poly(audio.astype(np.float32), up, down)
+            resampled = np.clip(np.round(resampled), -32768, 32767).astype(np.int16)
+
+        if target_len is not None:
+            if len(resampled) > target_len:
+                resampled = resampled[:target_len]
+            elif len(resampled) < target_len:
+                resampled = np.pad(resampled, (0, target_len - len(resampled)), mode='constant')
+
+        return resampled
 
     def get_speech_status(self, audio_chunk, sample_rate=app_settings.audio.vad.sample_rate):
         audio_chunk = audio_chunk.astype(np.float32) / 32768.0
@@ -61,9 +87,11 @@ class AudioPipeline:
 
         while True:
             try:
-                mic_audio = np.frombuffer(self.mic_stream.read(self.CHUNK,
+                mic_audio = np.frombuffer(self.mic_stream.read(self.READ_CHUNK,
                                                           exception_on_overflow=False),
                                                           dtype=np.int16)
+
+                mic_audio = self.convert_sr(mic_audio, self.MIC_SR, self.TARGET_SR, target_len=self.CHUNK)
 
                 recorded_audio.append(mic_audio)
                 samples = np.concatenate(recorded_audio, axis=0)
@@ -112,7 +140,8 @@ class AudioPipeline:
                 # if recorded_audio is None:
                 #     break
             else:
-                mic_audio = np.frombuffer(self.mic_stream.read(self.CHUNK, exception_on_overflow=False), dtype=np.int16)
+                mic_audio = np.frombuffer(self.mic_stream.read(self.READ_CHUNK, exception_on_overflow=False), dtype=np.int16)
+                mic_audio = self.convert_sr(mic_audio, self.MIC_SR, self.TARGET_SR, target_len=self.CHUNK)
                 self.audio_buffer.append(mic_audio)
 
                 prediction = {}
