@@ -2,7 +2,7 @@
 import logging
 import pyaudio
 
-from project_code.utils.utils import is_intel
+from project_code.utils.utils import is_intel, log_boxed
 
 
 def get_support_sample_rate():
@@ -111,6 +111,10 @@ def get_input_device():
                 pass
 
     logging.error(f"There is not input device which support SR=16000")
+    log_boxed("Audio Input Device", [
+        "There is no input device which supports SR=16000",
+        "Falling back to get_input_device_all_sr()",
+    ])
     p.terminate()
     # return None
     return get_input_device_all_sr()
