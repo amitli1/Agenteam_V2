@@ -98,7 +98,7 @@ def _apply_jetson_ip_overrides(data: dict) -> dict:
         general = data.get("general", {})
         general["ground_ip"]     = "192.168.144.113"
         general["master_air_ip"] = "192.168.144.114"
-        general["slave_air_ip"]  = "192.168.144.115"
+        general["slave_air_ip"]  = "192.168.144.112"
 
         vision = data.get("vision", {})
         vision["use_online"] = True
