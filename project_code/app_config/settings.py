@@ -96,9 +96,10 @@ def _apply_jetson_ip_overrides(data: dict) -> dict:
 
     if not is_intel():
         general = data.get("general", {})
-        general["ground_ip"]     = "192.168.144.113"
-        general["master_air_ip"] = "192.168.144.114"
-        general["slave_air_ip"]  = "192.168.144.112"
+        general["ground_ip"]       = "192.168.144.113"
+        general["master_air_ip"]   = "192.168.144.114"
+        general["slave_air_ip"]    = "192.168.144.112"
+        general["slave_quad_port"] = 8001
 
         vision = data.get("vision", {})
         vision["use_online"] = True
