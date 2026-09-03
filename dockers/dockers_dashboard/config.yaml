@@ -1,0 +1,18 @@
+# Configuration for the Dockers Dashboard web app
+
+sudo:
+  # Linux user used to authenticate "sudo docker ..." commands
+  username: "jetson"
+  password: "Aa123456"
+
+web:
+  # Port the Flask web app listens on
+  port: 6179
+  host: "0.0.0.0"
+
+docker:
+  # Refresh interval (seconds) for the running containers table (client side)
+  refresh_seconds: 5
+  # Number of trailing lines to fetch when a log stream first opens
+  log_tail_lines: 200
+

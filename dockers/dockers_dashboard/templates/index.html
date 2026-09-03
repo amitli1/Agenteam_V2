@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dockers Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <style>
+    body { background-color: #f5f6f8; }
+    .navbar-brand { font-weight: 600; }
+    #error-box { display: none; }
+    td.mono, code { font-family: "SFMono-Regular", Consolas, monospace; font-size: 0.85rem; }
+    .status-up { color: #198754; font-weight: 600; }
+    .status-other { color: #6c757d; }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-dark bg-dark mb-4">
+    <div class="container-fluid">
+      <span class="navbar-brand">🐳 Dockers Dashboard</span>
+      <span class="text-light small">Web port: {{ web_port }}</span>
+    </div>
+  </nav>
+
+  <div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4 class="mb-0">Running Containers</h4>
+      <div>
+        <span class="text-muted small me-2">Auto-refresh every {{ refresh_seconds }}s</span>
+        <button id="refresh-btn" class="btn btn-sm btn-outline-primary">Refresh now</button>
+      </div>
+    </div>
+
+    <div id="error-box" class="alert alert-danger"></div>
+
+    <div class="table-responsive">
+      <table class="table table-striped table-hover align-middle bg-white shadow-sm">
+        <thead class="table-dark">
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Image</th>
+            <th>Status</th>
+            <th>Ports</th>
+            <th>Running For</th>
+            <th>Logs</th>
+          </tr>
+        </thead>
+        <tbody id="containers-body">
+          <tr><td colspan="7" class="text-center text-muted">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const refreshSeconds = {{ refresh_seconds }};
+
+    function escapeHtml(s) {
+      if (!s) return "";
+      return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    async function fetchContainers() {
+      try {
+        const res = await fetch("/api/containers");
+        const data = await res.json();
+        const errorBox = document.getElementById("error-box");
+        const tbody = document.getElementById("containers-body");
+
+        if (data.error) {
+          errorBox.textContent = data.error;
+          errorBox.style.display = "block";
+        } else {
+          errorBox.style.display = "none";
+        }
+
+        const containers = data.containers || [];
+        if (containers.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No running containers</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = containers.map(c => {
+          const id = c.ID || "";
+          const name = c.Names || "";
+          const statusClass = (c.Status || "").toLowerCase().includes("up") ? "status-up" : "status-other";
+          return `
+            <tr>
+              <td class="mono">${escapeHtml(id.substring(0, 12))}</td>
+              <td>${escapeHtml(name)}</td>
+              <td class="mono">${escapeHtml(c.Image || "")}</td>
+              <td class="${statusClass}">${escapeHtml(c.Status || "")}</td>
+              <td class="mono">${escapeHtml(c.Ports || "")}</td>
+              <td>${escapeHtml(c.RunningFor || "")}</td>
+              <td>
+                <a class="btn btn-sm btn-primary"
+                   href="/logs/${encodeURIComponent(id)}"
+                   target="_blank" rel="noopener">
+                  View Logs
+                </a>
+              </td>
+            </tr>`;
+        }).join("");
+      } catch (e) {
+        const errorBox = document.getElementById("error-box");
+        errorBox.textContent = "Failed to fetch containers: " + e;
+        errorBox.style.display = "block";
+      }
+    }
+
+    document.getElementById("refresh-btn").addEventListener("click", fetchContainers);
+    fetchContainers();
+    setInterval(fetchContainers, refreshSeconds * 1000);
+  </script>
+</body>
+</html>
+

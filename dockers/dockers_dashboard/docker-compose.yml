@@ -1,0 +1,23 @@
+version: "3.8"
+
+services:
+  dockers_dashboard:
+    build: .
+    image: dockers_dashboard:latest
+    container_name: dockers_dashboard
+    restart: unless-stopped
+    # NOTE: keep this in sync with the "web.port" value in config.yaml
+    ports:
+      - "6179:6179"
+    volumes:
+      # Mount the host docker socket so the container's docker CLI can
+      # talk to the host's docker daemon (needed for "docker ps"/"docker logs -f").
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Mount the config file so credentials/port can be changed without rebuilding.
+      - ./config.yaml:/app/config.yaml:ro
+    environment:
+      - DASHBOARD_CONFIG=/app/config.yaml
+    # Needed so the entrypoint can create/manage the sudo user and adjust
+    # permissions on the mounted docker.sock.
+    privileged: true
+
