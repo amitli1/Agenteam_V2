@@ -49,7 +49,7 @@ flightPath:
 llm:
   api_key: EMPTY
   base_url: http://localhost:8090/v1
-  llm_model: openai/gpt-oss-20b
+  llm_model: openai/gpt-oss-20b #openai/gpt-oss-20b, Phi-3-mini-4k-instruct
 
 vision:
   use_online: false

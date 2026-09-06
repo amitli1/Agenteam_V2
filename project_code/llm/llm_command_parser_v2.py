@@ -76,6 +76,41 @@ class LlmCommandParser_V2:
         ]
         log_boxed(f"Parsed split_user_command for: '{user_command}'", lines)
 
+
+    def call_llm(self, user_command):
+
+        if "gpt-oss-20b" in app_settings.llm.llm_model:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": self.split_user_command_prompt},
+                    {"role": "user", "content": f"USER COMMAND: {user_command}"}
+                ],
+                extra_body={
+                    "reasoning_effort": "low",
+                    "seed": 0,
+                    "guided_json": self.split_command_schema,
+                },
+                temperature=0.0,
+                max_tokens=500,
+            )
+        else:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": self.split_user_command_prompt},
+                    {"role": "user", "content": f"USER COMMAND: {user_command}"}
+                ],
+                extra_body={
+                    "reasoning_effort": "low",
+                    "seed": 0,
+                    #"guided_json": self.split_command_schema,
+                },
+                temperature=0.0,
+                max_tokens=500,
+            )
+        return response
+
     def split_user_command(self, user_command):
 
         empty_results = {
