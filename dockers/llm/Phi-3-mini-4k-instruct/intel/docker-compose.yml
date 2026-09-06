@@ -1,0 +1,28 @@
+services:
+  llm-phi3-mini-intel:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: agenteam-llm-phi3-mini-intel:latest
+    container_name: agenteam-llm-phi3-mini-intel
+    ports:
+      # keep in sync with the port exposed by vllm serve (--port 8000 above)
+      - "8090:8000"
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+      # Fraction of GPU memory vLLM is allowed to reserve for weights + KV
+      # cache. Raise this (e.g. 0.9) if you hit:
+      # "ValueError: No available memory for the cache blocks."
+      - GPU_MEMORY_UTILIZATION=0.87
+      - MAX_MODEL_LEN=3072
+      - VLLM_HOST=0.0.0.0
+      - VLLM_PORT=8000
+      - SERVED_MODEL_NAME=Phi-3-mini-4k-instruct
+    # Expose the host GPU(s) to the container (requires the NVIDIA Container
+    # Toolkit installed on the host). vLLM needs a CUDA-capable GPU.
+    runtime: nvidia
+    # PyTorch/vLLM can use shared memory between processes.
+    ipc: host
+    restart: unless-stopped
+
