@@ -1,0 +1,29 @@
+services:
+  llm-qwen3-4b-awq-intel:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: agenteam-llm-qwen3-4b-awq-intel:latest
+    container_name: agenteam-llm-qwen3-4b-awq-intel
+    ports:
+      # keep in sync with the port exposed by vllm serve (--port 8000 above)
+      - "8090:8000"
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+      # Fraction of GPU memory vLLM is allowed to reserve for weights + KV
+      # cache. Raise this (e.g. 0.9) if you hit:
+      # "ValueError: No available memory for the cache blocks."
+      - GPU_MEMORY_UTILIZATION=0.8
+      - MAX_MODEL_LEN=4096
+      - VLLM_HOST=0.0.0.0
+      - VLLM_PORT=8000
+      - QUANTIZATION=awq
+      - SERVED_MODEL_NAME=Qwen3-4B-AWQ
+    # Expose the host GPU(s) to the container (requires the NVIDIA Container
+    # Toolkit installed on the host). vLLM needs a CUDA-capable GPU.
+    runtime: nvidia
+    # PyTorch/vLLM can use shared memory between processes.
+    ipc: host
+    restart: unless-stopped
+

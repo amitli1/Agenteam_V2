@@ -94,6 +94,23 @@ class LlmCommandParser_V2:
                 temperature=0.0,
                 max_tokens=500,
             )
+        elif "Qwen3" in app_settings.llm.llm_model:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": self.split_user_command_prompt},
+                    {"role": "user", "content": f"USER COMMAND: {user_command}"}
+                ],
+                extra_body={
+                    "seed": 0,
+                    "chat_template_kwargs": {
+                        "enable_thinking": False,
+                    },
+                    "guided_json": self.split_command_schema,
+                },
+                temperature=0.0,
+                max_tokens=500,
+            )
         else:
             response = self.client.chat.completions.create(
                 model=self.model,
@@ -102,9 +119,8 @@ class LlmCommandParser_V2:
                     {"role": "user", "content": f"USER COMMAND: {user_command}"}
                 ],
                 extra_body={
-                    "reasoning_effort": "low",
                     "seed": 0,
-                    #"guided_json": self.split_command_schema,
+                    "guided_json": self.split_command_schema,
                 },
                 temperature=0.0,
                 max_tokens=500,
@@ -122,20 +138,21 @@ class LlmCommandParser_V2:
 
         try:
             start_time = time.time()
-            response = self.client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {"role": "system", "content": self.split_user_command_prompt},
-                    {"role": "user", "content": f"USER COMMAND: {user_command}"}
-                ],
-                extra_body={
-                    "reasoning_effort": "low",
-                    "seed": 0,
-                    "guided_json": self.split_command_schema,
-                },
-                temperature=0.0,
-                max_tokens=500,
-            )
+            response = self.call_llm(user_command)
+            # response = self.client.chat.completions.create(
+            #     model=self.model,
+            #     messages=[
+            #         {"role": "system", "content": self.split_user_command_prompt},
+            #         {"role": "user", "content": f"USER COMMAND: {user_command}"}
+            #     ],
+            #     extra_body={
+            #         "reasoning_effort": "low",
+            #         "seed": 0,
+            #         "guided_json": self.split_command_schema,
+            #     },
+            #     temperature=0.0,
+            #     max_tokens=500,
+            # )
             end_time = time.time()
         except Exception as e:
             logging.error(f"Error while calling llm: {e}")
