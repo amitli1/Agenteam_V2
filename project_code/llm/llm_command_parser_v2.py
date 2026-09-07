@@ -139,20 +139,6 @@ class LlmCommandParser_V2:
         try:
             start_time = time.time()
             response = self.call_llm(user_command)
-            # response = self.client.chat.completions.create(
-            #     model=self.model,
-            #     messages=[
-            #         {"role": "system", "content": self.split_user_command_prompt},
-            #         {"role": "user", "content": f"USER COMMAND: {user_command}"}
-            #     ],
-            #     extra_body={
-            #         "reasoning_effort": "low",
-            #         "seed": 0,
-            #         "guided_json": self.split_command_schema,
-            #     },
-            #     temperature=0.0,
-            #     max_tokens=500,
-            # )
             end_time = time.time()
         except Exception as e:
             logging.error(f"Error while calling llm: {e}")
