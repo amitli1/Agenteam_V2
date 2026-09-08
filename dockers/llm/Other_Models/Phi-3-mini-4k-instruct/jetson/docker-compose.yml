@@ -1,8 +1,8 @@
 services:
-  vllm-phi3-mini :
+  vllm-phi3-mini:
     container_name: vllm-phi3-mini
     build:
-      context: ..
+      context: .
       dockerfile: Dockerfile
 
     ports:
