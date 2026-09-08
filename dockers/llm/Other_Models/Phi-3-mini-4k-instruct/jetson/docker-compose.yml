@@ -10,6 +10,8 @@ services:
 
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
+      - HF_HUB_OFFLINE=1
+      - TRANSFORMERS_OFFLINE=1
 
     runtime: nvidia
 
@@ -26,6 +28,7 @@ services:
 
     volumes:
       - /mnt/nvme/repo/Agenteam_V2/dockers/llm:/models
+      - ${HOME}/.cache/huggingface:/root/.cache/huggingface
 
     shm_size: "16gb"
     restart: always
