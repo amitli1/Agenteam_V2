@@ -24,5 +24,5 @@ services:
     runtime: nvidia
     # PyTorch/vLLM can use shared memory between processes.
     ipc: host
-    restart: unless-stopped
+    #restart: unless-stopped
 

@@ -536,12 +536,34 @@ class MissionPlannerAgent:
     # ------------------------------------------------------------------ #
     # Team spatial-offset helper
     # ------------------------------------------------------------------ #
+    # def _apply_spatial_offset(
+    #     self,
+    #     master_wps: List[Tuple[float, float, float]],
+    #     slave_alt: float,
+    #     spatial_distance: float,
+    #     delta_alt: float,
+    # ) -> List[Tuple[float, float, float]]:
+    #     """Shift the master path to obtain the slave path.
+    #
+    #     The horizontal separation is chosen so that the 3D (spatial) distance
+    #     between the two drones equals ``spatial_distance`` given the vertical
+    #     separation ``delta_alt``.
+    #     """
+    #     remaining = spatial_distance ** 2 - delta_alt ** 2
+    #     horizontal = math.sqrt(remaining) if remaining > 0 else spatial_distance
+    #
+    #     slave_wps: List[Tuple[float, float, float]] = []
+    #     for lat, lon, _ in master_wps:
+    #         # offset horizontally towards the east by `horizontal` meters.
+    #         s_lat, s_lon = self._offset_latlon(lat, lon, 0.0, horizontal)
+    #         slave_wps.append((s_lat, s_lon, slave_alt))
+    #     return slave_wps
     def _apply_spatial_offset(
-        self,
-        master_wps: List[Tuple[float, float, float]],
-        slave_alt: float,
-        spatial_distance: float,
-        delta_alt: float,
+            self,
+            master_wps: List[Tuple[float, float, float]],
+            slave_alt: float,
+            spatial_distance: float,
+            delta_alt: float,
     ) -> List[Tuple[float, float, float]]:
         """Shift the master path to obtain the slave path.
 
@@ -550,7 +572,13 @@ class MissionPlannerAgent:
         separation ``delta_alt``.
         """
         remaining = spatial_distance ** 2 - delta_alt ** 2
-        horizontal = math.sqrt(remaining) if remaining > 0 else spatial_distance
+        if remaining < 0:
+            logging.warning(
+                f"DELTA_ALT_SLAVE_DRONE ({delta_alt}) is greater than "
+                f"SPATIAL_DISTANCE ({spatial_distance}); clamping horizontal "
+                f"offset to 0 (actual distance will be {abs(delta_alt)}, not {spatial_distance})."
+            )
+        horizontal = math.sqrt(remaining) if remaining > 0 else 0.0
 
         slave_wps: List[Tuple[float, float, float]] = []
         for lat, lon, _ in master_wps:

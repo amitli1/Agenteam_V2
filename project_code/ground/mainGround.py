@@ -6,7 +6,7 @@ from project_code.app_config.settings import app_settings, log_app_settings
 from project_code.audio.audio_pipeline import AudioPipeline
 from project_code.db.database_manager import DatabaseManager
 from project_code.ground.monitor_collector import MonitorCollector
-from project_code.llm.drone_navigation_agent import DroneNavigationAgent
+#from project_code.llm.drone_navigation_agent import DroneNavigationAgent
 from project_code.llm.llm_command_parser import LlmCommandParser
 from project_code.llm.llm_command_parser_v2 import LlmCommandParser_V2
 from project_code.llm.llm_mission_planner import MissionPlannerAgent
@@ -36,7 +36,7 @@ class MainGround:
         self.llmCommandParser_v2  = LlmCommandParser_V2()
         self.llmMissionPlanner    = MissionPlannerAgent()
         self.databaseManager      = DatabaseManager()
-        self.DroneNavigationAgent = DroneNavigationAgent()
+        #self.DroneNavigationAgent = DroneNavigationAgent()
         self.vision_parser        = VisionParser()
         self.monitorCollector     = MonitorCollector()
         self.monitorCollector.start()

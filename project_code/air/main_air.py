@@ -90,6 +90,8 @@ class MainAir:
 
                 r = requests.post(ground_url, json={"drone_role": self.drone_role, "last_quad_msg": last_quad_msg})
                 r.raise_for_status()
+                if print_err is False:
+                    logging.info(f'Resume sending status to ground')
                 print_err = False
 
             except Exception as e:

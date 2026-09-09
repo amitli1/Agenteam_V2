@@ -20,8 +20,8 @@ class LlmCommandParser_V2:
             api_key=app_settings.llm.api_key,
             base_url=base_url
         )
-
         with open("llm/mission_command_parser_v2.txt", "r", encoding="utf-8") as f:
+        #with open("llm/mission_command_parser_phi.txt", "r", encoding="utf-8") as f:
             self.split_user_command_prompt = f.read()
 
         self.split_command_schema = {
@@ -111,7 +111,7 @@ class LlmCommandParser_V2:
                 temperature=0.0,
                 max_tokens=500,
             )
-        else:
+        elif "Phi-3" in app_settings.llm.llm_model:
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
@@ -120,11 +120,17 @@ class LlmCommandParser_V2:
                 ],
                 extra_body={
                     "seed": 0,
-                    "guided_json": self.split_command_schema,
+                    #"guided_json": self.split_command_schema,
+                    "structured_outputs": {
+                        "json": self.split_command_schema
+                    },
                 },
                 temperature=0.0,
                 max_tokens=500,
             )
+        else:
+            logging.error(f"Unkown LLM: {app_settings.llm.llm_model}")
+            response = {}
         return response
 
     def split_user_command(self, user_command):
