@@ -6,7 +6,7 @@ services:
       dockerfile: Dockerfile
 
     ports:
-      - "8090:8090"
+      - "8095:8095"
 
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
@@ -19,12 +19,12 @@ services:
       - bash
       - -c
       - |
-          sleep 1
-          python3 -m vllm.entrypoints.openai.api_server \
-            --model /models/Phi-3-mini-4k-instruct \            
-            --gpu-memory-utilization 0.30 \
-            --max-model-len 4096 \
-            --port 8090
+        sleep 1
+        python3 -m vllm.entrypoints.openai.api_server \
+          --model /models/Phi-3-mini-4k-instruct \
+          --gpu-memory-utilization 0.20 \
+          --max-model-len 3600 \
+          --port 8095
 
     volumes:
       - /mnt/nvme/repo/Agenteam_V2/dockers/llm:/models

@@ -8,7 +8,7 @@ RUN pip install --no-cache-dir fastapi uvicorn pydantic --index-url https://pypi
 #    git+https://github.com/huggingface/transformers.git
 
 RUN python3 -c "import vllm; print(vllm.__version__)"
-EXPOSE 8090
+EXPOSE 8095
 #RUN python3 -c "import transformers; print(transformers.__version__)"
 #RUN pip install --upgrade --no-cache-dir  transformers --index-url https://pypi.org/simple
 
