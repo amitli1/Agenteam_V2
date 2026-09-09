@@ -106,6 +106,9 @@ def _apply_jetson_ip_overrides(data: dict) -> dict:
 
         data["general"]          = general
         data["vision"]           = vision
+    else:
+        vision = data.get("vision", {})
+        vision["use_online"] = False
     return data
 
 def load_config(path: str = "app_config/conf.yaml") -> Settings:

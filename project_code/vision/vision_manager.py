@@ -66,7 +66,7 @@ class VisionManager(object):
     def open_video_window(self):
 
         if self.is_online is False:
-            return
+            return True
         try:
             stop_url = f"http://{get_running_ip()}:{app_settings.vision.point_port}/api/pointing-agent/stop"
             #logging.info(f'Send pointing-agent/stop (to: {stop_url})')
@@ -90,7 +90,7 @@ class VisionManager(object):
             logging.info(f'------------------------------------------------------------')
             return success
         except Exception as e:
-            logging.error(f'Error sending request for process-video: {e}  (status_code = {r.status_code}) text = {r.text})')
+            logging.error(f'Error sending request for process-video: {e}')
 
 
     def handle_point_status(self, data, last_is_active, last_agent_status):
