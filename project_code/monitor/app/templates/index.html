@@ -197,6 +197,61 @@
             };
         }
 
+        // ---------- Heading arrow helpers ----------
+        // Note: this app plots x = lat, y = lon (see makeTrace below), so a
+        // heading angle 'deg' (0 = North, clockwise like a compass) maps to
+        // dLat = cos(deg), dLon = sin(deg).
+
+        function computeHeadingDeg(points, explicitYaw) {
+            // Prefer the real YAW if it exists (not null/undefined).
+            if (explicitYaw !== null && explicitYaw !== undefined && !isNaN(explicitYaw)) {
+                return explicitYaw;
+            }
+            // Fallback: direction of flight, derived from the last two track points.
+            if (!points || points.length < 2) return null;
+            const prev = points[points.length - 2];
+            const cur = points[points.length - 1];
+            const dLat = cur.lat - prev.lat;
+            const dLon = cur.lon - prev.lon;
+            if (dLat === 0 && dLon === 0) return null;
+            let deg = Math.atan2(dLon, dLat) * 180 / Math.PI;
+            if (deg < 0) deg += 360;
+            return deg;
+        }
+
+        function arrowLengthFor(points) {
+            const lats = points.map(p => p.lat);
+            const lons = points.map(p => p.lon);
+            const latSpan = Math.max(...lats) - Math.min(...lats);
+            const lonSpan = Math.max(...lons) - Math.min(...lons);
+            const span = Math.max(latSpan, lonSpan, 0.0006);
+            return span * 0.18;
+        }
+
+        function makeHeadingAnnotation(points, color) {
+            if (!points || points.length === 0) return null;
+            const last = points[points.length - 1];
+            const deg = computeHeadingDeg(points, last.yaw);
+            if (deg === null || deg === undefined || isNaN(deg)) return null;
+
+            const rad = deg * Math.PI / 180;
+            const len = arrowLengthFor(points);
+            const dLat = len * Math.cos(rad);
+            const dLon = len * Math.sin(rad);
+
+            return {
+                x: last.lat, y: last.lon,
+                ax: last.lat - dLat, ay: last.lon - dLon,
+                xref: 'x', yref: 'y', axref: 'x', ayref: 'y',
+                showarrow: true,
+                arrowhead: 3,
+                arrowsize: 1.3,
+                arrowwidth: 2.5,
+                arrowcolor: color,
+                text: ''
+            };
+        }
+
         function makeDatasetTraces(groups) {
             // Markers + label trace: one marker per point, label text only on the
             // first point of each group (entity_type + entity_number).
@@ -310,9 +365,15 @@
                     }
                 });
             } else {
+                const annotations = [
+                    makeHeadingAnnotation(snapshot.master_points, 'green'),
+                    makeHeadingAnnotation(snapshot.slave_points, 'red'),
+                ].filter(a => a !== null);
+
                 layout = Object.assign({}, baseLayout, {
                     xaxis: { title: 'Lat', gridcolor: '#000000', zerolinecolor: '#000000', color: '#000000' },
                     yaxis: { title: 'Lon', gridcolor: '#000000', zerolinecolor: '#000000', color: '#000000' },
+                    annotations: annotations,
                 });
             }
 

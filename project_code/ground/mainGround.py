@@ -82,6 +82,8 @@ class MainGround:
         air_status_msg = request.get_json(silent=True)
 
         self.monitorCollector.update_air_status_msg(air_status_msg)
+        #yaw = json.loads(air_status_msg['last_quad_msg'])['yaw']
+        #logging.info(f'yaw = {yaw}')
 
         if air_status_msg['drone_role'] == 'master':
             self.last_master_quad_data = json.loads(air_status_msg['last_quad_msg'])

@@ -70,30 +70,30 @@ class FullSystemTest():
 
 
         self.log_test_step("Hey buddy go to building number one")
-        self.mainGround.handle_user_text("Hey buddy go to building number one")
+        self.mainGround.handle_user_text_2("Hey buddy go to building number one")
         if self.check_if_step_finished_successfully('I have reached the destination.') is False:
             return False
 
         self.log_test_step("Hey buddy point to the car or weapons")
-        mainGround.handle_user_text("Hey buddy point to the car or weapons")
+        mainGround.handle_user_text_2("Hey buddy point to the car or weapons")
 
         self.log_test_step("buddy, surround the building and tell me what you see")
-        mainGround.handle_user_text("buddy, surround the building and tell me what you see")
+        mainGround.handle_user_text_2("buddy, surround the building and tell me what you see")
 
         self.log_test_step('what should I look for ?')
         if self.check_if_step_finished_successfully('what should I look for ?') is True:
 
             self.log_test_step("buddy, look for people and weapons")
-            mainGround.handle_user_text("buddy, look for people and weapons")
+            mainGround.handle_user_text_2("buddy, look for people and weapons")
 
             if self.check_if_step_finished_successfully('I have reached the destination.') is False:
                 return False
 
             self.log_test_step("buddy, describe")
-            mainGround.handle_user_text("buddy, describe")
+            mainGround.handle_user_text_2("buddy, describe")
 
             self.log_test_step("buddy, return home")
-            mainGround.handle_user_text("buddy, return home")
+            mainGround.handle_user_text_2("buddy, return home")
 
             result = self.check_errors_in_log()
         else:
@@ -108,10 +108,10 @@ class FullSystemTest():
         return result
 
     def test_team(self):
-        self.mainGround.handle_user_text("Hey team go to building number one")
+        self.mainGround.handle_user_text_2("Hey team go to building number one")
         if self.check_if_step_finished_successfully('I have reached the destination.') is False:
             return False
-        mainGround.handle_user_text("team, return home")
+        mainGround.handle_user_text_2("team, return home")
         result = self.check_errors_in_log()
 
         logging.info("✅ ✅ ✅ ✅ ✅ ✅ ✅ ✅ ")
@@ -120,7 +120,7 @@ class FullSystemTest():
         logging.info("✅ ✅ ✅ ✅ ✅ ✅ ✅ ✅ ")
 
     def test_fly_to_the_moon(self):
-        self.mainGround.handle_user_text("Hey jarvis fly to the moon")
+        self.mainGround.handle_user_text_2("Hey jarvis fly to the moon")
         time.sleep(30)
 
 

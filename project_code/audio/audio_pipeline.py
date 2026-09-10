@@ -134,6 +134,7 @@ class AudioPipeline:
         while True:
 
             wake_word_detected = False
+            winner_wakeword = ""
             if app_settings.test.run_in_test_mode is True:
                 wake_word_detected = True
                 # recorded_audio = TesterManager().run_next_test_step()
@@ -209,6 +210,12 @@ class AudioPipeline:
                 text = re.sub(r'\b(body|budy|betty|badi|bety)\b', 'buddy', text, flags=re.IGNORECASE)
                 text = re.sub(r'\bTim\b', 'team', text, flags=re.IGNORECASE)
                 logging.info(f'Fix whisper transcription: {text}')
+
+                # --- added: ensure wakeword is present in the text ---
+                if winner_wakeword and winner_wakeword.lower() not in text.lower():
+                    text = f"{winner_wakeword} {text}"
+                    logging.info(f'Wakeword missing from transcription, prepended: {text}')
+
                 self.func_handle_user_text(text)
 
 

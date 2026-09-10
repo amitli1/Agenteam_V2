@@ -44,15 +44,23 @@ def load_config() -> dict:
 
 
 class Waypoint(BaseModel):
-    """A single mission waypoint: {"lat": .., "lon": .., "alt": ..}.
+    """A single mission waypoint: {"lat": .., "lon": .., "alt": .., "yaw": ..}.
+
+    "yaw" (compass heading in degrees, 0-360) is optional. When provided, it
+    is used directly as the target heading for that leg (useful for
+    in-place rotations, e.g. two consecutive waypoints with the same
+    lat/lon but different yaw). When omitted, the heading is derived from
+    the geometric bearing between the previous point and this waypoint.
 
     Also accepts the plain [lat, lon, alt] list/tuple form (as sent by
-    QuadManager.fly_to_wp / some legacy callers) for backward compatibility.
+    QuadManager.fly_to_wp / some legacy callers) for backward compatibility;
+    that form has no yaw, so the bearing is computed geometrically.
     """
 
     lat: float
     lon: float
     alt: float
+    yaw: Optional[float] = None
 
     @model_validator(mode="before")
     @classmethod
@@ -81,6 +89,14 @@ def _bearing(a: dict, b: dict) -> float:
 
 def _lerp(a: float, b: float, frac: float) -> float:
     return a + (b - a) * frac
+
+
+def _lerp_angle(a: float, b: float, frac: float) -> float:
+    """Interpolate between two compass headings (deg, 0-360) taking the
+    shortest angular path (e.g. 350 -> 10 goes forward through 360/0, not
+    backwards through 180)."""
+    diff = ((b - a + 180.0) % 360.0) - 180.0
+    return (a + diff * frac) % 360.0
 
 
 class DroneState:
@@ -118,6 +134,17 @@ class DroneState:
     # position / movement
     # ------------------------------------------------------------------
     def _current_position_and_yaw(self):
+        """Compute the drone's current lat/lon/alt (linear interpolation
+        along the active movement segment) and its current yaw.
+
+        Each segment carries a `start_yaw`/`end_yaw` (see `_start_movement`):
+        `end_yaw` is either the explicit "yaw" given for that waypoint in
+        POST /mission, or - if omitted - the geometric bearing to that
+        waypoint. The reported yaw is angularly interpolated from
+        `start_yaw` to `end_yaw` across the leg, so it updates smoothly and
+        automatically as the mission progresses (including in-place
+        rotations where lat/lon don't change but yaw does).
+        """
         now = time.time()
 
         if not self._move_segments:
@@ -139,7 +166,7 @@ class DroneState:
                     "lon": _lerp(prev_pos["lon"], seg["end_pos"]["lon"], frac),
                     "alt": _lerp(prev_pos["alt"], seg["end_pos"]["alt"], frac),
                 }
-                self._last_yaw = _bearing(prev_pos, seg["end_pos"])
+                self._last_yaw = _lerp_angle(seg["start_yaw"], seg["end_yaw"], frac)
                 return pos, self._last_yaw
 
             prev_pos = seg["end_pos"]
@@ -150,13 +177,33 @@ class DroneState:
 
     def _start_movement(self, waypoints: List[dict]):
         now = time.time()
-        start_pos, _ = self._current_position_and_yaw()
+        start_pos, start_yaw = self._current_position_and_yaw()
 
         segments = []
+        prev_pos = start_pos
+        prev_yaw = start_yaw
         for i, wp in enumerate(waypoints):
             seg_start = now + i * self.step_duration
             seg_end = seg_start + self.step_duration
-            segments.append({"end_pos": wp, "start_time": seg_start, "end_time": seg_end})
+
+            end_pos = {"lat": wp["lat"], "lon": wp["lon"], "alt": wp["alt"]}
+            explicit_yaw = wp.get("yaw")
+            if explicit_yaw is not None:
+                end_yaw = float(explicit_yaw) % 360.0
+            else:
+                end_yaw = _bearing(prev_pos, end_pos)
+
+            segments.append(
+                {
+                    "end_pos": end_pos,
+                    "start_yaw": prev_yaw,
+                    "end_yaw": end_yaw,
+                    "start_time": seg_start,
+                    "end_time": seg_end,
+                }
+            )
+            prev_pos = end_pos
+            prev_yaw = end_yaw
 
         self._move_start_pos = start_pos
         self._move_segments = segments

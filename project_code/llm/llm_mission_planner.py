@@ -211,6 +211,15 @@ class MissionPlannerAgent:
             return None
 
     @staticmethod
+    def _bearing_deg(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+        """Initial bearing (deg, 0=North, clockwise) from point1 to point2."""
+        phi1, phi2 = math.radians(lat1), math.radians(lat2)
+        d_lon = math.radians(lon2 - lon1)
+        x = math.sin(d_lon) * math.cos(phi2)
+        y = math.cos(phi1) * math.sin(phi2) - math.sin(phi1) * math.cos(phi2) * math.cos(d_lon)
+        return (math.degrees(math.atan2(x, y)) + 360.0) % 360.0
+
+    @staticmethod
     def _parse_with_rules(text_command: str) -> Dict[str, str]:
         """Deterministic fallback parser."""
         words = str(text_command).lower().replace(",", " ").split()
@@ -299,7 +308,8 @@ class MissionPlannerAgent:
         """Convert a list of (lat, lon, alt) tuples to a list of {'lat','lon','alt'} dicts."""
         if wps is None:
             return None
-        return [{"lat": lat, "lon": lon, "alt": alt} for lat, lon, alt in wps]
+        #return [{"lat": lat, "lon": lon, "alt": alt} for lat, lon, alt in wps]
+        return [{"lat": lat, "lon": lon, "alt": alt, "yaw": yaw} for lat, lon, alt, yaw in wps]
 
     @staticmethod
     def _offset_latlon(
@@ -311,29 +321,24 @@ class MissionPlannerAgent:
         return lat + d_lat, lon + d_lon
 
     @staticmethod
-    def _prepend_current_location(
-            drone_location: Dict[str, float], alt: float
-    ) -> List[Tuple[float, float, float]]:
-        """Build the starting way-points: current position, then climb straight
-        up (same lat/lon) to the target altitude before any lateral movement.
-        """
+    def _prepend_current_location(drone_location, alt):
         lat = float(drone_location["lat"])
         lon = float(drone_location["lon"])
         cur_alt = float(drone_location.get("alt", alt))
-        return [(lat, lon, cur_alt), (lat, lon, alt)]
+        cur_yaw = drone_location.get("yaw", None)
+        return [(lat, lon, cur_alt, cur_yaw), (lat, lon, alt, cur_yaw)]
 
     def _surround_waypoints(
-        self, center_lat: float, center_lon: float, alt: float
-    ) -> List[Tuple[float, float, float]]:
-        """Circle of way-points around a single center point."""
-        waypoints: List[Tuple[float, float, float]] = []
+            self, center_lat: float, center_lon: float, alt: float
+    ) -> List[Tuple[float, float, float, float]]:
+        waypoints: List[Tuple[float, float, float, float]] = []
         for i in range(SURROUND_NUM_POINTS):
             angle = 2.0 * math.pi * i / SURROUND_NUM_POINTS
             d_north = SURROUND_RADIUS_M * math.cos(angle)
             d_east = SURROUND_RADIUS_M * math.sin(angle)
             lat, lon = self._offset_latlon(center_lat, center_lon, d_north, d_east)
-            waypoints.append((lat, lon, alt))
-        # close the loop
+            yaw = self._bearing_deg(lat, lon, center_lat, center_lon)
+            waypoints.append((lat, lon, alt, yaw))
         waypoints.append(waypoints[0])
         return waypoints
 
@@ -367,30 +372,50 @@ class MissionPlannerAgent:
     # ------------------------------------------------------------------ #
     # Core way-point computation for a single logical target
     # ------------------------------------------------------------------ #
-    def _base_waypoints_for_action(
-        self,
-        action: str,
-        row,
-        alt: float,
-    ) -> List[Tuple[float, float, float]]:
-        """Compute the (lat, lon, alt) way-points for the given action/target."""
+    # def _base_waypoints_for_action(
+    #     self,
+    #     action: str,
+    #     row,
+    #     alt: float,
+    # ) -> List[Tuple[float, float, float]]:
+    #     """Compute the (lat, lon, alt) way-points for the given action/target."""
+    #     coords = self._parse_geometry_string(row.get("geometry", ""))
+    #     if not coords:
+    #         return []
+    #
+    #     if action == "surround":
+    #         if len(coords) > 1:
+    #             # Polygon: fly the boundary vertices, then close the loop.
+    #             waypoints = [(lat, lon, alt) for lat, lon in coords]
+    #             waypoints.append(waypoints[0])
+    #             return waypoints
+    #         # Single point: build a circle around it.
+    #         lat, lon = coords[0]
+    #         return self._surround_waypoints(lat, lon, alt)
+    #
+    #     # action == "goto" (default): destination is the first geometry point.
+    #     lat, lon = coords[0]
+    #     return [(lat, lon, alt)]
+    def _base_waypoints_for_action(self, action, row, alt):
         coords = self._parse_geometry_string(row.get("geometry", ""))
         if not coords:
             return []
 
         if action == "surround":
             if len(coords) > 1:
-                # Polygon: fly the boundary vertices, then close the loop.
-                waypoints = [(lat, lon, alt) for lat, lon in coords]
+                centroid_lat = sum(lat for lat, _ in coords) / len(coords)
+                centroid_lon = sum(lon for _, lon in coords) / len(coords)
+                waypoints = [
+                    (lat, lon, alt, self._bearing_deg(lat, lon, centroid_lat, centroid_lon))
+                    for lat, lon in coords
+                ]
                 waypoints.append(waypoints[0])
                 return waypoints
-            # Single point: build a circle around it.
             lat, lon = coords[0]
             return self._surround_waypoints(lat, lon, alt)
 
-        # action == "goto" (default): destination is the first geometry point.
         lat, lon = coords[0]
-        return [(lat, lon, alt)]
+        return [(lat, lon, alt, None)]  # goto: no forced heading
 
     # ------------------------------------------------------------------ #
     # Public API
@@ -581,10 +606,9 @@ class MissionPlannerAgent:
         horizontal = math.sqrt(remaining) if remaining > 0 else 0.0
 
         slave_wps: List[Tuple[float, float, float]] = []
-        for lat, lon, _ in master_wps:
-            # offset horizontally towards the east by `horizontal` meters.
+        for lat, lon, _, yaw in master_wps:
             s_lat, s_lon = self._offset_latlon(lat, lon, 0.0, horizontal)
-            slave_wps.append((s_lat, s_lon, slave_alt))
+            slave_wps.append((s_lat, s_lon, slave_alt, yaw))
         return slave_wps
 
     # ------------------------------------------------------------------ #

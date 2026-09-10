@@ -108,12 +108,13 @@ def get_master_status():
     lat = _to_float(payload.get("lat"))
     lon = _to_float(payload.get("lon"))
     alt = _to_float(payload.get("alt"))
+    yaw = _to_float(payload.get("yaw"))
 
     if lat is None or lon is None:
         return jsonify({"status": "error", "message": "lat/lon required"}), 400
 
-    state.add_master_status(lat, lon, alt, raw=payload)
-    logger.info(f"get_master_status: lat={lat} lon={lon} alt={alt}")
+    state.add_master_status(lat, lon, alt, yaw, raw=payload)
+    logger.info(f"get_master_status: lat={lat} lon={lon} alt={alt} yaw={yaw}")
     return jsonify({"status": "ok"})
 
 
@@ -124,12 +125,13 @@ def get_slave_status():
     lat = _to_float(payload.get("lat"))
     lon = _to_float(payload.get("lon"))
     alt = _to_float(payload.get("alt"))
+    yaw = _to_float(payload.get("yaw"))
 
     if lat is None or lon is None:
         return jsonify({"status": "error", "message": "lat/lon required"}), 400
 
-    state.add_slave_status(lat, lon, alt, raw=payload)
-    logger.info(f"get_slave_status: lat={lat} lon={lon} alt={alt}")
+    state.add_slave_status(lat, lon, alt, yaw, raw=payload)
+    logger.info(f"get_slave_status: lat={lat} lon={lon} alt={alt} yaw={yaw}")
     return jsonify({"status": "ok"})
 
 

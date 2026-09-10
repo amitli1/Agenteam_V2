@@ -65,28 +65,30 @@ def add_dataset_group(points, entity_type=None, entity_number=None):
         })
 
 
-def add_master_status(lat, lon, alt, raw=None):
+def add_master_status(lat, lon, alt, yaw=None, raw=None):
     global master_latest
     with _lock:
-        master_points.append({"lat": lat, "lon": lon, "alt": alt})
-        master_history.append({"time": _now(), "lat": lat, "lon": lon, "alt": alt})
+        master_points.append({"lat": lat, "lon": lon, "alt": alt, "yaw": yaw})
+        master_history.append({"time": _now(), "lat": lat, "lon": lon, "alt": alt, "yaw": yaw})
         latest = dict(raw) if raw else {}
         latest.setdefault("lat", lat)
         latest.setdefault("lon", lon)
         latest.setdefault("alt", alt)
+        latest.setdefault("yaw", yaw)
         latest["time"] = _now()
         master_latest = latest
 
 
-def add_slave_status(lat, lon, alt, raw=None):
+def add_slave_status(lat, lon, alt, yaw=None, raw=None):
     global slave_latest
     with _lock:
-        slave_points.append({"lat": lat, "lon": lon, "alt": alt})
-        slave_history.append({"time": _now(), "lat": lat, "lon": lon, "alt": alt})
+        slave_points.append({"lat": lat, "lon": lon, "alt": alt, "yaw": yaw})
+        slave_history.append({"time": _now(), "lat": lat, "lon": lon, "alt": alt, "yaw": yaw})
         latest = dict(raw) if raw else {}
         latest.setdefault("lat", lat)
         latest.setdefault("lon", lon)
         latest.setdefault("alt", alt)
+        latest.setdefault("yaw", yaw)
         latest["time"] = _now()
         slave_latest = latest
 
