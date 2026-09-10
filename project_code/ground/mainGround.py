@@ -349,36 +349,36 @@ class MainGround:
         self.last_text_command = ""
         self.log_wait_for_next_command()
 
-    def handle_user_text(self, text):
-
-        self.monitorCollector.update_user_command("", text)
-
-
-        l_commands       = self.llmCommandParser.split_user_command(text)
-        l_commands, text = self.merge_current_and_previous_commands(l_commands, text)
-
-        for command in l_commands:
-            logging.info(command)
-
-            if command['vision_command'] != '':
-                vision_result_ = self.handle_vision_command(text)
-                if vision_result_['need_more_data']:
-                    self.run_tts("what should I look for ?", "ground")
-                    self.last_fly_command    = command['fly_command']
-                    self.last_vision_command = vision_result_['vision_command']
-                    self.last_text_command   = text
-                    self.log_wait_for_next_command()
-                    return
-
-            if command['fly_command'] != '':
-                self.handle_fly_command(command)
-
-        logging.info(f'Clear last_fly_command and last_vision_command')
-        self.last_fly_command    = None
-        self.last_vision_command = None
-        self.last_text_command   = None
-
-        self.log_wait_for_next_command()
+    # def handle_user_text(self, text):
+    #
+    #     self.monitorCollector.update_user_command("", text)
+    #
+    #
+    #     l_commands       = self.llmCommandParser.split_user_command(text)
+    #     l_commands, text = self.merge_current_and_previous_commands(l_commands, text)
+    #
+    #     for command in l_commands:
+    #         logging.info(command)
+    #
+    #         if command['vision_command'] != '':
+    #             vision_result_ = self.handle_vision_command(text)
+    #             if vision_result_['need_more_data']:
+    #                 self.run_tts("what should I look for ?", "ground")
+    #                 self.last_fly_command    = command['fly_command']
+    #                 self.last_vision_command = vision_result_['vision_command']
+    #                 self.last_text_command   = text
+    #                 self.log_wait_for_next_command()
+    #                 return
+    #
+    #         if command['fly_command'] != '':
+    #             self.handle_fly_command(command)
+    #
+    #     logging.info(f'Clear last_fly_command and last_vision_command')
+    #     self.last_fly_command    = None
+    #     self.last_vision_command = None
+    #     self.last_text_command   = None
+    #
+    #     self.log_wait_for_next_command()
 
 
 
