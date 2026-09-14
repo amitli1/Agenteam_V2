@@ -74,22 +74,25 @@ class MainAir:
     def main_air_logic(self):
 
         print_err = False
+        last_sent_msg_id = None
 
         while True:
-            time.sleep(1) # get message every second
+            time.sleep(1)  # check every second
             with air_share_fields.quad_last_status_data_lock:
+                current_msg_id = air_share_fields.quad_last_status_msg_id
                 last_quad_msg = json.dumps(dict(quad_last_status_data))
 
-            if last_quad_msg is None:
-                continue
             if last_quad_msg == '{}':
                 continue
 
+            if current_msg_id == last_sent_msg_id:
+                continue  # no new message since last send
+
             try:
                 ground_url = f"http://{app_settings.general.ground_ip}:{app_settings.general.ground_port}/status"
-
                 r = requests.post(ground_url, json={"drone_role": self.drone_role, "last_quad_msg": last_quad_msg})
                 r.raise_for_status()
+                last_sent_msg_id = current_msg_id
                 if print_err is True:
                     logging.info(f'Resume sending status to ground')
                 print_err = False

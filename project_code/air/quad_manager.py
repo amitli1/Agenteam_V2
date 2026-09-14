@@ -2,6 +2,7 @@ import time
 
 from project_code.air.air_share_fields import quad_last_status_data, quad_isMissionInProgress, \
     quad_last_status_data_lock
+from project_code.air import air_share_fields
 from project_code.app_config.settings import app_settings
 from project_code.utils.utils import get_running_ip, log_boxed
 import websockets
@@ -170,6 +171,7 @@ class QuadManager:
                             # save last msg
                             with quad_last_status_data_lock:
                                 quad_last_status_data.update(json.loads(message))
+                                air_share_fields.quad_last_status_msg_id += 1
                             self.last_status_msg = current_status_data
 
                         except Exception as e:
