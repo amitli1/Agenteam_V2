@@ -4,7 +4,7 @@ from project_code.air.air_share_fields import quad_last_status_data, quad_isMiss
     quad_last_status_data_lock
 from project_code.air import air_share_fields
 from project_code.app_config.settings import app_settings
-from project_code.utils.utils import get_running_ip, log_boxed
+from project_code.utils.utils import get_running_ip, log_boxed, distance_meters
 import websockets
 import logging
 import threading
@@ -19,6 +19,7 @@ class QuadManager:
         self.quad_port             = quad_port
         self.target_ip             = get_running_ip()
         self.last_status_msg       = None
+        self.last_logged_latlon    = None
 
         self.quad_url  = f"ws://{self.target_ip}:{self.quad_port}/ws/drone-status"
         self._thread   = threading.Thread(
@@ -116,6 +117,25 @@ class QuadManager:
             curr_val = current_status_data.get(field)
             if prev_val != curr_val:
                 changed_lines.append(f"{field}: before={prev_val}, current={curr_val}")
+
+            # log lat/lon only if moved at least 1 meter since last logged position
+        lat = current_status_data.get('lat')
+        lon = current_status_data.get('lon')
+        alt = current_status_data.get('alt', 0.0)
+        if lat is not None and lon is not None:
+            current_point = {"lat": lat, "lon": lon, "alt": alt}
+            if self.last_logged_latlon is None:
+                self.last_logged_latlon = current_point
+                changed_lines.append(f"lat/lon: initial position=({lat}, {lon})")
+            else:
+                dist = distance_meters(self.last_logged_latlon, current_point)
+                if dist >= 1.0:
+                    prev_point = self.last_logged_latlon
+                    changed_lines.append(
+                        f"lat/lon: before=({prev_point['lat']}, {prev_point['lon']}), "
+                        f"current=({lat}, {lon}), dist={dist:.2f}m"
+                    )
+                    self.last_logged_latlon = current_point
 
         if changed_lines:
             log_boxed("Drone status changed", changed_lines)
