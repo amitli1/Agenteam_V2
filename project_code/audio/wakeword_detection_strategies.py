@@ -93,7 +93,8 @@ class BuddyDetector(DetectionStrategy):
         return self.wake_words
 
     def configure(self, model_names: Mapping[str, object], wake_word: str = None):
-        return _uniform(model_names.keys(), self.patience_frames), _uniform(model_names.keys(), self.model_threshold)
+        #return _uniform(model_names.keys(), self.patience_frames), _uniform(model_names.keys(), self.model_threshold)
+        return {}, {}
 
     def decide(self, prediction: Dict[str, dict]) -> DetectionOutcome:
 
@@ -155,10 +156,11 @@ class HeyBuddyDetector(DetectionStrategy):
         return self.wake_words
 
     def configure(self, model_names: Mapping[str, object], wake_word: str = None):
-        return (
-            _uniform(model_names.keys(), self.patience_frames),
-            _uniform(model_names.keys(), self.model_threshold),
-        )
+        # return (
+        #     _uniform(model_names.keys(), self.patience_frames),
+        #     _uniform(model_names.keys(), self.model_threshold),
+        # )
+        return {}, {}
 
     def decide(self, prediction: Dict[str, dict]) -> DetectionOutcome:
 
@@ -229,7 +231,8 @@ class TeamDetector(DetectionStrategy):
         return self.wake_words
 
     def configure(self, model_names: Mapping[str, object], wake_word: str = None):
-        return _uniform(model_names.keys(), self.patience_frames), _uniform(model_names.keys(), self.model_threshold)
+        #return _uniform(model_names.keys(), self.patience_frames), _uniform(model_names.keys(), self.model_threshold)
+        return {}, {}
 
     def decide(self, prediction: Dict[str, dict]) -> DetectionOutcome:
         prediction = prediction[self.wake_words[0]]
