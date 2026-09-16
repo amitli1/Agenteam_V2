@@ -23,15 +23,21 @@ class QuadManager:
 
         self.quad_url  = f"ws://{self.target_ip}:{self.quad_port}/ws/drone-status"
         self._thread   = threading.Thread(
-            target=self._run_status_loop,
+            target=self._run_websocket_status_loop,
             daemon=True,  # thread dies when main program exits
         )
         self._thread.start()
 
+        # self._thread = threading.Thread(
+        #     target=self._run_rest_status_loop,  # or _run_websocket_status_loop
+        #     daemon=True,
+        # )
+        # self._thread.start()
 
-    def _run_status_loop(self):
+
+    def _run_websocket_status_loop(self):
         # each thread needs its own event loop to run async code
-        asyncio.run(self.receive_drone_status())
+        asyncio.run(self.receive_websocket_drone_status())
 
     def call_back_home(self):
         try:
@@ -140,8 +146,73 @@ class QuadManager:
         if changed_lines:
             log_boxed("Drone status changed", changed_lines)
 
+    def _run_rest_status_loop(self):
+        # each thread needs its own event loop to run async code
+        asyncio.run(self.receive_restapi_drone_status_rest())
 
-    async def receive_drone_status(self):
+    async def receive_restapi_drone_status_rest(self, poll_interval=1.0):
+
+        status_url = f"http://{self.target_ip}:{self.quad_port}/status"
+        logging.info(f'Start polling on: {status_url}')
+        flag_connection_opened = False
+        flag_first_msg = False
+        flag_log_error = False
+
+        while True:
+            try:
+                r = requests.get(status_url, timeout=5)
+                if r.status_code != 200:
+                    if flag_log_error is False:
+                        logging.error(f'Bad status code while polling: {r.status_code}')
+                        flag_log_error = True
+                    flag_connection_opened = False
+                    await asyncio.sleep(poll_interval)
+                    continue
+
+                if flag_connection_opened is False:
+                    log_boxed("Connection to QUAD API established", [])
+
+                flag_connection_opened = True
+                current_status_data = r.json()
+
+                if flag_first_msg is False:
+                    if self.fnc_send_text_to_user:
+                        self.fnc_send_text_to_user('Start getting drone status')
+                    lines = [f"{k}: {v}" for k, v in current_status_data.items()]
+                    log_boxed("Got first quad message", lines)
+
+                flag_first_msg = True
+                flag_log_error = False
+
+                in_air = current_status_data['in_air']
+                flight_mode = current_status_data['flight_mode']
+                is_armed = current_status_data['is_armed']
+                is_mission_finished = current_status_data['is_mission_finished']
+                mission_progress = current_status_data['mission_progress']
+                last_mission_waypoint = current_status_data['last_mission_waypoint']
+
+                self.check_mission_progress(flight_mode, is_mission_finished, mission_progress)
+
+                # log changes
+                if self.last_status_msg:
+                    self.print_new_status(self.last_status_msg, current_status_data)
+
+                # save last msg
+                with quad_last_status_data_lock:
+                    quad_last_status_data.update(current_status_data)
+                    air_share_fields.quad_last_status_msg_id += 1
+                self.last_status_msg = current_status_data
+
+            except Exception as e:
+                if flag_log_error is False:
+                    logging.error(f'Error while polling status: {e}')
+                    flag_log_error = True
+                flag_connection_opened = False
+
+            await asyncio.sleep(poll_interval)
+
+
+    async def receive_websocket_drone_status(self):
 
         logging.info(f'Start listening on port: {self.quad_url}')
         flag_connection_opened = False
@@ -197,7 +268,7 @@ class QuadManager:
                         except Exception as e:
                             if flag_log_error is False:
                                 logging.error(f'Error while receiving message: {e}')
-                            flag_log_error = True
+                            #flag_log_error = True
 
             except Exception as e:
                 if flag_connection_opened:
