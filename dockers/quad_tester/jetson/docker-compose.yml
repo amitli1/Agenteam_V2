@@ -1,0 +1,43 @@
+version: "3.9"
+
+services:
+  quad_tester:
+    build:
+      context: ../../..
+      dockerfile: dockers/quad_tester/jetson/Dockerfile
+    image: operator_station-quad_tester # see under docker images
+    container_name: operator_station-quad_tester-container
+    network_mode: host
+    # Match host user and group for PulseAudio permissions
+    user: "${UID}:${GID}"
+
+    # Access to audio devices
+    devices:
+      - /dev/snd
+
+    # Environment variable tells apps where the PulseAudio socket is
+    environment:
+      - PULSE_SERVER=unix:/run/user/1000/pulse/native
+      - PYTHONPATH=/app
+
+    # Mount the PulseAudio socket and needed folders
+    volumes:
+      - /mnt/nvme/repo/Agenteam_V2:/app
+      - /run/user/1000/pulse:/run/user/1000/pulse        # PulseAudio socket
+      - /mnt/nvme:/mnt/nvme                              # Audio output files
+      - /mnt/nvme/outputs:/mnt/nvme/outputs
+
+    group_add:
+      - audio
+
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+    working_dir: /app/project_code
+
+    command: python3 air/quad_tester.py
+
+
+    # Optional: restart automatically if it crashes
+    restart: unless-stopped # restart: always, unless-stopped
+
