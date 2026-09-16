@@ -91,7 +91,7 @@ class MainGround:
             self.master_drone_location = {'lat': self.last_master_quad_data['lat'],
                                           'lon': self.last_master_quad_data['lon'],
                                           'alt': self.last_master_quad_data['alt'],
-                                          'yaw': self.last_master_quad_data['yaw']}
+                                          'yaw': self.last_master_quad_data.get('yaw', 0)}
 
             if self.log_master_drone_distance is False:
                 log_distances("Master Drone Distances:", self.master_drone_location, self.databaseManager.get_db())
@@ -104,7 +104,7 @@ class MainGround:
             self.slave_drone_location = {'lat': self.last_slave_quad_data['lat'],
                                           'lon': self.last_slave_quad_data['lon'],
                                           'alt': self.last_slave_quad_data['alt'],
-                                          'yaw': self.last_slave_quad_data['yaw']}
+                                           'yaw': self.last_slave_quad_data.get('yaw', 0)}
 
             if self.log_slave_drone_distance is False:
                 log_distances("Slave Drone Distances:", self.slave_drone_location, self.databaseManager.get_db())
