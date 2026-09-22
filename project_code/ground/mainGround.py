@@ -233,7 +233,7 @@ class MainGround:
                 logging.info(f"Got plan from LLM. status: {result['status']}, action: {result['action']}, team_member: {result['team_member']}")
             if result['status'] == "success":
 
-                self.zero_yaw(result)
+                #self.zero_yaw(result)
 
                 self.last_destination = result['target']
 
