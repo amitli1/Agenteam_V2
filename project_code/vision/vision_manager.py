@@ -35,7 +35,7 @@ class VisionManager(object):
             daemon=True
         )
 
-    def handle_vision_command(self, vision_command, objects_to_focus):
+    def handle_vision_command(self, vision_command, vision_cmd_action, objects_to_focus):
 
         if app_settings.vision.use_online is False:
             logging.info(f'use_online is False, Vision command: {vision_command} - Handled')
@@ -43,9 +43,15 @@ class VisionManager(object):
 
         start_time = time.time()
         if vision_command == "point":
-            self.start_point(text=f"focus on {objects_to_focus}")
+            if vision_cmd_action == "start":
+                self.start_point(text=f"focus on {objects_to_focus}")
+            else:
+                self.stop_point()
         elif vision_command == "hold":
-            self.start_hold(text=f"focus on {objects_to_focus}")
+            if vision_cmd_action == "start":
+                self.start_hold(text=f"focus on {objects_to_focus}")
+            else:
+                self.stop_hold()
         elif vision_command == "summary":
             self.call_summary_to_get_ready()
             self.start_summary(objects_to_focus=objects_to_focus)
@@ -274,7 +280,7 @@ class VisionManager(object):
 
         return res
 
-    def stop_hold(self, text):
+    def stop_hold(self):
         if self.is_online is False:
             return None
 

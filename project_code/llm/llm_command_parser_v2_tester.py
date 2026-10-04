@@ -36,10 +36,11 @@ def test_1(parser, text):
     result, elapsed = _run(parser, text)
     expected = {
         "fly_command": {"fly_cmd_type": "fly", "location": "building number two"},
-        "vision_command": {"vision_cmd_type": "", "objects": ""},
+        "vision_command": {"vision_cmd_type": "", "vision_cmd_action": "start", "objects": ""},
         "team_member": "buddy",
         "need_more_data": False,
     }
+    # vision_cmd_action
     return _check(result, expected, text, elapsed)
 
 
@@ -48,7 +49,7 @@ def test_2(parser, text):
     result, elapsed = _run(parser, text)
     expected = {
         "fly_command": {"fly_cmd_type": "fly", "location": "home"},
-        "vision_command": {"vision_cmd_type": "", "objects": ""},
+        "vision_command": {"vision_cmd_type": "", "vision_cmd_action": "start", "objects": ""},
         "team_member": "team",
         "need_more_data": False,
     }
@@ -60,7 +61,7 @@ def test_3(parser, text):
     result, elapsed = _run(parser, text)
     expected = {
         "fly_command": {"fly_cmd_type": "surround", "location": "junction"},
-        "vision_command": {"vision_cmd_type": "", "objects": ""},
+        "vision_command": {"vision_cmd_type": "", "vision_cmd_action": "start", "objects": ""},
         "team_member": "jarvis",
         "need_more_data": False,
     }
@@ -72,7 +73,7 @@ def test_4(parser, text):
     result, elapsed = _run(parser, text)
     expected = {
         "fly_command": {"fly_cmd_type": "surround", "location": "building"},
-        "vision_command": {"vision_cmd_type": "summary", "objects": "people and vehicles"},
+        "vision_command": {"vision_cmd_type": "summary", "vision_cmd_action": "start", "objects": "people and vehicles"},
         "team_member": "jarvis",
         "need_more_data": False,
     }
@@ -84,7 +85,7 @@ def test_5(parser, text):
     result, elapsed = _run(parser, text)
     expected = {
         "fly_command": {"fly_cmd_type": "", "location": ""},
-        "vision_command": {"vision_cmd_type": "hold", "objects": ""},
+        "vision_command": {"vision_cmd_type": "hold", "vision_cmd_action": "start", "objects": ""},
         "team_member": "jarvis",
         "need_more_data": False,
     }
@@ -96,7 +97,7 @@ def test_6(parser, text):
     result, elapsed = _run(parser, text)
     expected = {
         "fly_command": {"fly_cmd_type": "", "location": ""},
-        "vision_command": {"vision_cmd_type": "hold", "objects": "red car or blue truck"},
+        "vision_command": {"vision_cmd_type": "hold", "vision_cmd_action": "start", "objects": "red car or blue truck"},
         "team_member": "buddy",
         "need_more_data": False,
     }
@@ -108,7 +109,7 @@ def test_7(parser, text):
     result, elapsed = _run(parser, text)
     expected = {
         "fly_command": {"fly_cmd_type": "follow", "location": ""},
-        "vision_command": {"vision_cmd_type": "follow", "objects": "yellow car"},
+        "vision_command": {"vision_cmd_type": "follow", "vision_cmd_action": "start", "objects": "yellow car"},
         "team_member": "buddy",
         "need_more_data": False,
     }
@@ -120,7 +121,7 @@ def test_8(parser, text):
     result, elapsed = _run(parser, text)
     expected = {
         "fly_command": {"fly_cmd_type": "follow", "location": ""},
-        "vision_command": {"vision_cmd_type": "follow", "objects": ""},
+        "vision_command": {"vision_cmd_type": "follow", "vision_cmd_action": "start", "objects": ""},
         "team_member": "team",
         "need_more_data": True,
     }
@@ -132,7 +133,7 @@ def test_9(parser, text):
     result, elapsed = _run(parser, text)
     expected = {
         "fly_command": {"fly_cmd_type": "", "location": ""},
-        "vision_command": {"vision_cmd_type": "describe", "objects": ""},
+        "vision_command": {"vision_cmd_type": "describe", "vision_cmd_action": "start", "objects": ""},
         "team_member": "buddy",
         "need_more_data": False,
     }
@@ -144,7 +145,7 @@ def test_10(parser, text):
     result, elapsed = _run(parser, text)
     expected = {
         "fly_command": {"fly_cmd_type": "", "location": ""},
-        "vision_command": {"vision_cmd_type": "describe", "objects": "person in the car"},
+        "vision_command": {"vision_cmd_type": "describe", "vision_cmd_action": "start", "objects": "person in the car"},
         "team_member": "buddy",
         "need_more_data": False,
     }
@@ -156,7 +157,7 @@ def test_11(parser, text):
     result, elapsed = _run(parser, text)
     expected = {
         "fly_command": {"fly_cmd_type": "", "location": ""},
-        "vision_command": {"vision_cmd_type": "point", "objects": "yellow car"},
+        "vision_command": {"vision_cmd_type": "point", "vision_cmd_action": "start", "objects": "yellow car"},
         "team_member": "jarvis",
         "need_more_data": False,
     }
@@ -167,7 +168,18 @@ def test_12(parser, text):
     result, elapsed = _run(parser, text)
     expected = {
         "fly_command": {"fly_cmd_type": "surround", "location": "building"},
-        "vision_command": {"vision_cmd_type": "summary", "objects": "birds"},
+        "vision_command": {"vision_cmd_type": "summary", "vision_cmd_action": "start", "objects": "birds"},
+        "team_member": "jarvis",
+        "need_more_data": False,
+    }
+    return _check(result, expected, text, elapsed)
+
+def test_14(parser, text):
+    # Hey jarvis stop pointing
+    result, elapsed = _run(parser, text)
+    expected = {
+        "fly_command": {"fly_cmd_type": "", "location": ""},
+        "vision_command": {"vision_cmd_type": "point", "vision_cmd_action": "stop", "objects": ""},
         "team_member": "jarvis",
         "need_more_data": False,
     }
@@ -179,7 +191,7 @@ def test_13(parser, text):
     result, elapsed = _run(parser, text)
     expected = {
         "fly_command": {"fly_cmd_type": "surround", "location": "building"},
-        "vision_command": {"vision_cmd_type": "summary", "objects": ""},
+        "vision_command": {"vision_cmd_type": "summary", "vision_cmd_action": "start", "objects": ""},
         "team_member": "team",
         "need_more_data": True,
     }
@@ -201,7 +213,8 @@ def run_all_tests():
         (test_10, "buddy describe the person in the car"),
         (test_11, "hey jarvis point at the yellow car"),
         (test_12, "hey jarvis surround the building and tell me what you see hey jarvis look for birds"),
-        (test_13, "Hey team, walk around the building and describe to me what you see")
+        (test_13, "Hey team, walk around the building and describe to me what you see"),
+        (test_14, "Hey jarvis stop pointing")
     ]
 
     results = []

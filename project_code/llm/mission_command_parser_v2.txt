@@ -38,6 +38,17 @@ Output keys description:
         A fly_cmd_type of 'fly', 'surround' or 'follow' on its own does NOT imply a vision_command.
         If the user only gave a flight instruction (e.g. "surround the junction") with no visual request,
         vision_command must remain {"vision_cmd_type": "", "objects": ""} and need_more_data is unaffected by it.
+    2.9 'vision_cmd_action' is one of: 'start', 'stop'.
+     - Default is 'start' for any new vision request.
+     - Set 'vision_cmd_action' to 'stop' when the user explicitly asks to stop/cancel/end an ongoing
+       vision action, e.g. "stop pointing", "stop the hold", "stop following", "cancel describe",
+       "stop looking", "that's enough, stop".
+     - When 'vision_cmd_action' is 'stop', 'vision_cmd_type' should reflect which action is being stopped
+       if stated (e.g. "stop pointing" -> vision_cmd_type "point"); if the user just says "stop" generically
+       with no prior context to disambiguate, use the most recently implied type if obvious from the sentence,
+       otherwise leave 'vision_cmd_type' as "" only if truly ambiguous.
+     - 'objects' should be "" when 'vision_cmd_action' is 'stop' (no new target is being specified).
+     - need_more_data is False for stop commands even if objects are empty — stopping never requires more data.
  3. 'team_member'
 3. 'team_member'
     3.1 one of the 3 values: buddy, jarvis, team
@@ -52,81 +63,100 @@ Output keys description:
 
 
 examples:
+examples:
 Input: "hey buddy fly to building number two"
 Output: {"fly_command": {"fly_cmd_type": "fly", "location": "building number two"},
-         "vision_command": {"vision_cmd_type": "", "objects": ""},
+         "vision_command": {"vision_cmd_type": "", "vision_cmd_action": "start", "objects": ""},
          "team_member": "buddy",
          "need_more_data": false}
 
 Input: "buddy go back home"
 Output: {"fly_command": {"fly_cmd_type": "fly", "location": "home"},
-         "vision_command":  {"vision_cmd_type": "", "objects": ""},
+         "vision_command":  {"vision_cmd_type": "", "vision_cmd_action": "start", "objects": ""},
          "team_member": "buddy",
          "need_more_data": false}
 
 Input: "hey team surround the building and tell me what you see"
 Output: {"fly_command": {"fly_cmd_type": "surround", "location": "building"},
-         "vision_command":  {"vision_cmd_type": "summary", "objects": ""},
+         "vision_command":  {"vision_cmd_type": "summary", "vision_cmd_action": "start", "objects": ""},
          "team_member": "team",
          "need_more_data": true}
 
 Input: "hey jarvis surround the building and look for people and vehicles"
 Output: {"fly_command": {"fly_cmd_type": "surround", "location": "building"},
-         "vision_command":  {"vision_cmd_type": "summary", "objects": "people and vehicles"},
+         "vision_command":  {"vision_cmd_type": "summary", "vision_cmd_action": "start", "objects": "people and vehicles"},
          "team_member": "jarvis",
          "need_more_data": false}
 
 Input: "hey jarvis hold the junction"
 Output: {"fly_command": {"fly_cmd_type": "", "location": ""},
-         "vision_command":  {"vision_cmd_type": "hold", "objects": ""},
+         "vision_command":  {"vision_cmd_type": "hold", "vision_cmd_action": "start", "objects": ""},
          "team_member": "jarvis",
          "need_more_data": false}
 
 Input: "buddy hold the junction and tell me if you see red car or blue truck"
 Output: {"fly_command": {"fly_cmd_type": "", "location": ""},
-         "vision_command":  {"vision_cmd_type": "hold", "objects": "red car or blue truck"},
+         "vision_command":  {"vision_cmd_type": "hold", "vision_cmd_action": "start", "objects": "red car or blue truck"},
          "team_member": "buddy",
          "need_more_data": false}
 
 Input: "buddy follow the yellow car"
 Output: {"fly_command": {"fly_cmd_type": "follow", "location": ""},
-         "vision_command":  {"vision_cmd_type": "follow", "objects": "yellow car"},
+         "vision_command":  {"vision_cmd_type": "follow", "vision_cmd_action": "start", "objects": "yellow car"},
          "team_member": "buddy",
          "need_more_data": false}
 
 Input: "hey team follow"
 Output: {"fly_command":  {"fly_cmd_type": "follow", "location": ""},
-         "vision_command":  {"vision_cmd_type": "follow", "objects": ""},
+         "vision_command":  {"vision_cmd_type": "follow", "vision_cmd_action": "start", "objects": ""},
          "team_member": "team",
          "need_more_data": true}
 
 Input: "buddy describe"
 Output: {"fly_command":  {"fly_cmd_type": "", "location": ""},
-         "vision_command":  {"vision_cmd_type": "describe", "objects": ""},
+         "vision_command":  {"vision_cmd_type": "describe", "vision_cmd_action": "start", "objects": ""},
          "team_member": "buddy",
          "need_more_data": false}
 
 
 Input: "buddy describe the person in the car"
 Output: {"fly_command":  {"fly_cmd_type": "", "location": ""},
-         "vision_command":  {"vision_cmd_type": "describe", "objects": "person in the car"},
+         "vision_command":  {"vision_cmd_type": "describe", "vision_cmd_action": "start", "objects": "person in the car"},
          "team_member": "buddy",
          "need_more_data": false}
 
 Input: "hey jarvis point at the yellow car"
 Output: {"fly_command":  {"fly_cmd_type": "", "location": ""},
-         "vision_command":  {"vision_cmd_type": "point", "objects": "yellow car"},
+         "vision_command":  {"vision_cmd_type": "point", "vision_cmd_action": "start", "objects": "yellow car"},
          "team_member": "jarvis",
          "need_more_data": false}
 
 Input: "hey team surround the moon"
 Output: {"fly_command": {"fly_cmd_type": "surround", "location": "moon"},
-         "vision_command":  {"vision_cmd_type": "", "objects": ""},
+         "vision_command":  {"vision_cmd_type": "", "vision_cmd_action": "start", "objects": ""},
          "team_member": "team",
          "need_more_data": false}
 
 Input: "Hey jarvis, walk around the junction and describe to me what you see"
 Output: {"fly_command": {"fly_cmd_type": "surround", "location": "junction"},
-         "vision_command":  {"vision_cmd_type": "summary", "objects": ""},
+         "vision_command":  {"vision_cmd_type": "summary", "vision_cmd_action": "start", "objects": ""},
          "team_member": "jarvis",
          "need_more_data": true}
+
+Input: "jarvis stop pointing"
+Output: {"fly_command": {"fly_cmd_type": "", "location": ""},
+         "vision_command": {"vision_cmd_type": "point", "vision_cmd_action": "stop", "objects": ""},
+         "team_member": "jarvis",
+         "need_more_data": false}
+
+Input: "buddy stop the hold"
+Output: {"fly_command": {"fly_cmd_type": "", "location": ""},
+         "vision_command": {"vision_cmd_type": "hold", "vision_cmd_action": "stop", "objects": ""},
+         "team_member": "buddy",
+         "need_more_data": false}
+
+Input: "team stop following"
+Output: {"fly_command": {"fly_cmd_type": "", "location": ""},
+         "vision_command": {"vision_cmd_type": "follow", "vision_cmd_action": "stop", "objects": ""},
+         "team_member": "team",
+         "need_more_data": false}

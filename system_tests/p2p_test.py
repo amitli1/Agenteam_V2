@@ -66,6 +66,16 @@ class FullSystemTest():
             logging.info(f"│ {line:<{width}} │")
         logging.info("└" + "─" * (width + 2) + "┘")
 
+
+    def test_start_stop_vision(self):
+        text_command = "Hey buddy point to the car or weapons"
+        self.log_test_step(text_command)
+        self.mainGround.handle_user_text_2(text_command)
+
+        text_command = "Hey buddy stop pointing"
+        self.log_test_step(text_command)
+        self.mainGround.handle_user_text_2(text_command)
+
     def test_1(self):
 
 
@@ -132,6 +142,7 @@ if __name__ == "__main__":
     fullSystemTest = FullSystemTest(mainGround)
     mainGround.set_fnc_test_callback(fullSystemTest.wait_for_text_from_air)
     result = fullSystemTest.test_1()
+    #result = fullSystemTest.test_start_stop_vision()
     #result = fullSystemTest.test_team()
     #result = fullSystemTest.test_fly_to_the_moon()
     logging.info(f'\nResult: {result}')

@@ -346,8 +346,9 @@ class MainGround:
 
         if llm_command['vision_command']['vision_cmd_type'] != "":
             command_to_air = {
-                "vision_command"  : llm_command['vision_command']['vision_cmd_type'],
-                "objects_to_focus": llm_command['vision_command']['objects']
+                "vision_command"   : llm_command['vision_command']['vision_cmd_type'],
+                "vision_cmd_action": llm_command['vision_command']['vision_cmd_action'],
+                "objects_to_focus" : llm_command['vision_command']['objects']
             }
 
             r = requests.post(self.master_drone_url, json={"command": "vision", "vision_command": command_to_air})

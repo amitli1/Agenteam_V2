@@ -126,9 +126,11 @@ class MainAir:
                 return jsonify({"error": "error while sending wp to quad manager"}), 400
 
         elif data['command'] == 'vision':
-            vision_command   =  data['vision_command']['vision_command']
-            objects_to_focus = data['vision_command']['objects_to_focus']
-            self.visionManager.handle_vision_command(vision_command, objects_to_focus)
+            vision_command    =  data['vision_command']['vision_command']
+            vision_cmd_action = data['vision_command']['vision_cmd_action']
+            objects_to_focus  = data['vision_command']['objects_to_focus']
+
+            self.visionManager.handle_vision_command(vision_command, vision_cmd_action, objects_to_focus)
 
         end_time = time.time()
         logging.info(f'Process on_ground_command (successfully) took : {(end_time - start_time):.2f} seconds')

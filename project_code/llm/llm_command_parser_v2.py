@@ -46,9 +46,13 @@ class LlmCommandParser_V2:
                             "type": "string",
                             "enum": ["point", "hold", "summary", "describe", "follow", ""],
                         },
+                        "vision_cmd_action": {
+                            "type": "string",
+                            "enum": ["start", "stop"],
+                        },
                         "objects": {"type": "string"},
                     },
-                    "required": ["vision_cmd_type", "objects"],
+                    "required": ["vision_cmd_type", "vision_cmd_action", "objects"],
                     "additionalProperties": False,
                 },
                 "team_member": {
@@ -66,13 +70,14 @@ class LlmCommandParser_V2:
         vision_command = parsed_output.get("vision_command", {})
 
         lines = [
-            f"llm_time        = {total_time:.2f} seconds",
-            f"team_member     = {parsed_output.get('team_member')!r}",
-            f"fly_cmd_type    = {fly_command.get('fly_cmd_type')!r}, "
-            f"location        = {fly_command.get('location')!r}",
-            f"vision_cmd_type = {vision_command.get('vision_cmd_type')!r}, "
-            f"objects         = {vision_command.get('objects')!r}",
-            f"need_more_data  = {parsed_output.get('need_more_data')!r}",
+            f"llm_time          = {total_time:.2f} seconds",
+            f"team_member       = {parsed_output.get('team_member')!r}",
+            f"fly_cmd_type      = {fly_command.get('fly_cmd_type')!r}, "
+            f"location          = {fly_command.get('location')!r}",
+            f"vision_cmd_type   = {vision_command.get('vision_cmd_type')!r}, "
+            f"vision_cmd_action = {vision_command.get('vision_cmd_action')!r}, "
+            f"objects           = {vision_command.get('objects')!r}",
+            f"need_more_data    = {parsed_output.get('need_more_data')!r}",
         ]
         log_boxed(f"Parsed split_user_command for: '{user_command}'", lines)
 
@@ -137,7 +142,7 @@ class LlmCommandParser_V2:
 
         empty_results = {
             "fly_command": {"fly_cmd_type": "", "location": ""},
-            "vision_command": {"vision_cmd_type": "", "objects": ""},
+             "vision_command": {"vision_cmd_type": "", "vision_cmd_action": "start", "objects": ""},
             "team_member": "",
             "need_more_data": False
         }
