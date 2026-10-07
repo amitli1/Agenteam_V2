@@ -31,7 +31,7 @@ app = Flask(__name__)
 class MainGround:
 
     def __init__(self):
-        self.audioPipeline        = AudioPipeline(self.handle_user_text_2)
+        self.audioPipeline        = AudioPipeline(self.handle_user_text)
         self.llmCommandParser     = LlmCommandParser()
         self.llmCommandParser_v2  = LlmCommandParser_V2()
         self.llmMissionPlanner    = MissionPlannerAgent()
@@ -326,7 +326,7 @@ class MainGround:
             logging.info(f"│ {line:<{width}} │")
         logging.info("└" + "─" * (width + 2) + "┘")
 
-    def handle_user_text_2(self, text):
+    def handle_user_text(self, text):
         self.monitorCollector.update_user_command("", text)
 
         text        = f"{self.last_text_command} {text}"
