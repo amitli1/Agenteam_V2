@@ -100,6 +100,8 @@ class VisionManager(object):
 
 
     def handle_point_status(self, data, last_is_active, last_agent_status):
+
+        #logging.info("point_status:\n%s", json.dumps(data, indent=4, ensure_ascii=False))
         if 'session' in data:
             if 'is_active' in data['session']:
                 current_is_active = data['session']['is_active']
