@@ -46,7 +46,8 @@ class VisionManager(object):
             if vision_cmd_action == "start":
                 self.start_point(text=f"focus on {objects_to_focus}")
             else:
-                self.stop_point()
+                #self.stop_point()
+                self.start_point(text=f"")
         elif vision_command == "hold":
             if vision_cmd_action == "start":
                 self.start_hold(text=f"focus on {objects_to_focus}")
@@ -402,8 +403,8 @@ if __name__ == "__main__":
 
     vision_manager.start_collect_vision_telemetry()
     #vision_manager.point_status_thread.join()
-    time.sleep(5)
-    vision_manager.start_point(text=f"focus on person with green shirt")
+    time.sleep(3)
+    vision_manager.start_point(text=f"fire extinguisher")
     time.sleep(3)
     vision_manager.stop_point()
     time.sleep(3)
