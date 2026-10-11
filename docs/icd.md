@@ -1,4 +1,5 @@
 # Point status:
+# 1. to stop pointing - just send prompt ""
 ```
 {
     "session": {
