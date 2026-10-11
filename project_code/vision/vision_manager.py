@@ -70,6 +70,20 @@ class VisionManager(object):
         self.hold_status_thread.start()
         self.summary_status_thread.start()
 
+
+    def send_system_prompt(self):
+        try:
+            use_system_prompt = f"http://{get_running_ip()}:{app_settings.vision.point_port}/api/config/prompt"
+            command = {"use_system_prompt": False}
+            r = requests.post(use_system_prompt, json=command)
+            logging.info(f'Send to: {use_system_prompt}, command: {command}')
+            r.raise_for_status()
+            r = r.json()
+            return True
+        except Exception as e:
+            logging.error(f'\nError sending use_system_prompt=false, res:\n {e}\n')
+        return False
+
     def open_video_window(self):
 
         if self.is_online is False:
@@ -95,9 +109,19 @@ class VisionManager(object):
             logging.info(f'------------------------------------------------------------')
             logging.info(f'Send request for process-video (open windows), res: {success}')
             logging.info(f'------------------------------------------------------------')
+
+            if success:
+                res = self.send_system_prompt()
+                logging.info(f'------------------------------------------------------------')
+                logging.info(f'Send system prompt, res: {res}')
+                logging.info(f'------------------------------------------------------------')
+                return res
             return success
         except Exception as e:
             logging.error(f'Error sending request for process-video: {e}')
+
+        return False
+
 
 
     def handle_point_status(self, data, last_is_active, last_agent_status):
@@ -404,10 +428,11 @@ if __name__ == "__main__":
     vision_manager.start_collect_vision_telemetry()
     #vision_manager.point_status_thread.join()
     time.sleep(3)
-    vision_manager.start_point(text=f"fire extinguisher")
-    time.sleep(3)
-    vision_manager.stop_point()
-    time.sleep(3)
+    #vision_manager.start_point(text=f"fire extinguisher")
+    vision_manager.start_point(text=f"chair")
+    time.sleep(10)
+    # vision_manager.stop_point()
+    # time.sleep(3)
 
 
 
