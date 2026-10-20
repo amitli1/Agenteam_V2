@@ -15,7 +15,6 @@ class VisionManager(object):
         self.point_port              = app_settings.vision.point_port
         self.on_hold_status_callback = on_hold_status_callback
         self.fnc_send_text_to_user   = fnc_send_text_to_user
-        self.is_online               = True # take from config
 
         # point thread
         self.point_status_thread = threading.Thread(

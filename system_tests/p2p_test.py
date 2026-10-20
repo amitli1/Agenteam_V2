@@ -6,7 +6,8 @@ from flask import Flask
 
 
 from project_code.app_config.settings import app_settings
-from project_code.ground.mainGround import MainGround, run_ground
+from project_code.ground import mainGround
+from project_code.ground import mainGroundAgent
 from project_code.utils.logger_utils import init_logger, CURRENT_DATE
 from project_code.utils.sound_player import SoundPlayerManager
 from project_code.utils.utils import create_output_folder
@@ -16,11 +17,11 @@ app                 = Flask(__name__)
 
 class FullSystemTest():
 
-    def __init__(self, mainGround):
-        self.wait_for_text = ""
-        self.text_from_air = ""
-        self.mainGround    = mainGround
-        self.wait_event    = threading.Event()
+    def __init__(self, mainGroundInstance):
+        self.wait_for_text      = ""
+        self.text_from_air      = ""
+        self.mainGroundInstance = mainGroundInstance
+        self.wait_event         = threading.Event()
 
     def check_errors_in_log(self):
         log_file_path = f"{app_settings.logging_and_records.output_path}/log_{CURRENT_DATE}.txt"
@@ -70,40 +71,40 @@ class FullSystemTest():
     def test_start_stop_vision(self):
         text_command = "Hey buddy point to the car or weapons"
         self.log_test_step(text_command)
-        self.mainGround.handle_user_text(text_command)
+        self.mainGroundInstance.handle_user_text(text_command)
 
         text_command = "Hey buddy stop pointing"
         self.log_test_step(text_command)
-        self.mainGround.handle_user_text(text_command)
+        self.mainGroundInstance.handle_user_text(text_command)
 
     def test_1(self):
 
 
         self.log_test_step("Hey buddy go to building number one")
-        self.mainGround.handle_user_text("Hey buddy go to building number one")
+        self.mainGroundInstance.handle_user_text("Hey buddy go to building number one")
         if self.check_if_step_finished_successfully('I have reached the destination.') is False:
             return False
 
         self.log_test_step("Hey buddy point to the car or weapons")
-        mainGround.handle_user_text("Hey buddy point to the car or weapons")
+        mainGroundInstance.handle_user_text("Hey buddy point to the car or weapons")
 
         self.log_test_step("buddy, surround the building and tell me what you see")
-        mainGround.handle_user_text("buddy, surround the building and tell me what you see")
+        mainGroundInstance.handle_user_text("buddy, surround the building and tell me what you see")
 
         self.log_test_step('what should I look for ?')
         if self.check_if_step_finished_successfully('what should I look for ?') is True:
 
             self.log_test_step("buddy, look for people and weapons")
-            mainGround.handle_user_text("buddy, look for people and weapons")
+            mainGroundInstance.handle_user_text("buddy, look for people and weapons")
 
             if self.check_if_step_finished_successfully('I have reached the destination.') is False:
                 return False
 
             self.log_test_step("buddy, describe")
-            mainGround.handle_user_text("buddy, describe")
+            mainGroundInstance.handle_user_text("buddy, describe")
 
             self.log_test_step("buddy, return home")
-            mainGround.handle_user_text("buddy, return home")
+            mainGroundInstance.handle_user_text("buddy, return home")
 
             result = self.check_errors_in_log()
         else:
@@ -118,10 +119,10 @@ class FullSystemTest():
         return result
 
     def test_team(self):
-        self.mainGround.handle_user_text("Hey team go to building number one")
+        self.mainGroundInstance.handle_user_text("Hey team go to building number one")
         if self.check_if_step_finished_successfully('I have reached the destination.') is False:
             return False
-        mainGround.handle_user_text("team, return home")
+        mainGroundInstance.handle_user_text("team, return home")
         result = self.check_errors_in_log()
 
         logging.info("✅ ✅ ✅ ✅ ✅ ✅ ✅ ✅ ")
@@ -130,7 +131,7 @@ class FullSystemTest():
         logging.info("✅ ✅ ✅ ✅ ✅ ✅ ✅ ✅ ")
 
     def test_fly_to_the_moon(self):
-        self.mainGround.handle_user_text("Hey jarvis fly to the moon")
+        self.mainGroundInstance.handle_user_text("Hey jarvis fly to the moon")
         time.sleep(30)
 
 
@@ -138,9 +139,11 @@ if __name__ == "__main__":
 
 
     #run_air()
-    mainGround = run_ground()
-    fullSystemTest = FullSystemTest(mainGround)
-    mainGround.set_fnc_test_callback(fullSystemTest.wait_for_text_from_air)
+    mainGroundInstance = mainGround.run_ground()
+    #mainGroundInstance = mainGroundAgent.run_ground()
+
+    fullSystemTest = FullSystemTest(mainGroundInstance)
+    mainGroundInstance.set_fnc_test_callback(fullSystemTest.wait_for_text_from_air)
     result = fullSystemTest.test_1()
     #result = fullSystemTest.test_start_stop_vision()
     #result = fullSystemTest.test_team()
