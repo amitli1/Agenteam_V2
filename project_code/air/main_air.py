@@ -60,6 +60,12 @@ class MainAir:
     def on_hold_objects(self, hold_status):
         if app_settings.general.run_as_master:
             None
+        try:
+            if len(hold_status['msg']) > 0:
+                hold_msg = f'Hold status: {hold_status}'
+                log_boxed(hold_msg)
+        except Exception as e:
+            logging.error(f'Error while sending hold status to ground: {e}')
 
     def handle_message_from_master_drone(self):
         payload = request.get_json(silent=True)
