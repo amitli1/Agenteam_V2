@@ -191,7 +191,7 @@ class MainGround:
         )
         self.audio_thread.start()
 
-    def zero_yaw(self, llm_result):
+    def update_yaw(self, llm_result, angle):
         plan = llm_result.get('plan', {}) or {}
         for team_member_key in ('buddy', 'jarvis'):
             waypoints = plan.get(team_member_key)
@@ -199,7 +199,7 @@ class MainGround:
                 continue
             for wp in waypoints:
                 if wp.get('yaw', None) is not None:
-                    wp['yaw'] = 0
+                    wp['yaw'] = angle
 
     def handle_fly_command(self, command):
         """
@@ -233,7 +233,7 @@ class MainGround:
                 logging.info(f"Got plan from LLM. status: {result['status']}, action: {result['action']}, team_member: {result['team_member']}")
             if result['status'] == "success":
 
-                #self.zero_yaw(result)
+                #self.update_yaw(result, 0)
 
                 self.last_destination = result['target']
 
