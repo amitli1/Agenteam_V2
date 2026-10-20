@@ -41,9 +41,9 @@ general:
   wait_for_first_air_message: false
 
 flightPath:
-  default_drone_altitude: 20.0
+  default_drone_altitude: 10.0
   spatial_distance: 5.0
-  slave_drone_altitude_offset: 3.0
+  slave_drone_altitude_offset: 10.0
 
 
 llm:
