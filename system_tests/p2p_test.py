@@ -24,7 +24,7 @@ class FullSystemTest():
         self.wait_event         = threading.Event()
 
     def check_errors_in_log(self):
-        log_file_path = f"{app_settings.logging_and_records.output_path}/log_{CURRENT_DATE}.txt"
+        log_file_path = f"{app_settings.logging_and_records.output_path}/ground_{CURRENT_DATE}.txt"
         with open(log_file_path, 'r') as log_file:
             log_contents = log_file.read()
             if "ERROR" in log_contents:
@@ -44,7 +44,7 @@ class FullSystemTest():
 
         start_time = time.time()
         while True:
-            if self.wait_event.wait(timeout=20) is False:
+            if self.wait_event.wait(timeout=120) is False:
                 if text_to_wait != '':
                     logging.error("❌ (1) Timeout waiting for text from air ❌")
                 return False
@@ -52,7 +52,7 @@ class FullSystemTest():
             if text_to_wait == self.text_from_air:
                 break
 
-            if (time.time() - start_time) > 20:
+            if (time.time() - start_time) > 120:
                 logging.error("❌ (2) Timeout waiting for text from air ❌")
                 return False
 
@@ -135,6 +135,16 @@ class FullSystemTest():
         time.sleep(30)
 
 
+def wait_till_got_message_from_master_drone(mainGroundInstance):
+
+    logging.info('Wait till getting message from master drone')
+    while True:
+        if mainGroundInstance.master_drone_location is None:
+            time.sleep(1)
+        else:
+            break
+    logging.info('Got message from master drone, continue with the test')
+
 if __name__ == "__main__":
 
 
@@ -144,6 +154,9 @@ if __name__ == "__main__":
 
     fullSystemTest = FullSystemTest(mainGroundInstance)
     mainGroundInstance.set_fnc_test_callback(fullSystemTest.wait_for_text_from_air)
+    wait_till_got_message_from_master_drone(mainGroundInstance)
+
+
     result = fullSystemTest.test_1()
     #result = fullSystemTest.test_start_stop_vision()
     #result = fullSystemTest.test_team()

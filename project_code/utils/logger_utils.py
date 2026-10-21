@@ -13,6 +13,10 @@ CURRENT_DATE = get_timestamp_string()
 
 def init_logger(jetson_type):
 
+    logger = logging.getLogger()
+    if logger.handlers:
+        return  # already initialized
+
     prefix = ""
     if jetson_type == "ground":
         prefix = "ground_"
