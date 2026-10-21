@@ -157,8 +157,8 @@ if __name__ == "__main__":
     wait_till_got_message_from_master_drone(mainGroundInstance)
 
 
-    result = fullSystemTest.test_1()
+    #result = fullSystemTest.test_1()
     #result = fullSystemTest.test_start_stop_vision()
-    #result = fullSystemTest.test_team()
+    result = fullSystemTest.test_team()
     #result = fullSystemTest.test_fly_to_the_moon()
     logging.info(f'\nResult: {result}')

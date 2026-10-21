@@ -67,10 +67,44 @@
         .table-scroll table {
             border: none;
         }
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        #distance-box {
+            min-width: 340px;
+        }
+        #distance-box h2 {
+            font-size: 14px;
+            margin: 0 0 6px 0;
+        }
+        #distance-box table {
+            font-size: 13px;
+        }
     </style>
 </head>
 <body>
-    <h1>Drone / Building Monitor</h1>
+    <div class="top-bar">
+        <h1>Drone / Building Monitor</h1>
+        <div id="distance-box">
+            <h2>Master &#8596; Slave distance (meters)</h2>
+            <table>
+                <thead>
+                    <tr><th>Total distance</th><th>Spatial distance</th><th>Height distance</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td id="dist-total">-</td>
+                        <td id="dist-spatial">-</td>
+                        <td id="dist-height">-</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 
     <div class="controls">
         <label>
@@ -393,6 +427,44 @@
             });
         }
 
+        // ---------- Master/slave distance helpers ----------
+        function haversineMeters(lat1, lon1, lat2, lon2) {
+            const R = 6371000; // Earth radius in meters
+            const toRad = deg => deg * Math.PI / 180;
+            const dLat = toRad(lat2 - lat1);
+            const dLon = toRad(lon2 - lon1);
+            const a = Math.sin(dLat / 2) ** 2 +
+                Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
+        }
+
+        function fillDistanceTable(masterPoints, slavePoints) {
+            const totalEl = document.getElementById('dist-total');
+            const spatialEl = document.getElementById('dist-spatial');
+            const heightEl = document.getElementById('dist-height');
+
+            const master = (masterPoints && masterPoints.length > 0) ? masterPoints[masterPoints.length - 1] : null;
+            const slave = (slavePoints && slavePoints.length > 0) ? slavePoints[slavePoints.length - 1] : null;
+
+            if (!master || !slave || master.lat == null || master.lon == null || slave.lat == null || slave.lon == null) {
+                totalEl.textContent = '-';
+                spatialEl.textContent = '-';
+                heightEl.textContent = '-';
+                return;
+            }
+
+            const spatial = haversineMeters(master.lat, master.lon, slave.lat, slave.lon);
+            const masterAlt = (master.alt === null || master.alt === undefined) ? 0 : master.alt;
+            const slaveAlt = (slave.alt === null || slave.alt === undefined) ? 0 : slave.alt;
+            const height = Math.abs(masterAlt - slaveAlt);
+            const total = Math.sqrt(spatial * spatial + height * height);
+
+            totalEl.textContent = total.toFixed(2);
+            spatialEl.textContent = spatial.toFixed(2);
+            heightEl.textContent = height.toFixed(2);
+        }
+
         function fillHistoryTable(bodyId, rows) {
             const tbody = document.getElementById(bodyId);
             tbody.innerHTML = '';
@@ -416,6 +488,7 @@
                 fillStatusTable('slave-table-body', snapshot.slave_latest);
                 fillHistoryTable('user-command-table-body', snapshot.user_command_history);
                 fillHistoryTable('text-to-user-table-body', snapshot.text_to_user_history);
+                fillDistanceTable(snapshot.master_points, snapshot.slave_points);
             } catch (e) {
                 console.error('poll failed', e);
             } finally {

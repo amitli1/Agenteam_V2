@@ -58,11 +58,15 @@ class QuadManager:
     def fly_to_wp(self, l_wp):
 
         # [{'lat, 'lon', 'alt}]
-        url = f"http://{self.target_ip}:{self.quad_port}/mission"
+        url         = f"http://{self.target_ip}:{self.quad_port}/mission"
+        wps_to_send = l_wp[1:]
+        lines       = [f"wp[{i}]: {wp}" for i, wp in enumerate(wps_to_send)]
+        log_boxed("Sending To QuadAPI to fly to waypoints", lines)
+
         try:
             r = requests.post(
                 url,
-                json=l_wp[1:],
+                json=wps_to_send,
                 headers={"accept": "application/json", "content-type": "application/json"},
                 timeout=10,  # a bit more than 5 helps when mavsdk is slow
             )
@@ -132,14 +136,14 @@ class QuadManager:
             current_point = {"lat": lat, "lon": lon, "alt": alt}
             if self.last_logged_latlon is None:
                 self.last_logged_latlon = current_point
-                changed_lines.append(f"lat/lon: initial position=({lat}, {lon})")
+                changed_lines.append(f"lat/lon/alt: initial position=({lat}, {lon}, {alt})")
             else:
                 dist = distance_meters(self.last_logged_latlon, current_point)
                 if dist >= 1.0:
                     prev_point = self.last_logged_latlon
                     changed_lines.append(
-                        f"lat/lon: before=({prev_point['lat']}, {prev_point['lon']}), "
-                        f"current=({lat}, {lon}), dist={dist:.2f}m"
+                        f"lat/lon/alt: before=({prev_point['lat']}, {prev_point['lon']}, {prev_point['alt']}), "
+                        f"current=({lat}, {lon}, {alt}), dist={dist:.2f}m"
                     )
                     self.last_logged_latlon = current_point
 
@@ -441,8 +445,8 @@ def fly_error():
 
 async def async_run_code():
     await asyncio.gather(
-        #get_status_message(5, port=8001),
-        get_status_message(5, port=8011),
+        get_status_message(5, port=8001),
+        #get_status_message(5, port=8011),
     )
 
 

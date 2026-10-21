@@ -14,7 +14,7 @@ from project_code.llm.llm_vision_parser import VisionParser
 from project_code.utils.logger_utils import init_logger
 from project_code.utils.sound_player import SoundPlayerManager
 from project_code.utils.utils import create_output_folder, check_models, warmup, get_running_ip, \
-    prepare_audio_for_speech, is_intel, log_version, log_distances
+    prepare_audio_for_speech, is_intel, log_version, log_distances, log_boxed
 import logging
 import threading
 import time
@@ -201,6 +201,15 @@ class MainGround:
                 if wp.get('yaw', None) is not None:
                     wp['yaw'] = angle
 
+    def log_plan_list(self, team_member_label, plan_list):
+        """
+        Log a plan_list (list of waypoint dicts) using log_boxed.
+        """
+        lines = []
+        for idx, wp in enumerate(plan_list):
+            lines.append(f"[{idx}] {wp}")
+        log_boxed(f"Plan List - {team_member_label}", lines)
+
     def handle_fly_command(self, command):
         """
            command = {
@@ -240,10 +249,12 @@ class MainGround:
                 try:
                     if (result['team_member'] == "team") or (result['team_member'] == "buddy"):
                         plan_list = result['plan']['buddy']
+                        self.log_plan_list("buddy", plan_list)
                         r         = requests.post(self.master_drone_url, json={"command": "plan", "plan_list": plan_list})
                         r.raise_for_status()
                     if (result['team_member'] == "team") or (result['team_member'] == "jarvis"):
                         plan_list = result['plan']['jarvis']
+                        self.log_plan_list("jarvis", plan_list)
                         r         = requests.post(self.slave_drone_url, json={"command": "plan", "plan_list": plan_list})
                 except Exception as e:
                     logging.error(f"Error while sending plan to drone: {e}  (status_code = {r.status_code}) text = {r.text})")
