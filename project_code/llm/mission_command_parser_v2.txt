@@ -21,11 +21,19 @@ Output keys description:
     1.4 If the destination is the drone's home/base, set location to the literal value "home".
 2. 'vision_command'
     2.1 contain 2 keys: 'vision_cmd_type' and 'objects'
-    2.2 'vision_cmd_type' is one of the 5 values: point, hold, summary, describe, follow
+    2.2 'vision_cmd_type' is one of the 4 values: point, hold, summary, describe
     2.3 if the command is 'point' - must have objects to point at, if not - need_more_data = True
-    2.4 if the command is 'follow' - must have objects to follow on, if not - need_more_data = True
-    2.5 'hold' - Does not have to contain objects, if not - need_more_data = False
-    2.6 'describe' - Does not have to contain objects, if not - need_more_data = False
+    2.4 'hold' - Does not have to contain objects, if not - need_more_data = False
+    2.5 'describe' - Does not have to contain objects, if not - need_more_data = False
+    2.6 FOLLOW mapping rule (replaces old vision 'follow' type):
+        - Whenever the user asks to follow an object/entity (e.g. "follow the car"),
+          set fly_command.fly_cmd_type = "follow".
+        - If there is NO accompanying 'hold' in the command, set vision_command.vision_cmd_type = "point"
+          and vision_command.objects = the followed object.
+        - If the command ALSO includes 'hold' (e.g. "hold the house and follow the person",
+          "hold the junction, if you see a vehicle follow it"), set vision_command.vision_cmd_type = "hold"
+          and vision_command.objects = the followed object (not the hold target/location).
+        - 'need_more_data' is True if fly_cmd_type is 'follow' but no object/target to follow was given.
     2.7 Distinguish 'describe' from 'summary':
      - 'summary' applies when the user asks for a general observation report while flying/surrounding/patrolling
        an area, using phrasing like "tell me/describe what you see", "report", "look around and tell me",
@@ -49,6 +57,8 @@ Output keys description:
        otherwise leave 'vision_cmd_type' as "" only if truly ambiguous.
      - 'objects' should be "" when 'vision_cmd_action' is 'stop' (no new target is being specified).
      - need_more_data is False for stop commands even if objects are empty — stopping never requires more data.
+     - If the user says "stop following" with no hold context, vision_cmd_type should be "point"
+       (since follow-only maps to point), vision_cmd_action "stop".
  3. 'team_member'
 3. 'team_member'
     3.1 one of the 3 values: buddy, jarvis, team
@@ -58,7 +68,6 @@ Output keys description:
         - fly_cmd_type is fly/surround/follow but no destination entity was given (rule 1.3)
         - vision_cmd_type is 'summary' (surround) and the user asked to look for objects without saying which objects (e.g. "surround and tell me what you see")
         - vision_cmd_type is 'point' with no objects specified (rule 2.3)
-        - vision_cmd_type is 'follow' (or fly_cmd_type is 'follow') with no target specified (rule 2.4)
     4.3 need_more_data is False whenever all required fields for the detected command types are present, or when the missing field is one that is optional (e.g. objects for 'hold' or 'describe').
 
 
@@ -100,17 +109,7 @@ Output: {"fly_command": {"fly_cmd_type": "", "location": ""},
          "team_member": "buddy",
          "need_more_data": false}
 
-Input: "buddy follow the yellow car"
-Output: {"fly_command": {"fly_cmd_type": "follow", "location": ""},
-         "vision_command":  {"vision_cmd_type": "follow", "vision_cmd_action": "start", "objects": "yellow car"},
-         "team_member": "buddy",
-         "need_more_data": false}
 
-Input: "hey team follow"
-Output: {"fly_command":  {"fly_cmd_type": "follow", "location": ""},
-         "vision_command":  {"vision_cmd_type": "follow", "vision_cmd_action": "start", "objects": ""},
-         "team_member": "team",
-         "need_more_data": true}
 
 Input: "buddy describe"
 Output: {"fly_command":  {"fly_cmd_type": "", "location": ""},
@@ -157,6 +156,24 @@ Output: {"fly_command": {"fly_cmd_type": "", "location": ""},
 
 Input: "team stop following"
 Output: {"fly_command": {"fly_cmd_type": "", "location": ""},
-         "vision_command": {"vision_cmd_type": "follow", "vision_cmd_action": "stop", "objects": ""},
+         "vision_command": {"vision_cmd_type": "point", "vision_cmd_action": "stop", "objects": ""},
+         "team_member": "team",
+         "need_more_data": false}
+
+Input: "buddy follow the yellow car"
+Output: {"fly_command": {"fly_cmd_type": "follow", "location": ""},
+         "vision_command":  {"vision_cmd_type": "point", "vision_cmd_action": "start", "objects": "yellow car"},
+         "team_member": "buddy",
+         "need_more_data": false}
+
+Input: "hey team follow"
+Output: {"fly_command":  {"fly_cmd_type": "follow", "location": ""},
+         "vision_command":  {"vision_cmd_type": "point", "vision_cmd_action": "start", "objects": ""},
+         "team_member": "team",
+         "need_more_data": true}
+
+Input: "hey team hold the house and follow the person"
+Output: {"fly_command": {"fly_cmd_type": "follow", "location": ""},
+         "vision_command": {"vision_cmd_type": "hold", "vision_cmd_action": "start", "objects": "person"},
          "team_member": "team",
          "need_more_data": false}

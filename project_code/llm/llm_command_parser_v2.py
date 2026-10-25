@@ -44,7 +44,7 @@ class LlmCommandParser_V2:
                     "properties": {
                         "vision_cmd_type": {
                             "type": "string",
-                            "enum": ["point", "hold", "summary", "describe", "follow", ""],
+                            "enum": ["point", "hold", "summary", "describe", ""],
                         },
                         "vision_cmd_action": {
                             "type": "string",

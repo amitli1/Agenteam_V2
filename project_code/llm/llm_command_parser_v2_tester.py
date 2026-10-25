@@ -109,7 +109,7 @@ def test_7(parser, text):
     result, elapsed = _run(parser, text)
     expected = {
         "fly_command": {"fly_cmd_type": "follow", "location": ""},
-        "vision_command": {"vision_cmd_type": "follow", "vision_cmd_action": "start", "objects": "yellow car"},
+        "vision_command": {"vision_cmd_type": "point", "vision_cmd_action": "start", "objects": "yellow car"},
         "team_member": "buddy",
         "need_more_data": False,
     }
@@ -121,7 +121,7 @@ def test_8(parser, text):
     result, elapsed = _run(parser, text)
     expected = {
         "fly_command": {"fly_cmd_type": "follow", "location": ""},
-        "vision_command": {"vision_cmd_type": "follow", "vision_cmd_action": "start", "objects": ""},
+        "vision_command": {"vision_cmd_type": "point", "vision_cmd_action": "start", "objects": ""},
         "team_member": "team",
         "need_more_data": True,
     }
@@ -186,6 +186,18 @@ def test_14(parser, text):
     return _check(result, expected, text, elapsed)
 
 
+def test_15(parser, text):
+    # Hey team, hold the junction, if you see any vehicle follow it"
+    result, elapsed = _run(parser, text)
+    expected = {
+        "fly_command": {"fly_cmd_type": "follow", "location": ""},
+        "vision_command": {"vision_cmd_type": "hold", "vision_cmd_action": "start", "objects": "vehicle"},
+        "team_member": "team",
+        "need_more_data": False,
+    }
+    return _check(result, expected, text, elapsed)
+
+
 def test_13(parser, text):
     # Hey team, walk around the building and describe to me what you see
     result, elapsed = _run(parser, text)
@@ -214,7 +226,8 @@ def run_all_tests():
         (test_11, "hey jarvis point at the yellow car"),
         (test_12, "hey jarvis surround the building and tell me what you see hey jarvis look for birds"),
         (test_13, "Hey team, walk around the building and describe to me what you see"),
-        (test_14, "Hey jarvis stop pointing")
+        (test_14, "Hey jarvis stop pointing"),
+        (test_15, "Hey team, hold the junction, if you see any vehicle follow it"),
     ]
 
     results = []

@@ -2,7 +2,12 @@
 1. 640*480
 2. Blue robotics camera
 
-# Follow:
+# Follow (1):
+1. If the user say just follow an object -> we need to send point to the object first, and than follow.
+2. If the user say hold and follow an object -> we need to send hold (object) first and then follow.
+
+
+# Follow (2):
 1. To initiate tracking:
    1.1  Send a point command for the target object.
    1.2 Send the start_tracking() command to QUAD (with an empty body).

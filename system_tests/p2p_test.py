@@ -77,6 +77,13 @@ class FullSystemTest():
         self.log_test_step(text_command)
         self.mainGroundInstance.handle_user_text(text_command)
 
+    def test_describe(self):
+        command = "Hey buddy describe the person"
+        self.log_test_step(command)
+        self.mainGroundInstance.handle_user_text(command)
+        time.sleep(50)  # Wait for the description to be processed
+        return True
+
     def test_1(self):
 
 
@@ -100,8 +107,8 @@ class FullSystemTest():
             if self.check_if_step_finished_successfully('I have reached the destination.') is False:
                 return False
 
-            self.log_test_step("buddy, describe")
-            mainGroundInstance.handle_user_text("buddy, describe")
+            self.log_test_step("buddy, describe the person")
+            mainGroundInstance.handle_user_text("buddy, describe the person")
 
             self.log_test_step("buddy, return home")
             mainGroundInstance.handle_user_text("buddy, return home")
@@ -130,6 +137,9 @@ class FullSystemTest():
         logging.info("✅ TEST FINISHED  ✅ ")
         logging.info("✅ ✅ ✅ ✅ ✅ ✅ ✅ ✅ ")
 
+
+
+
     def test_fly_to_the_moon(self):
         self.mainGroundInstance.handle_user_text("Hey jarvis fly to the moon")
         time.sleep(30)
@@ -157,8 +167,9 @@ if __name__ == "__main__":
     wait_till_got_message_from_master_drone(mainGroundInstance)
 
 
-    #result = fullSystemTest.test_1()
+    result = fullSystemTest.test_1()
+    #result = fullSystemTest.test_describe()
     #result = fullSystemTest.test_start_stop_vision()
-    result = fullSystemTest.test_team()
+    #result = fullSystemTest.test_team()
     #result = fullSystemTest.test_fly_to_the_moon()
     logging.info(f'\nResult: {result}')
