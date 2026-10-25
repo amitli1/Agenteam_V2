@@ -11,7 +11,7 @@ import time
 import requests
 
 from project_code.utils.logger_utils import init_logger
-from project_code.utils.utils import log_boxed, _flatten_for_log, log_version
+from project_code.utils.utils import log_boxed, _flatten_for_log, log_version, get_running_ip
 from project_code.vision.vision_manager import VisionManager
 
 init_logger(jetson_type="air")
@@ -108,6 +108,29 @@ class MainAir:
                     logging.error(f'Got exception while sending status to ground: {e}')
                 print_err = True
 
+    def start_tracking(self):
+        try:
+            address = f"http://{get_running_ip()}:{app_settings.general.tracking_module_port}/start_tracking"
+            response = requests.post(address)
+            if response.status_code != 200:
+                logging.error(f'start_tracking failed, status: {response.status_code}, body: {response.text}')
+            return response.status_code == 200
+        except Exception as e:
+            logging.error(f'Error while sending start_tracking: {e}')
+            return False
+
+
+    def stop_tracking(self):
+        try:
+            address = f"http://{get_running_ip()}:{app_settings.general.tracking_module_port}/stop_tracking"
+            response = requests.post(address)
+            if response.status_code != 200:
+                logging.error(f'stop_tracking failed, status: {response.status_code}, body: {response.text}')
+            return response.status_code == 200
+        except Exception as e:
+            logging.error(f'Error while sending stop_tracking: {e}')
+            return False
+
     def on_ground_command(self):
         start_time = time.time()
         data       = request.get_json(silent=True)
@@ -137,6 +160,15 @@ class MainAir:
             objects_to_focus  = data['vision_command']['objects_to_focus']
 
             self.visionManager.handle_vision_command(vision_command, vision_cmd_action, objects_to_focus)
+
+        elif data['command'] == 'follow':
+            start_follow = data['start_follow']
+            if start_follow:
+                logging.info(f'Start following object')
+                self.start_tracking()
+            else:
+                logging.info(f'Stop following object')
+                self.stop_tracking()
 
         end_time = time.time()
         logging.info(f'Process on_ground_command (successfully) took : {(end_time - start_time):.2f} seconds')

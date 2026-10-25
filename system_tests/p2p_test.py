@@ -81,6 +81,18 @@ class FullSystemTest():
         command = "Hey buddy describe the person"
         self.log_test_step(command)
         self.mainGroundInstance.handle_user_text(command)
+        time.sleep(3)  # Wait for the description to be processed
+        return True
+
+    def test_follow_without_hold(self):
+        command = "Hey buddy follow the car"
+        self.log_test_step(command)
+        self.mainGroundInstance.handle_user_text(command)
+
+        command = "Hey buddy stop follow"
+        self.log_test_step(command)
+        self.mainGroundInstance.handle_user_text(command)
+
         time.sleep(50)  # Wait for the description to be processed
         return True
 
@@ -167,9 +179,10 @@ if __name__ == "__main__":
     wait_till_got_message_from_master_drone(mainGroundInstance)
 
 
-    result = fullSystemTest.test_1()
+    #result = fullSystemTest.test_1()
     #result = fullSystemTest.test_describe()
     #result = fullSystemTest.test_start_stop_vision()
     #result = fullSystemTest.test_team()
     #result = fullSystemTest.test_fly_to_the_moon()
+    result = fullSystemTest.test_follow_without_hold()
     logging.info(f'\nResult: {result}')

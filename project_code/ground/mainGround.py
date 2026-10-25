@@ -224,6 +224,19 @@ class MainGround:
 
             if (command['team_member'] == "team") or (command['team_member'] == "jarvis"):
                 r = requests.post(self.slave_drone_url, json={"command": "home"})
+
+        elif 'follow' in command['fly_command']:
+
+            has_object_to_follow = bool(re.match(r"^\s*follow\s+\S+", command['fly_command'].strip(), re.IGNORECASE))
+
+            if (command['team_member'] == "team") or (command['team_member'] == "buddy"):
+                logging.info(f'Sending follow command to master drone, start_follow: {has_object_to_follow}')
+                r = requests.post(self.master_drone_url, json={"command": "follow", "start_follow": has_object_to_follow})
+
+            if (command['team_member'] == "jarvis"):
+                logging.info(f'Sending follow command to slave drone, start_follow: {has_object_to_follow}')
+                r = requests.post(self.slave_drone_url, json={"command": "follow", "start_follow": has_object_to_follow})
+
         else:
             result = self.llmMissionPlanner.get_way_points(text_command          = command['fly_command'],
                                                            team_member           = command['team_member'],

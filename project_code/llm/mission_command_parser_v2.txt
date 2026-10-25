@@ -27,7 +27,11 @@ Output keys description:
     2.5 'describe' - Does not have to contain objects, if not - need_more_data = False
     2.6 FOLLOW mapping rule (replaces old vision 'follow' type):
         - Whenever the user asks to follow an object/entity (e.g. "follow the car"),
-          set fly_command.fly_cmd_type = "follow".
+          set fly_command.fly_cmd_type = "follow" and fly_command.location = the followed
+          object/entity (same value as vision_command.objects).
+        - If the user asks to stop following (e.g. "stop following"), set
+          fly_command.fly_cmd_type = "follow" and fly_command.location = "" (since no new
+          target is being specified), and vision_command.vision_cmd_action = "stop".
         - If there is NO accompanying 'hold' in the command, set vision_command.vision_cmd_type = "point"
           and vision_command.objects = the followed object.
         - If the command ALSO includes 'hold' (e.g. "hold the house and follow the person",
@@ -155,13 +159,13 @@ Output: {"fly_command": {"fly_cmd_type": "", "location": ""},
          "need_more_data": false}
 
 Input: "team stop following"
-Output: {"fly_command": {"fly_cmd_type": "", "location": ""},
+Output: {"fly_command": {"fly_cmd_type": "follow", "location": ""},
          "vision_command": {"vision_cmd_type": "point", "vision_cmd_action": "stop", "objects": ""},
          "team_member": "team",
          "need_more_data": false}
 
 Input: "buddy follow the yellow car"
-Output: {"fly_command": {"fly_cmd_type": "follow", "location": ""},
+Output: {"fly_command": {"fly_cmd_type": "follow", "location": "yellow car"},
          "vision_command":  {"vision_cmd_type": "point", "vision_cmd_action": "start", "objects": "yellow car"},
          "team_member": "buddy",
          "need_more_data": false}
@@ -173,7 +177,7 @@ Output: {"fly_command":  {"fly_cmd_type": "follow", "location": ""},
          "need_more_data": true}
 
 Input: "hey team hold the house and follow the person"
-Output: {"fly_command": {"fly_cmd_type": "follow", "location": ""},
+Output: {"fly_command": {"fly_cmd_type": "follow", "location": "person"},
          "vision_command": {"vision_cmd_type": "hold", "vision_cmd_action": "start", "objects": "person"},
          "team_member": "team",
          "need_more_data": false}

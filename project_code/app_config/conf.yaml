@@ -27,6 +27,8 @@ speakers:
 general:
   run_as_master: true
 
+  tracking_module_port: 8100
+
   master_quad_port: 8001
   master_air_ip: 127.0.0.1
   master_air_port: 8125

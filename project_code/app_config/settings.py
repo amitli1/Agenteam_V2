@@ -59,6 +59,7 @@ class Vision(BaseModel):
 
 class General(BaseModel):
     run_as_master: bool
+    tracking_module_port: int
     master_quad_port: int
     master_air_ip: str
     master_air_port: int

@@ -108,7 +108,7 @@ def test_7(parser, text):
     # buddy follow the yellow car
     result, elapsed = _run(parser, text)
     expected = {
-        "fly_command": {"fly_cmd_type": "follow", "location": ""},
+        "fly_command": {"fly_cmd_type": "follow", "location": "yellow car"},
         "vision_command": {"vision_cmd_type": "point", "vision_cmd_action": "start", "objects": "yellow car"},
         "team_member": "buddy",
         "need_more_data": False,
@@ -190,9 +190,20 @@ def test_15(parser, text):
     # Hey team, hold the junction, if you see any vehicle follow it"
     result, elapsed = _run(parser, text)
     expected = {
-        "fly_command": {"fly_cmd_type": "follow", "location": ""},
+        "fly_command": {"fly_cmd_type": "follow", "location": "vehicle"},
         "vision_command": {"vision_cmd_type": "hold", "vision_cmd_action": "start", "objects": "vehicle"},
         "team_member": "team",
+        "need_more_data": False,
+    }
+    return _check(result, expected, text, elapsed)
+
+def test_16(parser, text):
+    # Hey buddy stop following
+    result, elapsed = _run(parser, text)
+    expected = {
+        "fly_command": {"fly_cmd_type": "follow", "location": ""},
+        "vision_command": {"vision_cmd_type": "point", "vision_cmd_action": "stop", "objects": ""},
+        "team_member": "buddy",
         "need_more_data": False,
     }
     return _check(result, expected, text, elapsed)
@@ -228,6 +239,7 @@ def run_all_tests():
         (test_13, "Hey team, walk around the building and describe to me what you see"),
         (test_14, "Hey jarvis stop pointing"),
         (test_15, "Hey team, hold the junction, if you see any vehicle follow it"),
+        (test_16, "Hey buddy stop following")
     ]
 
     results = []
