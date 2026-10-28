@@ -230,11 +230,11 @@ class MainGround:
             has_object_to_follow = bool(re.match(r"^\s*follow\s+\S+", command['fly_command'].strip(), re.IGNORECASE))
 
             if (command['team_member'] == "team") or (command['team_member'] == "buddy"):
-                logging.info(f'Sending follow command to master drone, start_follow: {has_object_to_follow}')
+                log_boxed("Sending follow command to master drone", [f"start_follow: {has_object_to_follow}"])
                 r = requests.post(self.master_drone_url, json={"command": "follow", "start_follow": has_object_to_follow})
 
             if (command['team_member'] == "jarvis"):
-                logging.info(f'Sending follow command to slave drone, start_follow: {has_object_to_follow}')
+                log_boxed("Sending follow command to slave drone", [f"start_follow: {has_object_to_follow}"])
                 r = requests.post(self.slave_drone_url, json={"command": "follow", "start_follow": has_object_to_follow})
 
         else:
@@ -375,8 +375,16 @@ class MainGround:
                 "objects_to_focus" : llm_command['vision_command']['objects']
             }
 
-            r = requests.post(self.master_drone_url, json={"command": "vision", "vision_command": command_to_air})
-            r.raise_for_status()
+            if (llm_command['team_member'] == "team") or (llm_command['team_member'] == "buddy"):
+                log_boxed("Send vision command to master drone", [f"{k}: {v}" for k, v in command_to_air.items()])
+                r = requests.post(self.master_drone_url, json={"command": "vision", "vision_command": command_to_air})
+                r.raise_for_status()
+
+            if (llm_command['team_member'] == "team") or (llm_command['team_member'] == "jarvis"):
+                log_boxed("Send vision command to slave drone", [f"{k}: {v}" for k, v in command_to_air.items()])
+                r = requests.post(self.slave_drone_url, json={"command": "vision", "vision_command": command_to_air})
+                r.raise_for_status()
+
 
         if llm_command['fly_command']['fly_cmd_type'] != "":
             fly_command_to_air                 = {}

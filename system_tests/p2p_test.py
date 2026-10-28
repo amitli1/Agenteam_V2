@@ -96,6 +96,14 @@ class FullSystemTest():
         time.sleep(50)  # Wait for the description to be processed
         return True
 
+    def test_hold_and_follow(self):
+        command = "Hey team, hold the junction, if you see any vehicle follow it."
+        self.log_test_step(command)
+        self.mainGroundInstance.handle_user_text(command)
+
+        time.sleep(50)  # Wait for the description to be processed
+        return True
+
     def test_1(self):
 
 
@@ -184,5 +192,6 @@ if __name__ == "__main__":
     #result = fullSystemTest.test_start_stop_vision()
     #result = fullSystemTest.test_team()
     #result = fullSystemTest.test_fly_to_the_moon()
-    result = fullSystemTest.test_follow_without_hold()
+    #result = fullSystemTest.test_follow_without_hold()
+    result = fullSystemTest.test_hold_and_follow()
     logging.info(f'\nResult: {result}')
