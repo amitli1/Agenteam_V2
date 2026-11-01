@@ -213,25 +213,24 @@ class HeyBuddyDetector(DetectionStrategy):
                                 reason="hey_buddy7: idle"
                                 )
 
-#TODO- consider adding optional very high confidence with votes==2
 class TeamDetector(DetectionStrategy):
     """
     4-model 'Team' policy:
-      - patience=2, threshold=0.35
-      - trigger if votes >= 2
+      - trigger if votes >= 2 (model_threshold=0.25)
+      - OR trigger if votes == 1 with that model's score >= 0.7
       - run_whisper when not unanimous (votes < 4)
       - run_vosk on trigger
     """
-    def __init__(self, patience_frames: int = 2, model_threshold: float = 0.35):
+    def __init__(self, patience_frames: int = 2, model_threshold: float = 0.25, single_high_conf: float = 0.7):
         self.patience_frames = patience_frames
         self.model_threshold = model_threshold
+        self.single_high_conf = single_high_conf
         self.wake_words = ["Team"]
 
     def get_wake_words(self):
         return self.wake_words
 
     def configure(self, model_names: Mapping[str, object], wake_word: str = None):
-        #return _uniform(model_names.keys(), self.patience_frames), _uniform(model_names.keys(), self.model_threshold)
         return {}, {}
 
     def decide(self, prediction: Dict[str, dict]) -> DetectionOutcome:
@@ -248,6 +247,7 @@ class TeamDetector(DetectionStrategy):
         scores = list(prediction.values())
         mean_score = float(np.mean(scores)) if scores else 0.0
         votes = int(sum(s >= self.model_threshold for s in scores))
+        mx = max(scores) if scores else 0.0
 
         team_mean = {self.wake_words[0]: mean_score}
         team_votes = {self.wake_words[0]: votes}
@@ -260,7 +260,19 @@ class TeamDetector(DetectionStrategy):
                 save_clip_on_activity=True,
                 run_vosk=True,
                 run_whisper=(votes < 3),
-                reason=f"team: votes={votes}>=2",
+                reason=f"team: votes={votes}>=2 (thr={self.model_threshold})",
+                winner=self.wake_words[0],
+            )
+
+        if votes == 1 and mx >= self.single_high_conf:
+            return DetectionOutcome(
+                trigger=True,
+                votes=team_votes,
+                mean_score=team_mean,
+                save_clip_on_activity=True,
+                run_vosk=True,
+                run_whisper=True,   # ambiguous single-vote -> confirm via whisper
+                reason=f"team: votes=1 & high-conf={mx:.2f}>={self.single_high_conf}",
                 winner=self.wake_words[0],
             )
 
@@ -268,7 +280,6 @@ class TeamDetector(DetectionStrategy):
             return DetectionOutcome(False, team_votes, team_mean, False, reason=f"team: activity votes={votes}", winner=None)
 
         return DetectionOutcome(False, team_votes, team_mean, reason="team: idle", winner=None)
-
 
 class MixedBuddyHeyBuddyDetector(DetectionStrategy):
     """mixed 'Hey Buddy'+'Buddy' policy: if one of ['Hey Buddy' detector,'Buddy' detector] indicates a wakeword
