@@ -143,6 +143,7 @@ class VisionManager(object):
                 if current_agent_staus != last_agent_status:
                     point_status = f'Point agent status change from: {last_agent_status} to: {current_agent_staus}'
                     logging.info(point_status)
+                    self.fnc_send_text_to_user(point_status)
                 last_agent_status = current_agent_staus
 
         return last_is_active, last_agent_status
@@ -186,6 +187,8 @@ class VisionManager(object):
         if len(hold_status) != 0:
             if self.on_hold_status_callback is not None:
                 self.on_hold_status_callback(hold_status)
+                #seld.fnc_send_text_to_user("")
+
             # 1. check we are master
             # 2. check we are in team mission
             # 3. send to slave
