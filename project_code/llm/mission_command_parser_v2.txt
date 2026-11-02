@@ -152,7 +152,7 @@ Output: {"fly_command": {"fly_cmd_type": "", "location": ""},
          "team_member": "jarvis",
          "need_more_data": false}
 
-Input: "buddy stop the hold"
+Input: "buddy stop hold"
 Output: {"fly_command": {"fly_cmd_type": "", "location": ""},
          "vision_command": {"vision_cmd_type": "hold", "vision_cmd_action": "stop", "objects": ""},
          "team_member": "buddy",
