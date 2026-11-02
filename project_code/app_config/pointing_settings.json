@@ -154,7 +154,7 @@
         "_comment_freeze": "--- Freeze Detection ---",
 
         "_comment_enable_freeze_detection": "Detect when tracker locks on background and returns frozen position. true = automatically mark tracker as LOST and retry locking when same position repeats. false = disable freeze detection.",
-        "enable_freeze_detection": true,
+        "enable_freeze_detection": false,
 
         "_comment_max_frozen_frames": "Consecutive frames at nearly identical position before marking tracker as LOST. At 30fps: 10 = 0.33 seconds, 15 = 0.5 seconds. UP = more tolerant of slow-moving targets (reduces false positives). DOWN = faster recovery from background lock (more aggressive). Example: 10 for fast-moving, 20 for slow-moving objects.",
         "max_frozen_frames": 10,
