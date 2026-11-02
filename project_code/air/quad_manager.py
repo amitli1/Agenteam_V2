@@ -272,6 +272,7 @@ class QuadManager:
                         except Exception as e:
                             if flag_log_error is False:
                                 logging.error(f'Error while receiving message: {e}')
+                                flag_first_msg = False
                             #flag_log_error = True
 
             except Exception as e:
