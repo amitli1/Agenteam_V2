@@ -185,8 +185,19 @@ class VisionManager(object):
 
     def handle_vision_hold_status(self, hold_status):
         if len(hold_status) != 0:
-            if self.on_hold_status_callback is not None:
-                self.on_hold_status_callback(hold_status)
+
+            if 'msg' in hold_status:
+                hold_data = hold_status['msg']
+                if len(hold_data) > 2:
+                    logging.info(f'Got hold message: {hold_data}')
+                    self.fnc_send_text_to_user("I'm holding the object")
+                else:
+                    None
+                    #logging.info(f'Got hold message: {hold_data}')
+
+
+            # if self.on_hold_status_callback is not None:
+            #     self.on_hold_status_callback(hold_status)
                 #seld.fnc_send_text_to_user("")
 
             # 1. check we are master
