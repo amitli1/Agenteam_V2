@@ -376,20 +376,20 @@ class MainGround:
             }
 
             if (llm_command['team_member'] == "team") or (llm_command['team_member'] == "buddy"):
-                if self.master_drone_location is not None:
+                try:
                     log_boxed("Send vision command to master drone", [f"{k}: {v}" for k, v in command_to_air.items()])
                     r = requests.post(self.master_drone_url, json={"command": "vision", "vision_command": command_to_air})
                     r.raise_for_status()
-                else:
-                    logging.info('Cant send vision command to master drone - no master drone')
+                except Exception as e:
+                    logging.info(f'Cant send vision command to master drone ({self.master_drone_url}) - no master drone')
 
             if (llm_command['team_member'] == "team") or (llm_command['team_member'] == "jarvis"):
-                if self.slave_drone_location is not None:
+                try:
                     log_boxed("Send vision command to slave drone", [f"{k}: {v}" for k, v in command_to_air.items()])
                     r = requests.post(self.slave_drone_url, json={"command": "vision", "vision_command": command_to_air})
                     r.raise_for_status()
-                else:
-                    logging.info('Cant send vision command to slave drone - no master slave')
+                except Exception as e:
+                    logging.info(f'Cant send vision command to slave drone ({self.slave_drone_url}) - no slave drone')
 
 
         if llm_command['fly_command']['fly_cmd_type'] != "":
