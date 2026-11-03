@@ -255,7 +255,11 @@ class DroneState:
             "lat": pos["lat"],
             "lon": pos["lon"],
             "alt": pos["alt"],
-            "yaw": yaw,
+            "body_orientation_deg": {
+                "yaw": yaw,
+                "pitch": 0.0,
+                "roll": 0.0,
+            },
             "horizontal_velocity": 1.0,
             "vertical_velocity": 1.0,
             "battery_voltage": 50.0,

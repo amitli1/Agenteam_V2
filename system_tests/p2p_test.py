@@ -104,6 +104,36 @@ class FullSystemTest():
         time.sleep(50)  # Wait for the description to be processed
         return True
 
+    def test_l_flag(self):
+
+        # --- building 5
+        self.log_test_step("Hey buddy go to building number five")
+        self.mainGroundInstance.handle_user_text("Hey buddy go to building number five")
+        if self.check_if_step_finished_successfully('I have reached the destination.') is False:
+            return False
+
+        # --- building 1
+        self.log_test_step("Hey buddy go to building number one")
+        self.mainGroundInstance.handle_user_text("Hey buddy go to building number one")
+        if self.check_if_step_finished_successfully('I have reached the destination.') is False:
+            return False
+
+        self.log_test_step("Hey buddy surround the building")
+        self.mainGroundInstance.handle_user_text("Hey buddy surround the building")
+        if self.check_if_step_finished_successfully('I have reached the destination.') is False:
+            return False
+
+        # --- building 6
+        self.log_test_step("Hey buddy go to building number six")
+        self.mainGroundInstance.handle_user_text("Hey buddy go to building number six")
+        if self.check_if_step_finished_successfully('I have reached the destination.') is False:
+            return False
+
+        self.log_test_step("Hey buddy surround the building")
+        self.mainGroundInstance.handle_user_text("Hey buddy surround the building")
+        if self.check_if_step_finished_successfully('I have reached the destination.') is False:
+            return False
+
     def test_1(self):
 
 
@@ -187,11 +217,12 @@ if __name__ == "__main__":
     wait_till_got_message_from_master_drone(mainGroundInstance)
 
 
-    #result = fullSystemTest.test_1()
+    result = fullSystemTest.test_1()
+    #result = fullSystemTest.test_l_flag()
     #result = fullSystemTest.test_describe()
     #result = fullSystemTest.test_start_stop_vision()
     #result = fullSystemTest.test_team()
     #result = fullSystemTest.test_fly_to_the_moon()
     #result = fullSystemTest.test_follow_without_hold()
-    result = fullSystemTest.test_hold_and_follow()
+    #result = fullSystemTest.test_hold_and_follow()
     logging.info(f'\nResult: {result}')

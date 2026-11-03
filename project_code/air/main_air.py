@@ -134,7 +134,11 @@ class MainAir:
     def on_ground_command(self):
         start_time = time.time()
         data       = request.get_json(silent=True)
-        log_boxed("Ground Command Received", _flatten_for_log(data))
+
+        if data['command'] != 'update_vision_params':
+            log_boxed("Ground Command Received", _flatten_for_log(data))
+        else:
+            log_boxed("Ground Command Received", [f"json_params: ."])
 
         if data['command'] == 'plan':
             plan_list = data['plan_list']
@@ -146,6 +150,11 @@ class MainAir:
                 self.send_text_to_user("OK Flying to the destination")
             else:
                 return jsonify({"error": "error while sending wp to quad manager"}), 400
+
+        elif data['command'] == 'update_vision_params':
+            payload_img = data['json_file']
+            logging.info(f'Update vision params (from ground station json file')
+            self.visionManager.open_video_window(payload_img)
 
         elif data['command'] == 'home':
             res = self.quadManager.call_back_home()

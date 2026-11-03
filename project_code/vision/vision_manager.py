@@ -83,7 +83,7 @@ class VisionManager(object):
             logging.error(f'\nError sending use_system_prompt=false, res:\n {e}\n')
         return False
 
-    def open_video_window(self):
+    def open_video_window(self, payload_img=None):
 
         if self.is_online is False:
             return True
@@ -98,8 +98,9 @@ class VisionManager(object):
             return False
 
         try:
-            with open(app_settings.vision.pointing_settings_file, "r") as f:
-                payload_img = json.load(f)
+            if payload_img is None:
+                with open(app_settings.vision.pointing_settings_file, "r") as f:
+                    payload_img = json.load(f)
 
             r = requests.post(f"http://{get_running_ip()}:{app_settings.vision.point_port}/api/pointing-agent/start", json=payload_img)
             r.raise_for_status()

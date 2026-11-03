@@ -14,6 +14,7 @@ from project_code.app_config.settings import app_settings
 from project_code.utils.logger_utils import CURRENT_DATE
 import re
 import platform
+import subprocess
 
 from project_code.utils.platform_utils import is_intel
 from project_code.utils.sound_player import SoundPlayerManager
@@ -306,3 +307,66 @@ def get_last_generated_file():
                 latest_file = fname
 
     return max_num
+
+
+def run_command(command):
+    """Run a shell command and return its output."""
+    result = subprocess.run(
+        command,
+        shell=True,
+        capture_output=True,
+        text=True
+    )
+
+    if result.returncode != 0:
+        log_boxed(f"ERROR running: {command}", result.stderr.strip().splitlines())
+    else:
+        log_boxed(f"Output of: {command}", result.stdout.strip().splitlines())
+
+    return result.returncode == 0
+
+
+def check_performance():
+
+    # Mode       Power Budget       Performance
+    # -------------------------------------------
+    # MAXN (0)   Up to 60W          Highest potential
+    # 50W        50W                Very high
+    # 30W        30W                Medium
+    # 15W        15W                Lower
+    #
+    # Recommended maximum performance configuration:
+    #
+    #     sudo nvpmodel -m 0
+    #     sudo jetson_clocks
+    #     sudo jetson_clocks --fan
+    #
+    # Check current power mode:
+    #
+    #     sudo nvpmodel -q
+
+    power_mode = subprocess.run("sudo nvpmodel -q", shell=True, capture_output=True, text=True).stdout
+    clocks     = subprocess.run("sudo jetson_clocks --show", shell=True, capture_output=True, text=True).stdout
+    temp       = subprocess.run("tegrastats --interval 1000 --count 1", shell=True, capture_output=True, text=True).stdout
+
+    log_boxed("POWER MODE", power_mode.strip().splitlines())
+    log_boxed("CLOCKS", clocks.strip().splitlines())
+    log_boxed("TEMPERATURE / GPU", temp.strip().splitlines())
+
+
+def change_to_acceleration_mode():
+    check_performance()
+
+    log_boxed("ENABLING MAXIMUM PERFORMANCE", [
+        "sudo nvpmodel -m 0",
+        "sudo jetson_clocks",
+        "sudo jetson_clocks --fan",
+    ])
+    run_command("sudo nvpmodel -m 0")
+    run_command("sudo jetson_clocks")
+    run_command("sudo jetson_clocks --fan")
+
+    time.sleep(1)
+
+    log_boxed("AFTER OPTIMIZATION", ["Re-checking performance..."])
+    check_performance()

@@ -185,7 +185,9 @@ class AudioPipeline:
 
 
             if wake_word_detected:
-                file_num = file_num + 1
+
+                start_handle_speech = time.time()
+                file_num            = file_num + 1
                 self.write_samples(f"out_{file_num}", recorded_audio, samplerate=16000)
 
                 if isinstance(recorded_audio, np.ndarray):
@@ -216,7 +218,11 @@ class AudioPipeline:
                     text = f"{winner_wakeword} {text}"
                     logging.info(f'Wakeword missing from transcription, prepended: {text}')
 
+                start_handle_time = time.time()
                 self.func_handle_user_text(text)
+                end_handle_time   = time.time()
+                log_boxed("Handle User Text", [f"Total Time : {(end_handle_time - start_handle_time):.2f} sec"])
+                log_boxed("Handle Speech", [f"Total Time : {(end_handle_time - start_handle_speech):.2f} sec"])
 
 
 

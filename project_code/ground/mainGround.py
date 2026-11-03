@@ -14,7 +14,7 @@ from project_code.llm.llm_vision_parser import VisionParser
 from project_code.utils.logger_utils import init_logger
 from project_code.utils.sound_player import SoundPlayerManager
 from project_code.utils.utils import create_output_folder, check_models, warmup, get_running_ip, \
-    prepare_audio_for_speech, is_intel, log_version, log_distances, log_boxed
+    prepare_audio_for_speech, is_intel, log_version, log_distances, log_boxed, change_to_acceleration_mode
 import logging
 import threading
 import time
@@ -50,8 +50,10 @@ class MainGround:
         app.add_url_rule("/text_to_user"       , view_func=self.on_air_text_to_user        , methods=["POST"], )
         self.status_received_event = threading.Event()
 
-        self.master_drone_location = None
-        self.slave_drone_location  = None
+        self.master_drone_location     = None
+        self.slave_drone_location      = None
+        self.master_vision_params_sent = False
+        self.slave_vision_params_sent  = False
 
         self.master_drone_url = f"http://{app_settings.general.master_air_ip}:{app_settings.general.master_air_port}/ground_command"
         self.slave_drone_url  = f"http://{app_settings.general.slave_air_ip}:{app_settings.general.slave_air_port}/ground_command"
@@ -78,6 +80,16 @@ class MainGround:
             None
         return "OK", 200
 
+    def send_update_vision_params(self, drone_url, drone_role):
+        try:
+            with open(app_settings.vision.pointing_settings_file, "r") as f:
+                json_file = json.load(f)
+            r = requests.post(drone_url, json={"command": "update_vision_params", "json_file": json_file})
+            r.raise_for_status()
+            logging.info(f'Sent update_vision_params to {drone_role}: {drone_url}')
+        except Exception as e:
+            logging.error(f'Error while sending update_vision_params to {drone_url}: {e}')
+
     def on_air_status_message(self):
         air_status_msg = request.get_json(silent=True)
 
@@ -91,24 +103,35 @@ class MainGround:
             self.master_drone_location = {'lat': self.last_master_quad_data['lat'],
                                           'lon': self.last_master_quad_data['lon'],
                                           'alt': self.last_master_quad_data['alt'],
-                                          'yaw': self.last_master_quad_data.get('yaw', 0)}
+                                          'yaw': self.last_master_quad_data['body_orientation_deg']['yaw']}
 
             if self.log_master_drone_distance is False:
                 log_distances("Master Drone Distances:", self.master_drone_location, self.databaseManager.get_db())
+                log_boxed("Master Drone First Location", [f"{k}: {v}" for k, v in self.master_drone_location.items()])
                 self.log_master_drone_distance = True
+
+            if self.master_vision_params_sent is False:
+                self.send_update_vision_params(self.master_drone_url, "Master")
+                self.master_vision_params_sent = True
+
 
 
         elif air_status_msg['drone_role'] == 'slave':
             self.last_slave_quad_data = json.loads(air_status_msg['last_quad_msg'])
 
             self.slave_drone_location = {'lat': self.last_slave_quad_data['lat'],
-                                          'lon': self.last_slave_quad_data['lon'],
-                                          'alt': self.last_slave_quad_data['alt'],
-                                           'yaw': self.last_slave_quad_data.get('yaw', 0)}
+                                         'lon': self.last_slave_quad_data['lon'],
+                                         'alt': self.last_slave_quad_data['alt'],
+                                         'yaw': self.last_slave_quad_data['body_orientation_deg']['yaw']}
 
             if self.log_slave_drone_distance is False:
                 log_distances("Slave Drone Distances:", self.slave_drone_location, self.databaseManager.get_db())
+                log_boxed("Slave Drone First Location", [f"{k}: {v}" for k, v in self.slave_drone_location.items()])
                 self.log_slave_drone_distance = True
+
+            if self.slave_vision_params_sent is False:
+                self.send_update_vision_params(self.slave_drone_url, "Slave")
+                self.slave_vision_params_sent = True
 
         else:
             logging.error(f"Got unknown drone role: {air_status_msg['drone_role']}")
@@ -442,6 +465,9 @@ def run_ground():
     log_version()
     create_output_folder()
 
+    if is_intel() is False:
+        change_to_acceleration_mode()
+
     if check_models() is False:
         if is_intel() is False:
             #logging.info('EXIT')
@@ -449,6 +475,7 @@ def run_ground():
             None
     else:
         warmup()
+
 
     SoundPlayerManager().start()
     time.sleep(0.1)
