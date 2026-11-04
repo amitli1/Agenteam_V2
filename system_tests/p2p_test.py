@@ -106,11 +106,19 @@ class FullSystemTest():
 
     def test_l_flag(self):
 
+
         # --- building 5
-        self.log_test_step("Hey buddy go to building number five")
-        self.mainGroundInstance.handle_user_text("Hey buddy go to building number five")
+        # self.log_test_step("Hey buddy go to building number five")
+        # self.mainGroundInstance.handle_user_text("Hey buddy go to building number five")
+        # if self.check_if_step_finished_successfully('I have reached the destination.') is False:
+        #     return False
+
+        # check yaw
+        self.log_test_step("Hey buddy go to building number six")
+        self.mainGroundInstance.handle_user_text("Hey buddy go to building number six")
         if self.check_if_step_finished_successfully('I have reached the destination.') is False:
             return False
+        time.sleep(10)
 
         # --- building 1
         self.log_test_step("Hey buddy go to building number one")
@@ -134,13 +142,75 @@ class FullSystemTest():
         if self.check_if_step_finished_successfully('I have reached the destination.') is False:
             return False
 
+    def test_yaw(self):
+
+        time.sleep(1)
+
+        self.log_test_step("Hey buddy go to building number 4")
+        self.mainGroundInstance.handle_user_text("Hey buddy go to building number 4")
+        if self.check_if_step_finished_successfully('I have reached the destination.') is False:
+            return False
+
+        time.sleep(3)
+
+        self.log_test_step("Hey buddy go to building number 5")
+        self.mainGroundInstance.handle_user_text("Hey buddy go to building number 5")
+        if self.check_if_step_finished_successfully('I have reached the destination.') is False:
+            return False
+
+        time.sleep(3)
+
+        self.log_test_step("Hey buddy go to building number 1")
+        self.mainGroundInstance.handle_user_text("Hey buddy go to building number 1")
+        if self.check_if_step_finished_successfully('I have reached the destination.') is False:
+            return False
+
+        time.sleep(3)
+
+        self.log_test_step("Hey buddy surround the building")
+        self.mainGroundInstance.handle_user_text("Hey buddy surround the building")
+        if self.check_if_step_finished_successfully('I have reached the destination.') is False:
+            return False
+
+    def test_airsim(self):
+
+
+        self.log_test_step("Hey buddy go to junction number 1")
+        self.mainGroundInstance.handle_user_text("Hey buddy go to junction number 1")
+        if self.check_if_step_finished_successfully('I have reached the destination.') is False:
+            return False
+
+
+        self.log_test_step("Hey buddy go to building number 1")
+        self.mainGroundInstance.handle_user_text("Hey buddy go to building number 1")
+        if self.check_if_step_finished_successfully('I have reached the destination.') is False:
+            return False
+
+        time.sleep(3)
+
+        self.log_test_step("Hey buddy surround the building")
+        self.mainGroundInstance.handle_user_text("Hey buddy surround the building")
+        if self.check_if_step_finished_successfully('I have reached the destination.') is False:
+            return False
+
+        time.sleep(3)
+
     def test_1(self):
+
+        self.log_test_step("Hey buddy go to building number 5")
+        self.mainGroundInstance.handle_user_text("Hey buddy go to building number 5")
+        if self.check_if_step_finished_successfully('I have reached the destination.') is False:
+            return False
+
+        time.sleep(3)
 
 
         self.log_test_step("Hey buddy go to building number one")
         self.mainGroundInstance.handle_user_text("Hey buddy go to building number one")
         if self.check_if_step_finished_successfully('I have reached the destination.') is False:
             return False
+
+        time.sleep(2)
 
         self.log_test_step("Hey buddy point to the car or weapons")
         mainGroundInstance.handle_user_text("Hey buddy point to the car or weapons")
@@ -205,6 +275,11 @@ def wait_till_got_message_from_master_drone(mainGroundInstance):
             break
     logging.info('Got message from master drone, continue with the test')
 
+
+
+
+
+
 if __name__ == "__main__":
 
 
@@ -217,7 +292,9 @@ if __name__ == "__main__":
     wait_till_got_message_from_master_drone(mainGroundInstance)
 
 
-    result = fullSystemTest.test_1()
+    result = fullSystemTest.test_airsim()
+    #result = fullSystemTest.test_yaw()
+    #result = fullSystemTest.test_1()
     #result = fullSystemTest.test_l_flag()
     #result = fullSystemTest.test_describe()
     #result = fullSystemTest.test_start_stop_vision()

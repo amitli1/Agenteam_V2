@@ -372,36 +372,13 @@ class MissionPlannerAgent:
     # ------------------------------------------------------------------ #
     # Core way-point computation for a single logical target
     # ------------------------------------------------------------------ #
-    # def _base_waypoints_for_action(
-    #     self,
-    #     action: str,
-    #     row,
-    #     alt: float,
-    # ) -> List[Tuple[float, float, float]]:
-    #     """Compute the (lat, lon, alt) way-points for the given action/target."""
-    #     coords = self._parse_geometry_string(row.get("geometry", ""))
-    #     if not coords:
-    #         return []
-    #
-    #     if action == "surround":
-    #         if len(coords) > 1:
-    #             # Polygon: fly the boundary vertices, then close the loop.
-    #             waypoints = [(lat, lon, alt) for lat, lon in coords]
-    #             waypoints.append(waypoints[0])
-    #             return waypoints
-    #         # Single point: build a circle around it.
-    #         lat, lon = coords[0]
-    #         return self._surround_waypoints(lat, lon, alt)
-    #
-    #     # action == "goto" (default): destination is the first geometry point.
-    #     lat, lon = coords[0]
-    #     return [(lat, lon, alt)]
-    def _base_waypoints_for_action(self, action, row, alt):
+    def _base_waypoints_for_action(self, action, row, alt, start_latlon):
         coords = self._parse_geometry_string(row.get("geometry", ""))
         if not coords:
             return []
 
         if action == "surround":
+            # Yaw from the dataset is ignored for surround; bearings are computed.
             if len(coords) > 1:
                 centroid_lat = sum(lat for lat, _ in coords) / len(coords)
                 centroid_lon = sum(lon for _, lon in coords) / len(coords)
@@ -414,8 +391,32 @@ class MissionPlannerAgent:
             lat, lon = coords[0]
             return self._surround_waypoints(lat, lon, alt)
 
+        # action == "goto": while flying, look towards the destination
+        # (bearing from the current location). Only after arrival, rotate
+        # to the dataset YAW (if it is defined / not NaN).
         lat, lon = coords[0]
-        return [(lat, lon, alt, None)]  # goto: no forced heading
+        dest_yaw = row.get("yaw", None)
+        try:
+            dest_yaw = float(dest_yaw) if dest_yaw is not None and str(dest_yaw).strip() != "" and str(
+                dest_yaw).lower() != "nan" else None
+        except (TypeError, ValueError):
+            dest_yaw = None
+
+        # Yaw to use while flying: bearing from the current location to the
+        # destination (i.e. flight direction).
+        if start_latlon is not None:
+            start_lat, start_lon = start_latlon
+            travel_yaw = self._bearing_deg(start_lat, start_lon, lat, lon)
+        else:
+            travel_yaw = dest_yaw if dest_yaw is not None else 0.0
+
+        waypoints = [(lat, lon, alt, travel_yaw)]
+
+        # After arriving at the destination, rotate to the DB yaw (if valid).
+        if dest_yaw is not None:
+            waypoints.append((lat, lon, alt, dest_yaw))
+
+        return waypoints
 
     # ------------------------------------------------------------------ #
     # Public API
@@ -500,7 +501,10 @@ class MissionPlannerAgent:
         if team_member == TEAM_MEMBER_MASTER:
             if master_drone_location is None:
                 return self._error("NO_MASTER_DRONE: master drone location is not available.")
-            wps = self._base_waypoints_for_action(action, row, master_alt)
+            wps = self._base_waypoints_for_action(
+                action, row, master_alt,
+                start_latlon=(float(master_drone_location["lat"]), float(master_drone_location["lon"])),
+            )
             if not wps:
                 return self._error("INVALID_GEOMETRY: could not parse coordinates.")
             plan[TEAM_MEMBER_MASTER] = self._prepend_current_location(
@@ -511,7 +515,10 @@ class MissionPlannerAgent:
         elif team_member == TEAM_MEMBER_SLAVE:
             if slave_drone_location is None:
                 return self._error("NO_SLAVE_DRONE: slave drone is not available.")
-            wps = self._base_waypoints_for_action(action, row, slave_alt)
+            wps = self._base_waypoints_for_action(
+                action, row, slave_alt,
+                start_latlon=(float(slave_drone_location["lat"]), float(slave_drone_location["lon"])),
+            )
             if not wps:
                 return self._error("INVALID_GEOMETRY: could not parse coordinates.")
             plan[TEAM_MEMBER_SLAVE] = self._prepend_current_location(
@@ -525,7 +532,10 @@ class MissionPlannerAgent:
             if slave_drone_location is None:
                 return self._error("NO_SLAVE_DRONE: team flight needs two drones.")
 
-            master_wps = self._base_waypoints_for_action(action, row, master_alt)
+            master_wps = self._base_waypoints_for_action(
+                action, row, master_alt,
+                start_latlon=(float(master_drone_location["lat"]), float(master_drone_location["lon"])),
+            )
             if not master_wps:
                 return self._error("INVALID_GEOMETRY: could not parse coordinates.")
 

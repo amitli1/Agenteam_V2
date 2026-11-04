@@ -1,4 +1,4 @@
-entity_type,entity_number,lat,lon,alt,geometry
-building,1,32.8677741,35.2678205,16,"[32.8677741,35.2678205]"
-building,2,32.8674567,35.2673885,16,"[32.8674567,35.2673885]"
+entity_type,entity_number,lat,lon,alt,yaw,geometry
+building,1,32.8677741,35.2678205,16,nan,"[32.8677741,35.2678205]"
+building,2,32.8674567,35.2673885,16,nan,"[32.8674567,35.2673885]"
 

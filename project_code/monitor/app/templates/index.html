@@ -88,7 +88,7 @@
 </head>
 <body>
     <div class="top-bar">
-        <h1>Drone / Building Monitor</h1>
+        <h1>Drone / Building Monitor <span id="monitor-version" style="font-size: 12px; font-weight: normal; color: #666;"></span></h1>
         <div id="distance-box">
             <h2>Master &#8596; Slave distance (meters)</h2>
             <table>
@@ -213,7 +213,7 @@
 
             if (mode === "3d") {
                 return {
-                    x: lat, y: lon, z: alt,
+                    x: lon, y: lat, z: alt,
                     mode: plotMode,
                     type: 'scatter3d',
                     name: name,
@@ -222,7 +222,7 @@
                 };
             }
             return {
-                x: lat, y: lon,
+                x: lon, y: lat,
                 mode: plotMode,
                 type: 'scatter',
                 name: name,
@@ -232,7 +232,7 @@
         }
 
         // ---------- Heading arrow helpers ----------
-        // Note: this app plots x = lat, y = lon (see makeTrace below), so a
+        // Note: this app plots x = lon, y = lat (see makeTrace below), so a
         // heading angle 'deg' (0 = North, clockwise like a compass) maps to
         // dLat = cos(deg), dLon = sin(deg).
 
@@ -274,8 +274,8 @@
             const dLon = len * Math.sin(rad);
 
             return {
-                x: last.lat, y: last.lon,
-                ax: last.lat - dLat, ay: last.lon - dLon,
+                x: last.lon, y: last.lat,
+                ax: last.lon - dLon, ay: last.lat - dLat,
                 xref: 'x', yref: 'y', axref: 'x', ayref: 'y',
                 showarrow: true,
                 arrowhead: 3,
@@ -329,7 +329,7 @@
             if (mode === "3d") {
                 return [
                     {
-                        x: mLat, y: mLon, z: mAlt,
+                        x: mLon, y: mLat, z: mAlt,
                         mode: 'markers+text',
                         type: 'scatter3d',
                         name: 'Dataset',
@@ -340,7 +340,7 @@
                         marker: { color: 'blue', size: 4 }
                     },
                     {
-                        x: sLat, y: sLon, z: sAlt,
+                        x: sLon, y: sLat, z: sAlt,
                         mode: 'lines',
                         type: 'scatter3d',
                         name: 'Dataset shapes',
@@ -352,7 +352,7 @@
 
             return [
                 {
-                    x: mLat, y: mLon,
+                    x: mLon, y: mLat,
                     mode: 'markers+text',
                     type: 'scatter',
                     name: 'Dataset',
@@ -363,7 +363,7 @@
                     marker: { color: 'blue', size: 7 }
                 },
                 {
-                    x: sLat, y: sLon,
+                    x: sLon, y: sLat,
                     mode: 'lines',
                     type: 'scatter',
                     name: 'Dataset shapes',
@@ -392,21 +392,23 @@
             if (mode === "3d") {
                 layout = Object.assign({}, baseLayout, {
                     scene: {
-                        xaxis: { title: 'Lat', gridcolor: '#000000', color: '#000000', zerolinecolor: '#000000' },
-                        yaxis: { title: 'Lon', gridcolor: '#000000', color: '#000000', zerolinecolor: '#000000' },
+                        xaxis: { title: 'Lon', gridcolor: '#000000', color: '#000000', zerolinecolor: '#000000' },
+                        yaxis: { title: 'Lat', gridcolor: '#000000', color: '#000000', zerolinecolor: '#000000' },
                         zaxis: { title: 'Alt', gridcolor: '#000000', color: '#000000', zerolinecolor: '#000000' },
                         bgcolor: '#ffffff'
                     }
                 });
             } else {
-                const annotations = [
+                // Only show the heading (yaw) arrow when "Current location only"
+                // (dot) mode is selected, to avoid cluttering the full track view.
+                const annotations = trackMode === "dot" ? [
                     makeHeadingAnnotation(snapshot.master_points, 'green'),
                     makeHeadingAnnotation(snapshot.slave_points, 'red'),
-                ].filter(a => a !== null);
+                ].filter(a => a !== null) : [];
 
                 layout = Object.assign({}, baseLayout, {
-                    xaxis: { title: 'Lat', gridcolor: '#000000', zerolinecolor: '#000000', color: '#000000' },
-                    yaxis: { title: 'Lon', gridcolor: '#000000', zerolinecolor: '#000000', color: '#000000' },
+                    xaxis: { title: 'Lon', gridcolor: '#000000', zerolinecolor: '#000000', color: '#000000' },
+                    yaxis: { title: 'Lat', gridcolor: '#000000', zerolinecolor: '#000000', color: '#000000' },
                     annotations: annotations,
                 });
             }
@@ -489,6 +491,9 @@
                 fillHistoryTable('user-command-table-body', snapshot.user_command_history);
                 fillHistoryTable('text-to-user-table-body', snapshot.text_to_user_history);
                 fillDistanceTable(snapshot.master_points, snapshot.slave_points);
+                if (snapshot.monitor_version) {
+                    document.getElementById('monitor-version').textContent = snapshot.monitor_version;
+                }
             } catch (e) {
                 console.error('poll failed', e);
             } finally {

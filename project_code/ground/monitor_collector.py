@@ -26,8 +26,16 @@ class MonitorCollector:
 
         databaseManager = DatabaseManager()
         df              = databaseManager.get_db()
+        # pandas' own JSON encoder turns NaN/Inf into null, unlike df.to_dict()
+        # which keeps them as real float('nan')/float('inf') objects. The
+        # `requests` library serializes `json=...` with allow_nan=False, so
+        # passing df.to_dict() directly raises:
+        #   "Out of range float values are not JSON compliant"
+        # whenever a column (e.g. 'yaw') contains NaN. Round-trip through
+        # df.to_json() to sanitize it first.
+        safe_payload = json.loads(df.to_json())
         try:
-            response = requests.post(f"http://{get_running_ip()}:7031/get_dataset/", json=df.to_dict())
+            response = requests.post(f"http://{get_running_ip()}:7031/get_dataset/", json=safe_payload)
             if response.status_code != 200:
                 logging.error(f'Error while sending data to Monitor (get_dataset): {response.status_code}')
                 return False

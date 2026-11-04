@@ -219,7 +219,13 @@ class DroneState:
             self._mission_start_time = time.time()
             self.last_mission_waypoint = waypoints[-1] if waypoints else None
             self._mission_mode_until = time.time() + 3.0
-            logger.info(f"Mission started with {len(waypoints)} waypoints")
+
+            wp_lines = "\n".join(
+                f"  [{i}] lat={wp['lat']:.6f}, lon={wp['lon']:.6f}, alt={wp['alt']:.2f}, "
+                f"yaw={wp.get('yaw') if wp.get('yaw') is not None else 'auto'}"
+                for i, wp in enumerate(waypoints)
+            )
+            logger.info(f"Mission started with {len(waypoints)} waypoints:\n{wp_lines}")
 
     async def return_home(self):
         async with self._lock:

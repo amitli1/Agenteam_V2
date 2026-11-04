@@ -28,12 +28,42 @@ logger = logging.getLogger("monitor")
 
 app = Flask(__name__)
 
+_VERSION_FILE = os.path.join(os.path.dirname(__file__), "monitor_version.txt")
+
+
+def _read_version():
+    try:
+        with open(_VERSION_FILE, "r") as f:
+            return f.read().strip()
+    except OSError:
+        return "unknown"
+
+
+MONITOR_VERSION = _read_version()
+
 
 def _to_float(value):
     try:
-        return float(value)
+        f = float(value)
     except (TypeError, ValueError):
         return None
+    # Normalize NaN (and +/-inf, which are also invalid JSON) to None so the
+    # /data snapshot stays valid JSON and downstream consumers don't need to
+    # special-case NaN.
+    if f != f or f in (float("inf"), float("-inf")):
+        return None
+    return f
+
+
+def _extract_yaw(payload):
+    """
+    Yaw now arrives nested under body_orientation_deg (e.g. {"body_orientation_deg": {"yaw": 12.3, ...}}).
+    Fall back to a legacy top-level "yaw" key for backward compatibility.
+    """
+    body_orientation = payload.get("body_orientation_deg")
+    if isinstance(body_orientation, dict) and body_orientation.get("yaw") is not None:
+        return _to_float(body_orientation.get("yaw"))
+    return _to_float(payload.get("yaw"))
 
 
 def _records_from_payload(payload):
@@ -108,7 +138,7 @@ def get_master_status():
     lat = _to_float(payload.get("lat"))
     lon = _to_float(payload.get("lon"))
     alt = _to_float(payload.get("alt"))
-    yaw = _to_float(payload.get("yaw"))
+    yaw = _extract_yaw(payload)
 
     if lat is None or lon is None:
         return jsonify({"status": "error", "message": "lat/lon required"}), 400
@@ -125,7 +155,7 @@ def get_slave_status():
     lat = _to_float(payload.get("lat"))
     lon = _to_float(payload.get("lon"))
     alt = _to_float(payload.get("alt"))
-    yaw = _to_float(payload.get("yaw"))
+    yaw = _extract_yaw(payload)
 
     if lat is None or lon is None:
         return jsonify({"status": "error", "message": "lat/lon required"}), 400
@@ -165,7 +195,14 @@ def text_to_user():
 
 @app.route("/data", methods=["GET"])
 def data():
-    return jsonify(state.snapshot())
+    snapshot = state.snapshot()
+    snapshot["monitor_version"] = MONITOR_VERSION
+    return jsonify(snapshot)
+
+
+@app.route("/version", methods=["GET"])
+def version():
+    return jsonify({"version": MONITOR_VERSION})
 
 
 @app.route("/clear", methods=["POST"])

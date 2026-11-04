@@ -43,9 +43,9 @@ general:
   wait_for_first_air_message: false
 
 flightPath:
-  default_drone_altitude: 10.0
+  default_drone_altitude: 5.0
   spatial_distance: 5.0
-  slave_drone_altitude_offset: 10.0
+  slave_drone_altitude_offset: 5.0
 
 
 llm:
@@ -56,7 +56,7 @@ llm:
 vision:
   use_online: false
   summary_port: 8080
-  hold_port   : 6000
+  hold_port   : 5000
   point_port  : 8003
   pointing_settings_file: app_config/pointing_settings.json
 
@@ -64,7 +64,7 @@ logging_and_records:
   output_path: /mnt/nvme/outputs
 
 database:
-    db_path: app_config/airsim_poly_db.csv # airsim_poly_db, teradion_db
+    db_path: app_config/airsim_poly_db.csv # airsim_poly_db, teradion_db, l_flag_location
     max_area_in_meters: 2500
     audio_files: audio/audio_files/English
 
