@@ -22,3 +22,9 @@ Ubuntu 22.04 Jammy Jellfish
 Machine aarch64
 64 GB ram
 ```
+
+# Show disk space:
+```
+1. baobab
+2. qdirstat
+```
