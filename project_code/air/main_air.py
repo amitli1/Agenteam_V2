@@ -168,16 +168,22 @@ class MainAir:
             vision_cmd_action = data['vision_command']['vision_cmd_action']
             objects_to_focus  = data['vision_command']['objects_to_focus']
 
-            self.visionManager.handle_vision_command(vision_command, vision_cmd_action, objects_to_focus)
+            res = self.visionManager.handle_vision_command(vision_command, vision_cmd_action, objects_to_focus)
+            if res is False:
+                return jsonify({"error": "error while handling vision command"}), 400
 
         elif data['command'] == 'follow':
             start_follow = data['start_follow']
             if start_follow:
                 logging.info(f'Start following object')
-                self.start_tracking()
+                res = self.start_tracking()
+                if res is False:
+                    return jsonify({"error": "error while sending Start following message"}), 400
             else:
                 logging.info(f'Stop following object')
-                self.stop_tracking()
+                res = self.stop_tracking()
+                if res is False:
+                    return jsonify({"error": "error while sending Stop following message"}), 400
 
         end_time = time.time()
         logging.info(f'Process on_ground_command (successfully) took : {(end_time - start_time):.2f} seconds')

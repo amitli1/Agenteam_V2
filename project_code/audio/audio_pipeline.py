@@ -214,9 +214,16 @@ class AudioPipeline:
                 logging.info(f'Fix whisper transcription: {text}')
 
                 # --- added: ensure wakeword is present in the text ---
-                if winner_wakeword and winner_wakeword.lower() not in text.lower():
-                    text = f"{winner_wakeword} {text}"
-                    logging.info(f'Wakeword missing from transcription, prepended: {text}')
+                # if winner_wakeword and winner_wakeword.lower() not in text.lower():
+                #     text = f"{winner_wakeword} {text}"
+                #     logging.info(f'Wakeword missing from transcription, prepended: {text}')
+                if winner_wakeword:
+                    # Convert CamelCase label to spoken form, e.g. "HeyJarvis" -> "Hey Jarvis"
+                    spoken_wakeword = re.sub(r'(?<!^)(?=[A-Z])', ' ', winner_wakeword)
+
+                    if spoken_wakeword.lower() not in text.lower():
+                        text = f"{spoken_wakeword} {text}"
+                        logging.info(f'Wakeword missing from transcription, prepended: {text}')
 
                 start_handle_time = time.time()
                 self.func_handle_user_text(text)

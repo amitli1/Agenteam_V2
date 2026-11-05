@@ -74,6 +74,7 @@ class FLightPath(BaseModel):
   default_drone_altitude: float
   spatial_distance: float
   slave_drone_altitude_offset: float
+  point_toward_structure_center: bool
 
 class Speakers(BaseModel):
     card: int

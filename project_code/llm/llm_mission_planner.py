@@ -40,7 +40,7 @@ from typing import Optional, List, Dict, Any, Tuple
 import time
 from openai import OpenAI
 from project_code.app_config.settings import app_settings
-from project_code.utils.utils import is_intel, log_boxed
+from project_code.utils.utils import is_intel
 import re
 
 # ---------------------------------------------------------------------------
@@ -372,20 +372,30 @@ class MissionPlannerAgent:
     # ------------------------------------------------------------------ #
     # Core way-point computation for a single logical target
     # ------------------------------------------------------------------ #
-    def _base_waypoints_for_action(self, action, row, alt, start_latlon):
+    def _base_waypoints_for_action(self, action, row, alt, start_latlon, point_toward_structure_center):
         coords = self._parse_geometry_string(row.get("geometry", ""))
         if not coords:
             return []
 
         if action == "surround":
-            # Yaw from the dataset is ignored for surround; bearings are computed.
             if len(coords) > 1:
                 centroid_lat = sum(lat for lat, _ in coords) / len(coords)
                 centroid_lon = sum(lon for _, lon in coords) / len(coords)
-                waypoints = [
-                    (lat, lon, alt, self._bearing_deg(lat, lon, centroid_lat, centroid_lon))
-                    for lat, lon in coords
-                ]
+                n = len(coords)
+
+                if point_toward_structure_center:
+                    waypoints = [
+                        (lat, lon, alt, self._bearing_deg(lat, lon, centroid_lat, centroid_lon))
+                        for lat, lon in coords
+                    ]
+                else:
+                    waypoints = []
+                    for i in range(n):
+                        lat, lon = coords[i]
+                        lat2, lon2 = coords[(i + 1) % n]
+                        yaw = self._perpendicular_edge_yaw(lat, lon, lat2, lon2, centroid_lat, centroid_lon)
+                        waypoints.append((lat, lon, alt, yaw))
+
                 waypoints.append(waypoints[0])
                 return waypoints
             lat, lon = coords[0]
@@ -418,6 +428,28 @@ class MissionPlannerAgent:
 
         return waypoints
 
+    @staticmethod
+    def _perpendicular_edge_yaw(
+            lat1: float, lon1: float, lat2: float, lon2: float,
+            centroid_lat: float, centroid_lon: float
+    ) -> float:
+        """Yaw perpendicular to the edge (lat1,lon1)->(lat2,lon2), facing inward
+        (towards the polygon centroid)."""
+        edge_bearing = MissionPlannerAgent._bearing_deg(lat1, lon1, lat2, lon2)
+        mid_lat = (lat1 + lat2) / 2.0
+        mid_lon = (lon1 + lon2) / 2.0
+        to_centroid_bearing = MissionPlannerAgent._bearing_deg(mid_lat, mid_lon, centroid_lat, centroid_lon)
+
+        candidate1 = (edge_bearing + 90.0) % 360.0
+        candidate2 = (edge_bearing - 90.0) % 360.0
+
+        def ang_diff(a, b):
+            d = abs(a - b) % 360.0
+            return min(d, 360.0 - d)
+
+        return candidate1 if ang_diff(candidate1, to_centroid_bearing) <= ang_diff(candidate2,
+                                                                                   to_centroid_bearing) else candidate2
+
     # ------------------------------------------------------------------ #
     # Public API
     # ------------------------------------------------------------------ #
@@ -449,6 +481,8 @@ class MissionPlannerAgent:
                 },
             }
         """
+
+        point_toward_structure_center = app_settings.flightPath.point_toward_structure_center
         team_member = (team_member or "").strip().lower()
         if team_member not in (TEAM_MEMBER_MASTER, TEAM_MEMBER_SLAVE, TEAM_MEMBER_TEAM):
             return self._error(f"INVALID_TEAM_MEMBER: '{team_member}'.")
@@ -492,7 +526,7 @@ class MissionPlannerAgent:
         master_alt = float(ALT_DEFAULT)
         slave_alt = float(ALT_DEFAULT) + float(DELTA_ALT_SLAVE_DRONE)
 
-        plan: Dict[str, Optional[List[Tuple[float, float, float]]]] = {
+        plan: Dict[str, Optional[List[Tuple[float, float, float, Any]]]] = {
             TEAM_MEMBER_MASTER: None,
             TEAM_MEMBER_SLAVE: None,
         }
@@ -504,6 +538,7 @@ class MissionPlannerAgent:
             wps = self._base_waypoints_for_action(
                 action, row, master_alt,
                 start_latlon=(float(master_drone_location["lat"]), float(master_drone_location["lon"])),
+                point_toward_structure_center=point_toward_structure_center
             )
             if not wps:
                 return self._error("INVALID_GEOMETRY: could not parse coordinates.")
@@ -518,6 +553,7 @@ class MissionPlannerAgent:
             wps = self._base_waypoints_for_action(
                 action, row, slave_alt,
                 start_latlon=(float(slave_drone_location["lat"]), float(slave_drone_location["lon"])),
+                point_toward_structure_center=point_toward_structure_center
             )
             if not wps:
                 return self._error("INVALID_GEOMETRY: could not parse coordinates.")
@@ -535,6 +571,7 @@ class MissionPlannerAgent:
             master_wps = self._base_waypoints_for_action(
                 action, row, master_alt,
                 start_latlon=(float(master_drone_location["lat"]), float(master_drone_location["lon"])),
+                point_toward_structure_center=point_toward_structure_center
             )
             if not master_wps:
                 return self._error("INVALID_GEOMETRY: could not parse coordinates.")
@@ -595,11 +632,11 @@ class MissionPlannerAgent:
     #     return slave_wps
     def _apply_spatial_offset(
             self,
-            master_wps: List[Tuple[float, float, float]],
+            master_wps: List[Tuple[float, float, float, Any]],
             slave_alt: float,
             spatial_distance: float,
             delta_alt: float,
-    ) -> List[Tuple[float, float, float]]:
+    ) -> List[Tuple[float, float, float, Any]]:
         """Shift the master path to obtain the slave path.
 
         The horizontal separation is chosen so that the 3D (spatial) distance

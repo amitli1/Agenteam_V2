@@ -38,9 +38,10 @@ class VisionManager(object):
 
         if app_settings.vision.use_online is False:
             logging.info(f'use_online is False, Vision command: {vision_command} - Handled')
-            return
+            return True
 
         start_time = time.time()
+        result     = True
         if vision_command == "point":
             if vision_cmd_action == "start":
                 self.start_point(text=f"focus on {objects_to_focus}")
@@ -61,6 +62,7 @@ class VisionManager(object):
             logging.error(f"Unknown vision command: {vision_command}")
         end_time = time.time()
         logging.info(f'Handling vision command: {vision_command} took: {(end_time - start_time):.2f} seconds')
+        return result
 
 
 
