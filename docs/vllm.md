@@ -100,4 +100,51 @@ llm_model: Qwen/Qwen3-4B-AWQ
 
 ## Phi-3-mini-4k-instruct
  ```
+ sudo docker run --rm \
+    --runtime=nvidia \
+    -e NVIDIA_VISIBLE_DEVICES=all \
+    -e VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS=0 \
+    -v ~/.cache/huggingface:/root/.cache/huggingface \
+    -p 8090:8000 \
+    --ipc=host \
+    vllm/vllm-openai:latest \
+    --model microsoft/Phi-3-mini-4k-instruct \
+    --served-model-name microsoft/Phi-3-mini-4k-instruct \
+    --host 0.0.0.0 \
+    --port 8000 \
+    --gpu-memory-utilization 0.98 \
+    --max-model-len 4096 \
+    --max-num-seqs 1 \
+    --max-num-batched-tokens 1024
+ ```
+ ```
+llm_model:  microsoft/Phi-3-mini-4k-instruct
+ ```
+
+ ```
+ [PASS] [1.9 sec] hey buddy fly to building number two
+[PASS] [1.6 sec] hey team fly home
+[FAIL] [1.8 sec] hey jarvis surround the junction
+    expected: {'fly_command': {'fly_cmd_type': 'surround', 'location': 'junction'}, 'vision_command': {'vision_cmd_type': '', 'vision_cmd_action': 'start', 'objects': ''}, 'team_member': 'jarvis', 'need_more_data': False}
+    actual  : {'fly_command': {'fly_cmd_type': 'surround', 'location': 'junction'}, 'vision_command': {'vision_cmd_type': 'summary', 'vision_cmd_action': 'start', 'objects': ''}, 'team_member': 'jarvis', 'need_more_data': True}
+[PASS] [1.9 sec] hey jarvis surround the building and look for people and vehicles
+[FAIL] [1.7 sec] hey jarvis hold the junction
+    expected: {'fly_command': {'fly_cmd_type': '', 'location': ''}, 'vision_command': {'vision_cmd_type': 'hold', 'vision_cmd_action': 'start', 'objects': ''}, 'team_member': 'jarvis', 'need_more_data': False}
+    actual  : {'fly_command': {'fly_cmd_type': '', 'location': ''}, 'vision_command': {'vision_cmd_type': 'hold', 'vision_cmd_action': 'start', 'objects': 'junction'}, 'team_member': 'jarvis', 'need_more_data': False}
+[PASS] [1.8 sec] buddy hold the junction and tell me if you see red car or blue truck
+[PASS] [1.8 sec] buddy follow the yellow car
+[PASS] [1.7 sec] hey team follow
+[PASS] [1.7 sec] buddy describe
+[PASS] [1.8 sec] buddy describe the person in the car
+[PASS] [1.7 sec] hey jarvis point at the yellow car
+[FAIL] [1.8 sec] hey jarvis surround the building and tell me what you see hey jarvis look for birds
+    expected: {'fly_command': {'fly_cmd_type': 'surround', 'location': 'building'}, 'vision_command': {'vision_cmd_type': 'summary', 'vision_cmd_action': 'start', 'objects': 'birds'}, 'team_member': 'jarvis', 'need_more_data': False}
+    actual  : {'fly_command': {'fly_cmd_type': 'surround', 'location': 'building'}, 'vision_command': {'vision_cmd_type': 'summary', 'vision_cmd_action': 'start', 'objects': ''}, 'team_member': 'jarvis', 'need_more_data': True}
+[PASS] [1.7 sec] Hey team, walk around the building and describe to me what you see
+[PASS] [1.7 sec] Hey jarvis stop pointing
+[FAIL] [1.7 sec] Hey team, hold the junction, if you see any vehicle follow it
+    expected: {'fly_command': {'fly_cmd_type': 'follow', 'location': 'vehicle'}, 'vision_command': {'vision_cmd_type': 'hold', 'vision_cmd_action': 'start', 'objects': 'vehicle'}, 'team_member': 'team', 'need_more_data': False}
+    actual  : {'fly_command': {'fly_cmd_type': '', 'location': ''}, 'vision_command': {'vision_cmd_type': 'hold', 'vision_cmd_action': 'start', 'objects': 'vehicle'}, 'team_member': 'team', 'need_more_data': True}
+[PASS] [1.7 sec] Hey buddy stop following
+[PASS] [1.6 sec] Hey buddy hold
  ```
