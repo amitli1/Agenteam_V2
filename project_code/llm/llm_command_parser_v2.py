@@ -131,7 +131,7 @@ class LlmCommandParser_V2:
                     },
                 },
                 temperature=0.0,
-                max_tokens=500,
+                max_tokens=128,
             )
         else:
             logging.error(f"Unkown LLM: {app_settings.llm.llm_model}")
