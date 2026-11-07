@@ -149,3 +149,25 @@ llm_model:  microsoft/Phi-3-mini-4k-instruct
 [PASS] [1.7 sec] Hey buddy stop following
 [PASS] [1.6 sec] Hey buddy hold
  ```
+
+ ```
+ awq version
+ 
+ 
+  sudo docker run --rm \
+    --runtime=nvidia \
+    -e NVIDIA_VISIBLE_DEVICES=all \
+    -e VLLM_MEMORY_PROFILER_ESTIMATE_CUDAGRAPHS=0 \
+    -v ~/.cache/huggingface:/root/.cache/huggingface \
+    -p 8090:8000 \
+    --ipc=host \
+    vllm/vllm-openai:latest \
+    --model Sreenington/Phi-3-mini-4k-instruct-AWQ \
+    --served-model-name Sreenington/Phi-3-mini-4k-instruct-AWQ \
+    --host 0.0.0.0 \
+    --port 8000 \
+    --gpu-memory-utilization 0.95 \
+    --max-model-len 3500 \
+    --max-num-seqs 1 \
+    --max-num-batched-tokens 1024
+ ```

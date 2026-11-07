@@ -20,8 +20,15 @@ class LlmCommandParser_V2:
             api_key=app_settings.llm.api_key,
             base_url=base_url
         )
-        with open("llm/mission_command_parser_v2.txt", "r", encoding="utf-8") as f:
-        #with open("llm/mission_command_parser_phi.txt", "r", encoding="utf-8") as f:
+
+        if "Phi-3" in app_settings.llm.llm_model:
+            prompt_file = "llm/mission_command_parser_phi.txt"
+        else:
+            prompt_file = "llm/mission_command_parser_v2.txt"
+
+        logging.info(f'Loading prompt file: {prompt_file}')
+        #print(prompt_file)
+        with open(prompt_file, "r", encoding="utf-8") as f:
             self.split_user_command_prompt = f.read()
 
         self.split_command_schema = {
