@@ -1,6 +1,8 @@
 # Notes:
 1. run twice (for warmup) to get more accurate timing
-2. on my laptop qwen is faster ~40% from gpt-oss-20b
+2. on my laptop qwen is faster ~40% than gpt-oss-20b
+3. on my laptop phi3 is faster ~25% than gpt-oss-20b
+4. on my laptop qwen3 is faster ~20% than phi3
 
 # Intel (VLLM) (GPT-OSS-20B) on NVIDIA RTX 5000 ADA:
         ```
@@ -170,4 +172,24 @@ llm_model:  microsoft/Phi-3-mini-4k-instruct
     --max-model-len 3500 \
     --max-num-seqs 1 \
     --max-num-batched-tokens 1024
+    
+    
+    
+[PASS] [0.9 sec] hey buddy fly to building number two
+[PASS] [0.7 sec] hey team fly home
+[PASS] [0.7 sec] hey jarvis surround the junction
+[PASS] [0.7 sec] hey jarvis surround the building and look for people and vehicles
+[PASS] [0.6 sec] hey jarvis hold the junction
+[PASS] [0.8 sec] buddy hold the junction and tell me if you see red car or blue truck
+[PASS] [0.8 sec] buddy follow the yellow car
+[PASS] [0.6 sec] hey team follow
+[PASS] [0.6 sec] buddy describe
+[PASS] [0.7 sec] buddy describe the person in the car
+[PASS] [0.6 sec] hey jarvis point at the yellow car
+[PASS] [0.7 sec] hey jarvis surround the building and tell me what you see hey jarvis look for birds
+[PASS] [0.7 sec] Hey team, walk around the building and describe to me what you see
+[PASS] [0.6 sec] Hey jarvis stop pointing
+[PASS] [0.8 sec] Hey team, hold the junction, if you see any vehicle follow it
+[PASS] [0.6 sec] Hey buddy stop following
+[PASS] [0.6 sec] Hey buddy hold
  ```
