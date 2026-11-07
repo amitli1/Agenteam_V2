@@ -27,7 +27,7 @@ class LlmCommandParser_V2:
             prompt_file = "llm/mission_command_parser_v2.txt"
 
         logging.info(f'Loading prompt file: {prompt_file}')
-        #print(prompt_file)
+
         with open(prompt_file, "r", encoding="utf-8") as f:
             self.split_user_command_prompt = f.read()
 
@@ -138,7 +138,7 @@ class LlmCommandParser_V2:
                     },
                 },
                 temperature=0.0,
-                max_tokens=128,
+                max_tokens=256,
             )
         else:
             logging.error(f"Unkown LLM: {app_settings.llm.llm_model}")
