@@ -22,6 +22,6 @@ sudo docker run --rm \
     --gpu-memory-utilization 0.50 \
     --max-model-len 4096 \
     --max-num-seqs 1 \
-    --max-num-batched-tokens 1024
+    --max-num-batched-tokens 4096
 
 ```
