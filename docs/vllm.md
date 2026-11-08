@@ -117,7 +117,7 @@ llm_model: Qwen/Qwen3-4B-AWQ
     --host 0.0.0.0 \
     --port 8000 \
     --gpu-memory-utilization 0.95 \
-    --max-model-len 3500 \
+    --max-model-len 4096 \
     --max-num-seqs 1 \
     --max-num-batched-tokens 1024
     
