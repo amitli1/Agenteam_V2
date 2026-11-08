@@ -1,3 +1,6 @@
+# General:
+1. on Jetson (without clock) - qwen is faser than gpt-oss-20b => ~42%
+
 # GPT-OSS-20B (no clock):
 ```
 Attaching to llm-tester
