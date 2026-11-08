@@ -21,6 +21,8 @@ RUN pip install --no-cache-dir sounddevice --index-url https://pypi.org/simple
 RUN pip install --no-cache-dir silero_vad --index-url https://pypi.org/simple
 RUN pip install --no-cache-dir openwakeword --index-url https://pypi.org/simple
 RUN pip install --no-cache-dir websockets --index-url https://pypi.org/simple
+RUN pip install --no-cache-dir pydub --index-url https://pypi.org/simple
+
 
 # Ground: \
 RUN pip install --no-cache-dir google-genai --index-url https://pypi.org/simple
