@@ -1,6 +1,10 @@
 # Download (openai/gpt-oss-20b):
 ```
 
+sudo docker update --restart=no vllm_gpt_oss
+sudo docker stop vllm_gpt_oss
+sudo docker start vllm_gpt_oss
+
 pip install -U "huggingface_hub[cli]"
 pip install vllm
 hf auth login
@@ -21,52 +25,24 @@ got:
 
 # Create a copy/symlink named with the exact SHA-256 hash tiktoken expects
 cp o200k_base.tiktoken b426e515a3b19d6c297921820689e47228a2a09559c6086f685352c842790e78
-
-docker run --rm -it \
-  --network host \
-  --ipc=host \
-  --shm-size=16g \
-  --ulimit memlock=-1 \
-  --ulimit stack=67108864 \
+    
+    
+    docker run -d \
+  --name vllm_gpt_oss \
   --runtime=nvidia \
-  --name=vllm-orin \
+  --ipc=host \
+  -p 8090:8000 \
+  -v /mnt/nvme/models/gpt-oss-20b-local:/models:ro \
+  -v /mnt/nvme/models/tiktoken_encodings:/root/.cache/tiktoken_encodings:ro \
   -e HF_HUB_OFFLINE=1 \
   -e TRANSFORMERS_OFFLINE=1 \
-  -e PYTORCH_NVML_BASED_CUDA_CHECK=0 \
-  -e VLLM_WORKER_MULTIPROC_METHOD=spawn \
-  -e VLLM_USE_V1=0 \
-  -v /mnt/nvme/repo/Agenteam_V2/dockers/llm/openai-gpt-oss-20b:/model \
-  -v $HOME/data/vllm_cache:/root/.cache/vllm \
+  -e TIKTOKEN_ENCODINGS_BASE=/root/.cache/tiktoken_encodings \
   ghcr.io/nvidia-ai-iot/vllm:latest-jetson-orin \
-  vllm serve /model \
+  vllm serve /models \
     --host 0.0.0.0 \
-    --port 8090 \
-    --gpu-memory-utilization 0.20 \
-    --max-model-len 2048 \
-    --enforce-eager
-    
-    
-    
-docker run --rm -it \
-  --network host \
-  --ipc=host \
-  --shm-size=16g \
-  --ulimit memlock=-1 \
-  --ulimit stack=67108864 \
-  --runtime=nvidia \
-  --name=vllm-orin \    
-  -e PYTORCH_NVML_BASED_CUDA_CHECK=0 \
-  -e VLLM_WORKER_MULTIPROC_METHOD=spawn \
-  -e VLLM_USE_V1=0 \
-  -v /mnt/nvme/repo/Agenteam_V2/dockers/llm/openai-gpt-oss-20b:/model \
-  -v $HOME/data/vllm_cache:/root/.cache/vllm \
-  ghcr.io/nvidia-ai-iot/vllm:latest-jetson-orin \
-  vllm serve /model \
-    --host 0.0.0.0 \
-    --port 8090 \
-    --gpu-memory-utilization 0.20 \
-    --max-model-len 2048 \
-    --enforce-eager    
+    --port 8000 \
+    --gpu-memory-utilization 0.5
+
 
 ```
 
