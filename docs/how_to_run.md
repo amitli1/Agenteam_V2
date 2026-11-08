@@ -1,11 +1,8 @@
 # Airsim:
 ```
-cd /home/amitli/repo/Airsim/LinuxNoEditor/LinuxNoEditor/
-./Blocks.sh -windowed -ResX=640 -ResY=480 -scalability=1 -t.MaxFPS=30
-
 Steps:
 1. [Airsim]   cd /home/amitli/Agent_Team_Prj/Q_Ground/LinuxNoEditor
-2. [Airsim]   ./Block.sh ./runh -windowed -ResX=640 -ResY=480 -scalability=1 -t.MaxFPS=20
+2. [Airsim]   ./Blocks.sh ./runh -windowed -ResX=640 -ResY=480 -scalability=1 -t.MaxFPS=20
 3. [QuadAPI]  ~/repo/QUAD_2_DRONES/QuadAPI_airsim_dual/QuadAPI_airsim$ sudo ./run_all.sh 
 4. [Q Ground] Run Q_Ground (remote controller) 
 
