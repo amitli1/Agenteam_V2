@@ -123,9 +123,9 @@ class LlmCommandParser_V2:
                 temperature=0.0,
                 max_tokens=500,
             )
-        elif "Phi-3" in app_settings.llm.llm_model:
+        elif "Phi-3" in app_settings.llm.llm_model or "phi" in app_settings.llm.llm_model.lower():
             response = self.client.chat.completions.create(
-                model=self.model,
+                model='/models/Phi-3-mini-4k-instruct-AWQ',
                 messages=[
                     {"role": "system", "content": self.split_user_command_prompt},
                     {"role": "user", "content": f"USER COMMAND: {user_command}"}

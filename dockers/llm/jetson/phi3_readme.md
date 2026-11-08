@@ -21,13 +21,14 @@ sudo docker run --rm \
     --ipc=host \
     ghcr.io/nvidia-ai-iot/vllm:r36.4.tegra-aarch64-cu126-22.04 \
     vllm serve /models/Phi-3-mini-4k-instruct-AWQ \
-    --served-model-name Phi-3-mini-4k-instruct-AWQ \
     --host 0.0.0.0 \
     --port 8000 \
     --gpu-memory-utilization 0.50 \
     --max-model-len 4096 \
     --max-num-seqs 1 \
     --max-num-batched-tokens 1024
+
+
 
 
  ```
@@ -39,3 +40,16 @@ sudo docker run --rm \
  ```
  curl http://localhost:8090/v1/models
  ```
+
+```
+curl http://localhost:8090/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "/models/Phi-3-mini-4k-instruct-AWQ",
+    "messages": [
+      {"role": "user", "content": "Hello"}
+    ],
+    "max_tokens": 50
+  }'
+
+```
