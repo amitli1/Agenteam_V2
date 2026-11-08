@@ -1,4 +1,4 @@
-from datetime import time
+from time import time
 import numpy             as np
 import sounddevice       as sd
 import soundfile         as sf
@@ -355,18 +355,18 @@ def check_performance():
 
 
 def change_to_acceleration_mode():
-    check_performance()
+    #check_performance()
 
     log_boxed("ENABLING MAXIMUM PERFORMANCE", [
         "sudo nvpmodel -m 0",
         "sudo jetson_clocks",
         "sudo jetson_clocks --fan",
     ])
-    run_command("sudo nvpmodel -m 0")
-    run_command("sudo jetson_clocks")
-    run_command("sudo jetson_clocks --fan")
+    run_command("nvpmodel -m 0")
+    run_command("jetson_clocks")
+    run_command("jetson_clocks --fan")
 
     time.sleep(1)
 
-    log_boxed("AFTER OPTIMIZATION", ["Re-checking performance..."])
-    check_performance()
+    #log_boxed("AFTER OPTIMIZATION", ["Re-checking performance..."])
+    #check_performance()

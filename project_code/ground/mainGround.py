@@ -466,7 +466,9 @@ def run_ground():
     create_output_folder()
 
     if is_intel() is False:
-        change_to_acceleration_mode()
+        # Do it from script (scripts/jetson_max_performance.sh)
+        #change_to_acceleration_mode()
+        None
 
     if check_models() is False:
         if is_intel() is False:
