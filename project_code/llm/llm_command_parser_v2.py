@@ -108,6 +108,10 @@ class LlmCommandParser_V2:
                 temperature=0.0,
                 max_tokens=500,
             )
+            if response.choices[0].finish_reason != "stop":
+                logging.error(f'LLM response finish reason: {response.choices[0].finish_reason}')
+
+
         elif "qwen" in app_settings.llm.llm_model.lower():
             response = self.client.chat.completions.create(
                 model="/models/Qwen3-4B-AWQ",
@@ -160,7 +164,7 @@ class LlmCommandParser_V2:
                     },
                 },
                 temperature=0.0,
-                max_tokens=256,
+                max_tokens=128,
             )
             if response.choices[0].finish_reason != "stop":
                 logging.error(f'LLM response finish reason: {response.choices[0].finish_reason}')

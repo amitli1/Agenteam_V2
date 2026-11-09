@@ -26,9 +26,11 @@ Output keys description:
     2.4 'hold' - Does not have to contain objects, if not - need_more_data = False
     2.5 'describe' - Does not have to contain objects, if not - need_more_data = False
     2.6 FOLLOW mapping rule (replaces old vision 'follow' type):
-        - Whenever the user asks to follow an object/entity (e.g. "follow the car"),
-          set fly_command.fly_cmd_type = "follow" and fly_command.location = the followed
-          object/entity (same value as vision_command.objects).
+        - Whenever the user asks to follow an object/entity (e.g. "follow the car"), including via a
+          pronoun that refers back to an object just named (e.g. "if you see a vehicle follow it"),
+          set fly_command.fly_cmd_type = "follow" and fly_command.location = the followed/resolved
+          object/entity (same value as vision_command.objects). Never leave location empty when an
+          object to follow (direct or pronoun-resolved) is present.
         - If the user asks to stop following (e.g. "stop following"), set
           fly_command.fly_cmd_type = "follow" and fly_command.location = "" (since no new
           target is being specified), and vision_command.vision_cmd_action = "stop".
@@ -70,10 +72,20 @@ Output keys description:
     4.1 True/False
     4.2 need_more_data is True whenever a required field described above is missing, including:
         - fly_cmd_type is fly/surround/follow but no destination entity was given (rule 1.3)
-        - vision_cmd_type is 'summary' (surround) and the user asked to look for objects without saying which objects (e.g. "surround and tell me what you see")
+        - vision_cmd_type is 'summary' (surround) and the FINAL vision_command.objects value (after
+          combining every clause, see rule 5) is still empty — the user never named any objects anywhere
+          in the sentence (e.g. "surround and tell me what you see")
         - vision_cmd_type is 'point' with no objects specified (rule 2.3)
-    4.3 need_more_data is False whenever all required fields for the detected command types are present, or when the missing field is one that is optional (e.g. objects for 'hold' or 'describe').
-
+    4.3 need_more_data is False whenever all required fields for the detected command types are present,
+        or when the missing field is one that is optional (e.g. objects for 'hold' or 'describe').
+        IMPORTANT: if vision_cmd_type is 'summary' and vision_command.objects is NOT empty, need_more_data
+        MUST be false — never set it true just because objects were named later in the sentence.
+5. Compound / multi-clause commands:
+    5.1 A USER_TEXT may contain more than one clause for the same team member, sometimes repeating the
+        wake word (e.g. "hey jarvis surround the building and tell me what you see hey jarvis look for
+        birds"). Combine ALL such clauses into ONE output JSON — never use only the first clause.
+    5.2 A later clause's details (e.g. named objects) fill in/refine fields left incomplete by an earlier
+        clause (e.g. objects for a summary request). Do not leave a field empty if any clause supplied it.
 
 examples:
 examples:
@@ -98,6 +110,12 @@ Output: {"fly_command": {"fly_cmd_type": "surround", "location": "building"},
 Input: "hey jarvis surround the building and look for people and vehicles"
 Output: {"fly_command": {"fly_cmd_type": "surround", "location": "building"},
          "vision_command":  {"vision_cmd_type": "summary", "vision_cmd_action": "start", "objects": "people and vehicles"},
+         "team_member": "jarvis",
+         "need_more_data": false}
+
+Input: "hey jarvis surround the building and tell me what you see hey jarvis look for birds"
+Output: {"fly_command": {"fly_cmd_type": "surround", "location": "building"},
+         "vision_command":  {"vision_cmd_type": "summary", "vision_cmd_action": "start", "objects": "birds"},
          "team_member": "jarvis",
          "need_more_data": false}
 
@@ -181,3 +199,16 @@ Output: {"fly_command": {"fly_cmd_type": "follow", "location": "person"},
          "vision_command": {"vision_cmd_type": "hold", "vision_cmd_action": "start", "objects": "person"},
          "team_member": "team",
          "need_more_data": false}
+
+Input: "hey jarvis, hold the gate, if you see a dog follow it"
+Output: {"fly_command": {"fly_cmd_type": "follow", "location": "dog"},
+         "vision_command": {"vision_cmd_type": "hold", "vision_cmd_action": "start", "objects": "dog"},
+         "team_member": "jarvis",
+         "need_more_data": false}
+
+Input: "Hey team, hold the junction, if you see any vehicle follow it"
+Output: {"fly_command": {"fly_cmd_type": "follow", "location": "vehicle"},
+         "vision_command": {"vision_cmd_type": "hold", "vision_cmd_action": "start", "objects": "vehicle"},
+         "team_member": "team",
+         "need_more_data": false}
+
