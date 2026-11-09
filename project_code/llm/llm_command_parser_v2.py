@@ -25,6 +25,8 @@ class LlmCommandParser_V2:
             prompt_file = "llm/mission_command_parser_phi.txt"
         elif "gemma" in app_settings.llm.llm_model.lower():
             prompt_file = "llm/mission_command_parser_gemma3.txt"
+        elif "qwen" in app_settings.llm.llm_model.lower():
+            prompt_file = "llm/mission_command_parser_qwen.txt"
         else:
             prompt_file = "llm/mission_command_parser_v2.txt"
 
@@ -114,7 +116,7 @@ class LlmCommandParser_V2:
 
         elif "qwen" in app_settings.llm.llm_model.lower():
             response = self.client.chat.completions.create(
-                model="/models/Qwen3-4B-AWQ",
+                model="Qwen/Qwen3-4B-AWQ", #"/models/Qwen3-4B-AWQ",
                 messages=[
                     {"role": "system", "content": self.split_user_command_prompt},
                     {"role": "user", "content": f"USER COMMAND: {user_command}"}
@@ -129,6 +131,8 @@ class LlmCommandParser_V2:
                 temperature=0.0,
                 max_tokens=500,
             )
+            if response.choices[0].finish_reason != "stop":
+                logging.error(f'LLM response finish reason: {response.choices[0].finish_reason}')
         elif "Phi".lower() in app_settings.llm.llm_model.lower():
             response = self.client.chat.completions.create(
                 model='/models/Phi-3-mini-4k-instruct-AWQ',

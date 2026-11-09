@@ -11,6 +11,7 @@
 1. On RTX5000 (ADA) PHI         total time: 11.48 seconds
 2. On RTX5000 (ADA) GEMMA3      total time: 15.05 seconds
 3. On RTX5000 (ADA) GPT-OSS-20B total time: 19.81 seconds
+4. On RTX5000 (ADA) QWEN3       total time:  9.99 seconds
 
 # Intel (VLLM) (GPT-OSS-20B) on NVIDIA RTX 5000 ADA:
         ```
