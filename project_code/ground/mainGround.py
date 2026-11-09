@@ -284,14 +284,21 @@ class MainGround:
 
                 try:
                     if (result['team_member'] == "team") or (result['team_member'] == "buddy"):
-                        plan_list = result['plan']['buddy']
-                        self.log_plan_list("buddy", plan_list)
-                        r         = requests.post(self.master_drone_url, json={"command": "plan", "plan_list": plan_list})
-                        r.raise_for_status()
+                        try:
+                            plan_list = result['plan']['buddy']
+                            self.log_plan_list("buddy", plan_list)
+                            r         = requests.post(self.master_drone_url, json={"command": "plan", "plan_list": plan_list})
+                            r.raise_for_status()
+                        except Exception as e:
+                            logging.error(f"Error sending plan to master drone: {e}")
+
                     if (result['team_member'] == "team") or (result['team_member'] == "jarvis"):
-                        plan_list = result['plan']['jarvis']
-                        self.log_plan_list("jarvis", plan_list)
-                        r         = requests.post(self.slave_drone_url, json={"command": "plan", "plan_list": plan_list})
+                        try:
+                            plan_list = result['plan']['jarvis']
+                            self.log_plan_list("jarvis", plan_list)
+                            r         = requests.post(self.slave_drone_url, json={"command": "plan", "plan_list": plan_list})
+                        except Exception as e:
+                            logging.error(f"Error sending plan to slave drone: {e}")
                 except Exception as e:
                     logging.error(f"Error while sending plan to drone: {e}  (status_code = {r.status_code}) text = {r.text})")
 
