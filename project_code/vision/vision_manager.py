@@ -318,7 +318,7 @@ class VisionManager(object):
             r.raise_for_status()
             res = r.json()
         except Exception as e:
-            logging.info(f'Failed to send alert-start (start hold), error:\n{e}\n (status_code = {r.status_code}) text = {r.text})\n')
+            logging.info(f'Failed to send alert-start (start hold), error:\n{e}')
             res = None
 
         return res
@@ -335,7 +335,7 @@ class VisionManager(object):
             res = r.json()
 
         except Exception as e:
-            logging.error(f'Error while sending stop hold(alert-stop) message: {e}  (status_code = {r.status_code}) text = {r.text})')
+            logging.error(f'Error while sending stop hold(alert-stop) message: {e}')
             res = None
         return res
 
