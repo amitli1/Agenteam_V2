@@ -21,8 +21,10 @@ class LlmCommandParser_V2:
             base_url=base_url
         )
 
-        if "Phi-3" in app_settings.llm.llm_model:
+        if "phi" in app_settings.llm.llm_model.lower():
             prompt_file = "llm/mission_command_parser_phi.txt"
+        elif "gemma" in app_settings.llm.llm_model.lower():
+            prompt_file = "llm/mission_command_parser_gemma3.txt"
         else:
             prompt_file = "llm/mission_command_parser_v2.txt"
 
@@ -123,7 +125,7 @@ class LlmCommandParser_V2:
                 temperature=0.0,
                 max_tokens=500,
             )
-        elif "Phi-3" in app_settings.llm.llm_model or "phi" in app_settings.llm.llm_model.lower():
+        elif "Phi".lower() in app_settings.llm.llm_model.lower():
             response = self.client.chat.completions.create(
                 model='/models/Phi-3-mini-4k-instruct-AWQ',
                 messages=[
@@ -140,6 +142,30 @@ class LlmCommandParser_V2:
                 temperature=0.0,
                 max_tokens=256,
             )
+            if response.choices[0].finish_reason != "stop":
+                logging.error(f'LLM response finish reason: {response.choices[0].finish_reason}')
+
+        elif "gemma" in app_settings.llm.llm_model.lower():
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": self.split_user_command_prompt},
+                    {"role": "user", "content": f"USER COMMAND: {user_command}"}
+                ],
+                extra_body={
+                    "seed": 0,
+                    # "guided_json": self.split_command_schema,
+                    "structured_outputs": {
+                        "json": self.split_command_schema
+                    },
+                },
+                temperature=0.0,
+                max_tokens=256,
+            )
+            if response.choices[0].finish_reason != "stop":
+                logging.error(f'LLM response finish reason: {response.choices[0].finish_reason}')
+
+
         else:
             logging.error(f"Unkown LLM: {app_settings.llm.llm_model}")
             response = {}

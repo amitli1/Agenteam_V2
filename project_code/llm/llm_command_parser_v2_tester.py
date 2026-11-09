@@ -255,17 +255,19 @@ def run_all_tests():
         (test_17, "Hey buddy hold")
     ]
 
-    results = []
+    results    = []
+    start_time = time.time()
     for test, text in tests:
         try:
             results.append(test(parser, text))
         except Exception as e:
             print(f"[ERROR] {test.__name__} raised an exception: {e}")
             results.append(False)
+    end_time = time.time()
 
     passed = sum(results)
     total = len(results)
-    print(f"\n{passed}/{total} tests passed.")
+    print(f"\n{passed}/{total} tests passed. [Total time: {(end_time - start_time):.2f}s]")
 
 
 if __name__ == '__main__':
