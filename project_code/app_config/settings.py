@@ -75,6 +75,7 @@ class FLightPath(BaseModel):
   spatial_distance: float
   slave_drone_altitude_offset: float
   point_toward_structure_center: bool
+  sleep_time_between_team_members_sec: float
 
 class Speakers(BaseModel):
     card: int

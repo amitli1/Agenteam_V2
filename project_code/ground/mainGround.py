@@ -293,6 +293,12 @@ class MainGround:
                             logging.error(f"Error sending plan to master drone: {e}")
 
                     if (result['team_member'] == "team") or (result['team_member'] == "jarvis"):
+
+                        if result['team_member'] == "team":
+                            sleep_time = app_settings.flightPath.sleep_time_between_team_members_sec
+                            logging.info(f'Sleep for: {sleep_time} before sending team command to slave drone')
+                            time.sleep(sleep_time)
+
                         try:
                             plan_list = result['plan']['jarvis']
                             self.log_plan_list("jarvis", plan_list)

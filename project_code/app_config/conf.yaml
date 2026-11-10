@@ -47,12 +47,13 @@ flightPath:
   spatial_distance: 5.0
   slave_drone_altitude_offset: 5.0
   point_toward_structure_center: true
+  sleep_time_between_team_members_sec: 2
 
 
 llm:
   api_key: EMPTY
   base_url: http://localhost:8090/v1
-  llm_model: openai/gpt-oss-20b #openai/gpt-oss-20b, Phi-3-mini-4k-instruct, Qwen3-4B-AWQ
+  llm_model: Qwen/Qwen3-4B-AWQ #openai/gpt-oss-20b, Phi-3-mini-4k-instruct, Qwen3-4B-AWQ
 
 vision:
   use_online: false
