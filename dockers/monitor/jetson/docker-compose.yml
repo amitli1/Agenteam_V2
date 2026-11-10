@@ -10,5 +10,10 @@ services:
     environment:
       - PORT=7031
       - HOST=0.0.0.0
+      - PYTHONPATH=/app
+    volumes:
+      - /mnt/nvme/repo/Agenteam_V2:/app
+    working_dir: /app/project_code/monitor
+    command: python3 -m app.main
     restart: unless-stopped
 
