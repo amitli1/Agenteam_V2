@@ -5,7 +5,7 @@ RUN pip install --no-cache-dir --ignore-installed Flask==3.0.3 Werkzeug==3.0.3 \
     --index-url https://pypi.org/simple
 
 
-COPY project_code/monitor/app ./app
+#COPY project_code/monitor/app ./app
 
 EXPOSE 7031
 
