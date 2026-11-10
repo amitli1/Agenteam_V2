@@ -176,20 +176,41 @@ class MissionPlannerAgent:
             return None
         try:
             start_time = time.time()
-            response = self.client.chat.completions.create(
-                model=self.model_name,
-                messages=[
-                    {"role": "system", "content": self._intent_prompt},
-                    {"role": "user", "content": f"COMMAND: {text_command}"},
-                ],
-                extra_body={
-                    "reasoning_effort": "low",
-                    "seed": 0,
-                    "guided_json": self._intent_schema,
-                },
-                temperature=0.0,
-                max_tokens=500,
-            )
+            if "gpt-oss-20b" in app_settings.llm.llm_model:
+                response = self.client.chat.completions.create(
+                    model=self.model_name,
+                    messages=[
+                        {"role": "system", "content": self._intent_prompt},
+                        {"role": "user", "content": f"COMMAND: {text_command}"},
+                    ],
+                    extra_body={
+                        "reasoning_effort": "low",
+                        "seed": 0,
+                        "guided_json": self._intent_schema,
+                    },
+                    temperature=0.0,
+                    max_tokens=500,
+                )
+            elif "qwen" in app_settings.llm.llm_model.lower():
+                response = self.client.chat.completions.create(
+                    model="Qwen/Qwen3-4B-AWQ",
+                    messages=[
+                        {"role": "system", "content": self._intent_prompt},
+                        {"role": "user", "content": f"COMMAND: {text_command}"},
+                    ],
+                    extra_body={
+                        "chat_template_kwargs": {
+                            "enable_thinking": False,
+                        },
+                        "seed": 0,
+                        "guided_json": self._intent_schema,
+                    },
+                    temperature=0.0,
+                    max_tokens=500,
+                )
+            else:
+                logging.error(f'Unknown llm_model: {app_settings.llm.llm_model}')
+                response = None
             end_time = time.time()
             if response.choices[0].finish_reason != "stop":
                 logging.error(f"LLM response finish reason: {response.choices[0].finish_reason}")
