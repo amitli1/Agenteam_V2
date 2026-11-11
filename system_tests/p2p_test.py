@@ -146,31 +146,39 @@ class FullSystemTest():
 
         time.sleep(1)
 
-        self.log_test_step("Hey buddy go to building number 4")
-        self.mainGroundInstance.handle_user_text("Hey buddy go to building number 4")
-        if self.check_if_step_finished_successfully('I have reached the destination.') is False:
-            return False
-
-        time.sleep(3)
-
-        self.log_test_step("Hey buddy go to building number 5")
-        self.mainGroundInstance.handle_user_text("Hey buddy go to building number 5")
-        if self.check_if_step_finished_successfully('I have reached the destination.') is False:
-            return False
-
-        time.sleep(3)
+        # self.log_test_step("Hey buddy go to building number 4")
+        # self.mainGroundInstance.handle_user_text("Hey buddy go to building number 4")
+        # if self.check_if_step_finished_successfully('I have reached the destination.') is False:
+        #     return False
+        #
+        # time.sleep(3)
+        #
+        # self.log_test_step("Hey buddy go to building number 5")
+        # self.mainGroundInstance.handle_user_text("Hey buddy go to building number 5")
+        # if self.check_if_step_finished_successfully('I have reached the destination.') is False:
+        #     return False
+        #
+        # time.sleep(3)
 
         self.log_test_step("Hey buddy go to building number 1")
         self.mainGroundInstance.handle_user_text("Hey buddy go to building number 1")
         if self.check_if_step_finished_successfully('I have reached the destination.') is False:
             return False
 
-        time.sleep(3)
+        time.sleep(2)
 
         self.log_test_step("Hey buddy surround the building")
         self.mainGroundInstance.handle_user_text("Hey buddy surround the building")
         if self.check_if_step_finished_successfully('I have reached the destination.') is False:
             return False
+
+        time.sleep(2)
+        self.log_test_step("Hey buddy go to building number 5")
+        self.mainGroundInstance.handle_user_text("Hey buddy go to building number 5")
+        if self.check_if_step_finished_successfully('I have reached the destination.') is False:
+            return False
+
+        time.sleep(3)
 
     def test_airsim(self):
 
@@ -247,15 +255,23 @@ class FullSystemTest():
 
     def test_team(self):
 
+        time.sleep(1)
         self.mainGroundInstance.handle_user_text("Hey team go to building number five")
         if self.check_if_step_finished_successfully('I have reached the destination.') is False:
             return False
 
+        time.sleep(1)
         self.mainGroundInstance.handle_user_text("Hey team go to building number one")
         if self.check_if_step_finished_successfully('I have reached the destination.') is False:
             return False
 
+        time.sleep(1)
         self.mainGroundInstance.handle_user_text("Hey team surround the building")
+        if self.check_if_step_finished_successfully('I have reached the destination.') is False:
+            return False
+
+        time.sleep(1)
+        self.mainGroundInstance.handle_user_text("Hey team go to junction number one")
         if self.check_if_step_finished_successfully('I have reached the destination.') is False:
             return False
 
@@ -303,12 +319,12 @@ if __name__ == "__main__":
 
 
     #result = fullSystemTest.test_airsim()
-    #result = fullSystemTest.test_yaw()
+    result = fullSystemTest.test_yaw()
     #result = fullSystemTest.test_1()
     #result = fullSystemTest.test_l_flag()
     #result = fullSystemTest.test_describe()
     #result = fullSystemTest.test_start_stop_vision()
-    result = fullSystemTest.test_team()
+    #result = fullSystemTest.test_team()
     #result = fullSystemTest.test_fly_to_the_moon()
     #result = fullSystemTest.test_follow_without_hold()
     #result = fullSystemTest.test_hold_and_follow()

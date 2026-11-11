@@ -393,7 +393,7 @@ class MissionPlannerAgent:
     # ------------------------------------------------------------------ #
     # Core way-point computation for a single logical target
     # ------------------------------------------------------------------ #
-    def _base_waypoints_for_action(self, action, row, alt, start_latlon, point_toward_structure_center):
+    def _base_waypoints_for_action(self, action, row, alt, start_latlon, point_toward_structure_center, yaw_field):
         coords = self._parse_geometry_string(row.get("geometry", ""))
         if not coords:
             return []
@@ -426,7 +426,7 @@ class MissionPlannerAgent:
         # (bearing from the current location). Only after arrival, rotate
         # to the dataset YAW (if it is defined / not NaN).
         lat, lon = coords[0]
-        dest_yaw = row.get("yaw", None)
+        dest_yaw = row.get(yaw_field, None)
         try:
             dest_yaw = float(dest_yaw) if dest_yaw is not None and str(dest_yaw).strip() != "" and str(
                 dest_yaw).lower() != "nan" else None
@@ -559,7 +559,8 @@ class MissionPlannerAgent:
             wps = self._base_waypoints_for_action(
                 action, row, master_alt,
                 start_latlon=(float(master_drone_location["lat"]), float(master_drone_location["lon"])),
-                point_toward_structure_center=point_toward_structure_center
+                point_toward_structure_center=point_toward_structure_center,
+                yaw_field = "master_yaw"
             )
             if not wps:
                 return self._error("INVALID_GEOMETRY: could not parse coordinates.")
@@ -574,7 +575,8 @@ class MissionPlannerAgent:
             wps = self._base_waypoints_for_action(
                 action, row, slave_alt,
                 start_latlon=(float(slave_drone_location["lat"]), float(slave_drone_location["lon"])),
-                point_toward_structure_center=point_toward_structure_center
+                point_toward_structure_center=point_toward_structure_center,
+                yaw_field="slave_yaw",
             )
             if not wps:
                 return self._error("INVALID_GEOMETRY: could not parse coordinates.")
@@ -592,20 +594,40 @@ class MissionPlannerAgent:
             master_wps = self._base_waypoints_for_action(
                 action, row, master_alt,
                 start_latlon=(float(master_drone_location["lat"]), float(master_drone_location["lon"])),
-                point_toward_structure_center=point_toward_structure_center
+                point_toward_structure_center=point_toward_structure_center,
+                yaw_field="master_yaw"
             )
             if not master_wps:
                 return self._error("INVALID_GEOMETRY: could not parse coordinates.")
 
-            # Slave follows the same path but is shifted so that the *spatial*
-            # (3D) distance between the drones equals SPATIAL_DISTANCE, taking
-            # the altitude difference (DELTA_ALT_SLAVE_DRONE) into account.
-            slave_wps = self._apply_spatial_offset(
-                master_wps,
-                slave_alt,
-                spatial_distance=float(SPATIAL_DISTANCE),
-                delta_alt=float(DELTA_ALT_SLAVE_DRONE),
-            )
+            if action == "goto":
+                # Slave's destination position: same spatial offset as before,
+                # but yaw is computed independently from slave_yaw (own
+                # nan-fallback, decoupled from master_yaw).
+                tgt_lat, tgt_lon, _, _ = master_wps[0]
+                s_lat, s_lon = self._offset_latlon(tgt_lat, tgt_lon, 0.0, float(SPATIAL_DISTANCE))
+                travel_yaw = self._bearing_deg(
+                    float(slave_drone_location["lat"]), float(slave_drone_location["lon"]),
+                    s_lat, s_lon,
+                )
+                slave_dest_yaw = row.get("slave_yaw", None)
+                try:
+                    slave_dest_yaw = float(slave_dest_yaw) if slave_dest_yaw is not None and str(
+                        slave_dest_yaw).strip() != "" and str(slave_dest_yaw).lower() != "nan" else None
+                except (TypeError, ValueError):
+                    slave_dest_yaw = None
+
+                slave_wps = [(s_lat, s_lon, slave_alt, travel_yaw)]
+                if slave_dest_yaw is not None:
+                    slave_wps.append((s_lat, s_lon, slave_alt, slave_dest_yaw))
+            else:
+                # Other actions (e.g. surround): unchanged formation logic.
+                slave_wps = self._apply_spatial_offset(
+                    master_wps,
+                    slave_alt,
+                    spatial_distance=float(SPATIAL_DISTANCE),
+                    delta_alt=float(DELTA_ALT_SLAVE_DRONE),
+                )
             plan[TEAM_MEMBER_MASTER] = self._prepend_current_location(
                 master_drone_location, master_alt
             ) + master_wps
