@@ -202,7 +202,7 @@ class FullSystemTest():
         if self.check_if_step_finished_successfully('I have reached the destination.') is False:
             return False
 
-        time.sleep(3)
+        #time.sleep(3)
 
 
         self.log_test_step("Hey buddy go to building number one")
@@ -210,7 +210,7 @@ class FullSystemTest():
         if self.check_if_step_finished_successfully('I have reached the destination.') is False:
             return False
 
-        time.sleep(2)
+        #time.sleep(2)
 
         self.log_test_step("Hey buddy point to the car or weapons")
         mainGroundInstance.handle_user_text("Hey buddy point to the car or weapons")
@@ -246,9 +246,19 @@ class FullSystemTest():
         return result
 
     def test_team(self):
+
+        self.mainGroundInstance.handle_user_text("Hey team go to building number five")
+        if self.check_if_step_finished_successfully('I have reached the destination.') is False:
+            return False
+
         self.mainGroundInstance.handle_user_text("Hey team go to building number one")
         if self.check_if_step_finished_successfully('I have reached the destination.') is False:
             return False
+
+        self.mainGroundInstance.handle_user_text("Hey team surround the building")
+        if self.check_if_step_finished_successfully('I have reached the destination.') is False:
+            return False
+
         mainGroundInstance.handle_user_text("team, return home")
         result = self.check_errors_in_log()
 
@@ -292,13 +302,13 @@ if __name__ == "__main__":
     wait_till_got_message_from_master_drone(mainGroundInstance)
 
 
-    result = fullSystemTest.test_airsim()
+    #result = fullSystemTest.test_airsim()
     #result = fullSystemTest.test_yaw()
     #result = fullSystemTest.test_1()
     #result = fullSystemTest.test_l_flag()
     #result = fullSystemTest.test_describe()
     #result = fullSystemTest.test_start_stop_vision()
-    #result = fullSystemTest.test_team()
+    result = fullSystemTest.test_team()
     #result = fullSystemTest.test_fly_to_the_moon()
     #result = fullSystemTest.test_follow_without_hold()
     #result = fullSystemTest.test_hold_and_follow()
