@@ -143,13 +143,28 @@ class FullSystemTest():
             return False
 
     def test_gazebo(self):
-        self.log_test_step("Hey buddy go to junction number 1")
-        self.mainGroundInstance.handle_user_text("Hey buddy go to junction number 1")
+
+        cmd = "Hey buddy go to junction number 2"
+        self.log_test_step(cmd)
+        self.mainGroundInstance.handle_user_text(cmd)
         if self.check_if_step_finished_successfully('I have reached the destination.') is False:
             return False
 
-        self.log_test_step("Hey jarvis go to junction number 2")
-        self.mainGroundInstance.handle_user_text("Hey jarvis go to junction number 2")
+        cmd = "Hey buddy go to building number 1"
+        self.log_test_step(cmd)
+        self.mainGroundInstance.handle_user_text(cmd)
+        if self.check_if_step_finished_successfully('I have reached the destination.') is False:
+            return False
+
+        cmd = "Hey buddy surround the building"
+        self.log_test_step(cmd)
+        self.mainGroundInstance.handle_user_text(cmd)
+        if self.check_if_step_finished_successfully('I have reached the destination.') is False:
+            return False
+
+        cmd = "Hey buddy to back home"
+        self.log_test_step(cmd)
+        self.mainGroundInstance.handle_user_text(cmd)
         if self.check_if_step_finished_successfully('I have reached the destination.') is False:
             return False
 
