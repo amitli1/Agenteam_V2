@@ -33,7 +33,7 @@ general:
   master_air_ip: 127.0.0.1
   master_air_port: 8125
 
-  slave_quad_port: 8011
+  slave_quad_port: 8002
   slave_air_ip: 127.0.0.1
   slave_air_port: 8124
 
@@ -66,7 +66,7 @@ logging_and_records:
   output_path: /mnt/nvme/outputs
 
 database:
-    db_path: app_config/airsim_poly_db.csv # airsim_poly_db, teradion_db, l_flag_location
+    db_path: app_config/gazebo_sim.csv #airsim_poly_db.csv # airsim_poly_db, teradion_db, l_flag_location
     max_area_in_meters: 2500
     audio_files: audio/audio_files/English
 

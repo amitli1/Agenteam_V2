@@ -142,6 +142,17 @@ class FullSystemTest():
         if self.check_if_step_finished_successfully('I have reached the destination.') is False:
             return False
 
+    def test_gazebo(self):
+        self.log_test_step("Hey buddy go to junction number 1")
+        self.mainGroundInstance.handle_user_text("Hey buddy go to junction number 1")
+        if self.check_if_step_finished_successfully('I have reached the destination.') is False:
+            return False
+
+        self.log_test_step("Hey jarvis go to junction number 2")
+        self.mainGroundInstance.handle_user_text("Hey jarvis go to junction number 2")
+        if self.check_if_step_finished_successfully('I have reached the destination.') is False:
+            return False
+
     def test_yaw(self):
 
         time.sleep(1)
@@ -318,8 +329,9 @@ if __name__ == "__main__":
     wait_till_got_message_from_master_drone(mainGroundInstance)
 
 
+    result = fullSystemTest.test_gazebo()
     #result = fullSystemTest.test_airsim()
-    result = fullSystemTest.test_yaw()
+    #result = fullSystemTest.test_yaw()
     #result = fullSystemTest.test_1()
     #result = fullSystemTest.test_l_flag()
     #result = fullSystemTest.test_describe()

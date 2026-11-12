@@ -1,0 +1,5 @@
+entity_type,entity_number,lat,lon,alt,master_yaw,slave_yaw,geometry
+junction,1,29.91586195,34.84135000,0,nan,nan,"[29.91586195,34.  84135000]"
+junction,2,29.91495985,34.84135000,0,nan,nan,"[29.91495985,34.84135000]"
+junction,3,29.91541090,34.84186867,0,nan,nan,"[29.91541090,34.84186867]"
+junction,4,29.91541090,34.84083133,0,nan,nan,"[29.91541090,34.84083133]"
