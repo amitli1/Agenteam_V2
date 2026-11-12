@@ -203,11 +203,12 @@ if __name__ == "__main__":
               {'lat': 47.640141, 'lon': -122.1415707, 'alt': 15.0, 'yaw': None}
               ]
 
-    draw_path(f_path)
+    #draw_path(f_path)
 
     #draw_location_string(building)
 
     # draw_csv_locations(r'/home/amitli/repo/Agenteam_V2/project_code/app_config/l_flag_location.csv')
     #draw_csv_locations(r'/home/amitli/repo/Agenteam_V2/project_code/app_config/airsim_poly_db.csv')
     #draw_csv_locations(r'/home/amitli/repo/Agenteam_V2/project_code/app_config/teradion_db.csv')
+    draw_csv_locations(r'/home/amitli/repo/Agenteam_V2/project_code/app_config/gazebo_sim.csv')
 
