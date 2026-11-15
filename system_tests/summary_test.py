@@ -10,6 +10,10 @@ def send_text_to_user(text: str):
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
 
+    #
+    # ssh -J amitli@10.57.93.209 jetson@10.42.0.21
+    #
+
     logging.info(f'\nStart summary test')
 
     app_settings.vision.use_online= True
