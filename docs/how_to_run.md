@@ -8,6 +8,13 @@ Steps:
 
 ```
 
+# Gazeebo:
+```
+1. [Gazebo] /home/amitli/repo/AgenteamRunner/./build_all.sh (or ./run_all_sim.sh) (or ./stop_all.sh)
+    1.1 It will run Gazebo with 2 quad
+2. Run your app
+```
+
 # Air:
 ```
 udo docker compose -f docker-compose.air-intel.yml up --build
