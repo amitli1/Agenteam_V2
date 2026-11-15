@@ -381,7 +381,7 @@ class VisionManager(object):
         return res
 
     def stop_summary(self):
-        if not self.use_online:
+        if not self.is_online:
             return
 
         try:

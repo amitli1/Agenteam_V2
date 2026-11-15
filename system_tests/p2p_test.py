@@ -142,6 +142,46 @@ class FullSystemTest():
         if self.check_if_step_finished_successfully('I have reached the destination.') is False:
             return False
 
+
+    def run_final_senario(self):
+
+        cmd = "Hey team go to junction number 1"
+        self.log_test_step(cmd)
+        self.mainGroundInstance.handle_user_text(cmd)
+        if self.check_if_step_finished_successfully('I have reached the destination.') is False:
+            return False
+
+        cmd = "Hey team, hold the junction, if you see any vehicle follow it."
+        self.log_test_step(cmd)
+        self.mainGroundInstance.handle_user_text(cmd)
+        time.sleep(10)
+        exit(0)
+
+        if self.check_if_step_finished_successfully('I have reached the destination.') is False:
+            return False
+
+
+
+        cmd = "Hey buddy go to building number 1"
+        self.log_test_step(cmd)
+        self.mainGroundInstance.handle_user_text(cmd)
+        if self.check_if_step_finished_successfully('I have reached the destination.') is False:
+            return False
+
+        cmd = "buddy, surround the building and tell me what you see"
+        self.log_test_step(cmd)
+        mainGroundInstance.handle_user_text(cmd)
+
+        cmd= 'what should I look for ?'
+        self.log_test_step(cmd)
+        if self.check_if_step_finished_successfully('what should I look for ?') is True:
+            self.log_test_step("buddy, look for people and weapons")
+            mainGroundInstance.handle_user_text("buddy, look for people and weapons")
+
+        cmd = "Hey buddy describe"
+        self.log_test_step(cmd)
+        mainGroundInstance.handle_user_text(cmd)
+
     def test_gazebo(self):
 
         cmd = "Hey buddy go to junction number 2"
@@ -344,7 +384,8 @@ if __name__ == "__main__":
     wait_till_got_message_from_master_drone(mainGroundInstance)
 
 
-    result = fullSystemTest.test_gazebo()
+    result = fullSystemTest.run_final_senario()
+    #result = fullSystemTest.test_gazebo()
     #result = fullSystemTest.test_airsim()
     #result = fullSystemTest.test_yaw()
     #result = fullSystemTest.test_1()
