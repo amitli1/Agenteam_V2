@@ -166,7 +166,7 @@ class FullSystemTest():
             mainGroundInstance.handle_user_text("buddy, look for people and weapons")
 
         # --- 4 ---
-        cmd = "Hey buddy describe"
+        cmd = "Hey buddy describe the person"
         self.log_test_step(cmd)
         mainGroundInstance.handle_user_text(cmd)
 
