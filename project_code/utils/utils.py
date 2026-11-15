@@ -178,8 +178,15 @@ def in_docker():
 def get_running_ip():
     if in_docker():
         return "host.docker.internal"
-    else:
+
+    if is_intel() is False:
         return "127.0.0.1"
+
+    remote_ip = app_settings.vision.remote_debug_agent_ip
+    if remote_ip and remote_ip != "None":
+        return remote_ip
+
+    return "127.0.0.1"
 
 def play_text(text_to_user):
 

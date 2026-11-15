@@ -357,6 +357,7 @@ class VisionManager(object):
             else:
                 res = False
         except Exception as e:
+
             logging.error(f'Error while sending get_ready message: {e}  (status_code = {r.status_code}) text = {r.text})')
             res = False
         return res

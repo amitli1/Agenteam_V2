@@ -61,6 +61,7 @@ vision:
   hold_port   : 5000
   point_port  : 8003
   pointing_settings_file: app_config/pointing_settings.json
+  remote_debug_agent_ip: 10.42.0.21 # or None
 
 logging_and_records:
   output_path: /mnt/nvme/outputs

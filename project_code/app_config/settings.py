@@ -56,6 +56,7 @@ class Vision(BaseModel):
     hold_port: int
     point_port: int
     pointing_settings_file: str
+    remote_debug_agent_ip: str
 
 class General(BaseModel):
     run_as_master: bool

@@ -17,5 +17,6 @@ if __name__ == "__main__":
     visionManager.call_summary_to_get_ready()
     visionManager.start_summary(objects_to_focus="people and weapons")
     visionManager.stop_summary()
+    visionManager.describe_summerization(text="describe the person")
 
     logging.info(f'\nStop summary test')

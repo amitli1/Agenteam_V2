@@ -145,42 +145,45 @@ class FullSystemTest():
 
     def run_final_senario(self):
 
-        cmd = "Hey team go to junction number 1"
-        self.log_test_step(cmd)
-        self.mainGroundInstance.handle_user_text(cmd)
-        if self.check_if_step_finished_successfully('I have reached the destination.') is False:
-            return False
 
-        cmd = "Hey team, hold the junction, if you see any vehicle follow it."
-        self.log_test_step(cmd)
-        self.mainGroundInstance.handle_user_text(cmd)
-        time.sleep(10)
-        exit(0)
-
-        if self.check_if_step_finished_successfully('I have reached the destination.') is False:
-            return False
-
-
-
+        # --- 1 ---
         cmd = "Hey buddy go to building number 1"
         self.log_test_step(cmd)
         self.mainGroundInstance.handle_user_text(cmd)
         if self.check_if_step_finished_successfully('I have reached the destination.') is False:
             return False
 
+        # --- 2 ---
         cmd = "buddy, surround the building and tell me what you see"
         self.log_test_step(cmd)
         mainGroundInstance.handle_user_text(cmd)
 
-        cmd= 'what should I look for ?'
+        # --- 3 ---
+        cmd= 'what should I look for people and weapons'
         self.log_test_step(cmd)
         if self.check_if_step_finished_successfully('what should I look for ?') is True:
             self.log_test_step("buddy, look for people and weapons")
             mainGroundInstance.handle_user_text("buddy, look for people and weapons")
 
+        # --- 4 ---
         cmd = "Hey buddy describe"
         self.log_test_step(cmd)
         mainGroundInstance.handle_user_text(cmd)
+
+        # --- 5 ---
+        cmd = "Hey team go to junction number 1"
+        self.log_test_step(cmd)
+        self.mainGroundInstance.handle_user_text(cmd)
+        if self.check_if_step_finished_successfully('I have reached the destination.') is False:
+            return False
+
+        # --- 6 ---
+        cmd = "Hey team, hold the junction, if you see any vehicle follow it."
+        self.log_test_step(cmd)
+        self.mainGroundInstance.handle_user_text(cmd)
+
+        # --- 7 ---
+        time.sleep(30)
 
     def test_gazebo(self):
 
