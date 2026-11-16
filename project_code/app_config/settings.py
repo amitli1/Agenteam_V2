@@ -79,6 +79,7 @@ class FLightPath(BaseModel):
   slave_drone_altitude_offset: float
   point_toward_structure_center: bool
   sleep_time_between_team_members_sec: float
+  use_enu_edge_yaw_calculation: bool = False
 
 class Speakers(BaseModel):
     card: int

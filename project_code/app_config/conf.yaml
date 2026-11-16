@@ -48,6 +48,7 @@ flightPath:
   slave_drone_altitude_offset: 5.0
   point_toward_structure_center: true
   sleep_time_between_team_members_sec: 2
+  use_enu_edge_yaw_calculation: true # ENU - East North Up coordinate system
 
 
 llm:

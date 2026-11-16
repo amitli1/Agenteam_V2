@@ -419,8 +419,8 @@ if __name__ == "__main__":
     wait_till_got_message_from_master_drone(mainGroundInstance)
 
 
-    #result = fullSystemTest.run_final_scenario()
-    result = fullSystemTest.test_summary()
+    result = fullSystemTest.run_final_scenario()
+    #result = fullSystemTest.test_summary()
 
     #result = fullSystemTest.test_gazebo()
     #result = fullSystemTest.test_airsim()

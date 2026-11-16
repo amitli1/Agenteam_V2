@@ -450,24 +450,53 @@ class MissionPlannerAgent:
         return waypoints
 
     @staticmethod
+    def _bearing_enu(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+        """Bearing of A->B converted from North convention (0=North, CW) to
+        ENU convention (0=East, CW)."""
+        brg_nav = MissionPlannerAgent._bearing_deg(lat1, lon1, lat2, lon2)
+        return (brg_nav - 90.0) % 360.0
+
+    @staticmethod
     def _perpendicular_edge_yaw(
             lat1: float, lon1: float, lat2: float, lon2: float,
             centroid_lat: float, centroid_lon: float
     ) -> float:
         """Yaw perpendicular to the edge (lat1,lon1)->(lat2,lon2), facing inward
-        (towards the polygon centroid)."""
-        edge_bearing = MissionPlannerAgent._bearing_deg(lat1, lon1, lat2, lon2)
+        (towards the polygon centroid).
+
+        Controlled by flightPath.use_enu_edge_yaw_calculation:
+          * False (default) -> original calculation, entirely in the
+            North-based (0=North, clockwise) convention.
+          * True  -> edge bearing (0=North) is first converted to ENU
+            convention (0=East), rotated +-90 deg to get the two
+            perpendicular (inward/outward) candidates, then converted back
+            to the North-based convention used everywhere else in this
+            file / by the flight stack before the inward one is selected.
+        """
         mid_lat = (lat1 + lat2) / 2.0
         mid_lon = (lon1 + lon2) / 2.0
         to_centroid_bearing = MissionPlannerAgent._bearing_deg(mid_lat, mid_lon, centroid_lat, centroid_lon)
-
-        candidate1 = (edge_bearing + 90.0) % 360.0
-        candidate2 = (edge_bearing - 90.0) % 360.0
 
         def ang_diff(a, b):
             d = abs(a - b) % 360.0
             return min(d, 360.0 - d)
 
+        if app_settings.flightPath.use_enu_edge_yaw_calculation:
+            # --- new logic: explicit North -> ENU -> North round trip ---
+            edge_bearing_enu = MissionPlannerAgent._bearing_enu(lat1, lon1, lat2, lon2)
+
+            candidate1_enu = (edge_bearing_enu + 90.0) % 360.0
+            candidate2_enu = (edge_bearing_enu - 90.0) % 360.0
+
+            candidate1 = (candidate1_enu + 90.0) % 360.0
+            candidate2 = (candidate2_enu + 90.0) % 360.0
+        else:
+            # --- old logic: stay in the North-based convention throughout ---
+            edge_bearing = MissionPlannerAgent._bearing_deg(lat1, lon1, lat2, lon2)
+            candidate1 = (edge_bearing + 90.0) % 360.0
+            candidate2 = (edge_bearing - 90.0) % 360.0
+
+        # pick whichever candidate points inward (toward the centroid)
         return candidate1 if ang_diff(candidate1, to_centroid_bearing) <= ang_diff(candidate2,
                                                                                    to_centroid_bearing) else candidate2
 
