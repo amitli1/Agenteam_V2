@@ -8,25 +8,27 @@ import json
 
 class VisionManager(object):
 
-    def __init__(self, on_hold_status_callback, fnc_send_text_to_user):
+    def __init__(self, on_hold_status_callback, fnc_send_text_to_user, use_for_summery_only=False):
         self.is_online               = app_settings.vision.use_online
         self.summary_port            = app_settings.vision.summary_port
         self.hold_port               = app_settings.vision.hold_port
         self.point_port              = app_settings.vision.point_port
         self.on_hold_status_callback = on_hold_status_callback
         self.fnc_send_text_to_user   = fnc_send_text_to_user
+        self.use_for_summery_only    = use_for_summery_only
 
         # point thread
-        self.point_status_thread = threading.Thread(
-            target=self.receive_vision_point_status,
-            daemon=True
-        )
+        if self.use_for_summery_only is False:
+            self.point_status_thread = threading.Thread(
+                target=self.receive_vision_point_status,
+                daemon=True
+            )
 
-        # hold thread
-        self.hold_status_thread = threading.Thread(
-            target=self.receive_vision_hold_status,
-            daemon=True
-        )
+            # hold thread
+            self.hold_status_thread = threading.Thread(
+                target=self.receive_vision_hold_status,
+                daemon=True
+            )
 
         # summary thread
         self.summary_status_thread = threading.Thread(
@@ -54,8 +56,11 @@ class VisionManager(object):
             else:
                 self.stop_hold()
         elif vision_command == "summary":
-            self.call_summary_to_get_ready()
-            self.start_summary(objects_to_focus=objects_to_focus)
+            if vision_cmd_action == "start":
+                self.call_summary_to_get_ready()
+                self.start_summary(objects_to_focus=objects_to_focus)
+            else:
+                self.stop_summary()
         elif vision_command == "describe":
             self.describe_summerization(objects_to_focus)
         else:
@@ -346,7 +351,11 @@ class VisionManager(object):
 
         try:
             payload = {"task": "get_ready"}
-            url = f"http://{get_running_ip()}:{self.summary_port}/get_ready"
+
+            if self.use_for_summery_only is True:
+                url = f"http://{app_settings.vision.ground_summary_agent_ip}:{self.summary_port}/get_ready"
+            else:
+                url = f"http://{get_running_ip()}:{self.summary_port}/get_ready"
             logging.info(f'Send message to: {url} with: {payload}')
             r = requests.post(url, json=payload)
             r.raise_for_status()
@@ -370,7 +379,10 @@ class VisionManager(object):
             payload = {"task": "start_summarizing",
                        "objects_to_focus": objects_to_focus}
 
-            url = f"http://{get_running_ip()}:{self.summary_port}/start_sum"
+            if self.use_for_summery_only is True:
+                url = f"http://{app_settings.vision.ground_summary_agent_ip}:{self.summary_port}/start_sum"
+            else:
+                url = f"http://{get_running_ip()}:{self.summary_port}/start_sum"
             logging.info(f'Send message to: {url} with: {payload}')
             r = requests.post(url, json=payload)
             r.raise_for_status()
@@ -387,7 +399,10 @@ class VisionManager(object):
 
         try:
             payload = {"task": "stop_summarizing"}
-            url = f"http://{get_running_ip()}:{app_settings.vision.summary_port}/stop_sum"
+            if self.use_for_summery_only is True:
+                url = f"http://{app_settings.vision.ground_summary_agent_ip}:{app_settings.vision.summary_port}/stop_sum"
+            else:
+                url = f"http://{get_running_ip()}:{app_settings.vision.summary_port}/stop_sum"
             logging.info(f'Send message to: {url} with: {payload}')
             r = requests.post(url, json=payload)
             r.raise_for_status()
@@ -407,7 +422,10 @@ class VisionManager(object):
         try:
             start_time = time.time()
             payload    = {"task": "describe", "transcription": text}
-            url        = f"http://{get_running_ip()}:{self.summary_port}/describe"
+            if self.use_for_summery_only is True:
+                url        = f"http://{app_settings.vision.ground_summary_agent_ip}:{self.summary_port}/describe"
+            else:
+                url = f"http://{get_running_ip()}:{self.summary_port}/describe"
             logging.info(f'Send message to: {url} with: {payload}')
             r          = requests.post(url, json=payload)
             r.raise_for_status()

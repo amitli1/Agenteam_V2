@@ -57,6 +57,8 @@ class Vision(BaseModel):
     point_port: int
     pointing_settings_file: str
     remote_debug_agent_ip: str
+    run_summery_agent_on_ground: bool
+    ground_summary_agent_ip: str
 
 class General(BaseModel):
     run_as_master: bool

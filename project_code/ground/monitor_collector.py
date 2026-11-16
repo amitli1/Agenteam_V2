@@ -35,7 +35,7 @@ class MonitorCollector:
         # df.to_json() to sanitize it first.
         safe_payload = json.loads(df.to_json())
         try:
-            response = requests.post(f"http://{get_running_ip()}:7031/get_dataset/", json=safe_payload)
+            response = requests.post(f"http://{get_running_ip()}:7031/get_dataset/", json=safe_payload,  timeout=5)
             if response.status_code != 200:
                 logging.error(f'Error while sending data to Monitor (get_dataset): {response.status_code}')
                 return False

@@ -61,7 +61,10 @@ vision:
   hold_port   : 5000
   point_port  : 8003
   pointing_settings_file: app_config/pointing_settings.json
-  remote_debug_agent_ip: 10.42.0.21 # or None
+  remote_debug_agent_ip: 127.0.0.1 #10.42.0.21 # or None
+  run_summery_agent_on_ground: true
+  ground_summary_agent_ip: 127.0.0.1
+
 
 logging_and_records:
   output_path: /mnt/nvme/outputs

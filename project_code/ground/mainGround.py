@@ -23,6 +23,8 @@ import numpy as np
 from flask import Flask, jsonify, request
 import re
 
+from project_code.vision.vision_manager import VisionManager
+
 init_logger(jetson_type="ground")
 logging.getLogger("werkzeug").setLevel(logging.ERROR)
 
@@ -66,6 +68,10 @@ class MainGround:
         self.last_destination          = None
         self.log_master_drone_distance = False
         self.log_slave_drone_distance  = False
+
+        self.vision_manager            = VisionManager(on_hold_status_callback = None,
+                                                       fnc_send_text_to_user   = None,
+                                                       use_for_summery_only    = True)
 
     def set_fnc_test_callback(self, fnc):
         self.fnc_test_callback = fnc
@@ -161,6 +167,10 @@ class MainGround:
         elif "I have reached the destination." in text_to_user:
             logging.info(f'Put I_have_reached_the_destination.wav into the Q')
             SoundPlayerManager().get_file_queue().put(f"{app_settings.database.audio_files}/I_have_reached_the_destination.wav")
+
+            if app_settings.vision.run_summery_agent_on_ground:
+                self.vision_manager.stop_summary()
+
             return True
         elif "what should I look for ?" in text_to_user:
             SoundPlayerManager().get_file_queue().put(f"{app_settings.database.audio_files}/What_should_I_look_for.wav")
@@ -308,50 +318,50 @@ class MainGround:
                 except Exception as e:
                     logging.error(f"Error while sending plan to drone: {e}  (status_code = {r.status_code}) text = {r.text})")
 
-    def handle_vision_command(self, text):
-
-        result_obj = {
-            "success"       : True,
-            "need_more_data": False,
-            "vision_command": None
-        }
-
-        # {'vision_commands': [{'command': 'point', 'need_more_data': False, 'objects': 'red car, blue truck'}]}
-        llm_result       = self.vision_parser.parse(text)
-        try:
-            llm_result       = llm_result['vision_commands'][0]
-            vision_command   = llm_result['command']
-            need_more_data   = llm_result['need_more_data']
-            objects_to_focus = llm_result['objects']
-        except Exception as e:
-            logging.error(f"Error while parsing vision command: {e}")
-            result_obj['success']        = False
-            result_obj['need_more_data'] = False
-            return result_obj
-
-        # save vision command in the return result
-        result_obj['vision_command'] = vision_command
-
-        if need_more_data:
-            result_obj['success']        = False
-            result_obj['need_more_data'] = True
-            return result_obj
-
-        command_to_air = {
-            "vision_command": vision_command,
-            "objects_to_focus": objects_to_focus
-        }
-
-        r = requests.post(self.master_drone_url, json={"command": "vision", "vision_command": command_to_air})
-        r.raise_for_status()
-
-        if r.status_code != 200:
-            logging.error(f"Unexpected status when sending command to air: {r.status_code}")
-            result_obj['success'] = False
-            result_obj['need_more_data'] = False
-            return result_obj
-
-        return result_obj
+    # def handle_vision_command(self, text):
+    #
+    #     result_obj = {
+    #         "success"       : True,
+    #         "need_more_data": False,
+    #         "vision_command": None
+    #     }
+    #
+    #     # {'vision_commands': [{'command': 'point', 'need_more_data': False, 'objects': 'red car, blue truck'}]}
+    #     llm_result       = self.vision_parser.parse(text)
+    #     try:
+    #         llm_result       = llm_result['vision_commands'][0]
+    #         vision_command   = llm_result['command']
+    #         need_more_data   = llm_result['need_more_data']
+    #         objects_to_focus = llm_result['objects']
+    #     except Exception as e:
+    #         logging.error(f"Error while parsing vision command: {e}")
+    #         result_obj['success']        = False
+    #         result_obj['need_more_data'] = False
+    #         return result_obj
+    #
+    #     # save vision command in the return result
+    #     result_obj['vision_command'] = vision_command
+    #
+    #     if need_more_data:
+    #         result_obj['success']        = False
+    #         result_obj['need_more_data'] = True
+    #         return result_obj
+    #
+    #     command_to_air = {
+    #         "vision_command": vision_command,
+    #         "objects_to_focus": objects_to_focus
+    #     }
+    #
+    #     r = requests.post(self.master_drone_url, json={"command": "vision", "vision_command": command_to_air})
+    #     r.raise_for_status()
+    #
+    #     if r.status_code != 200:
+    #         logging.error(f"Unexpected status when sending command to air: {r.status_code}")
+    #         result_obj['success'] = False
+    #         result_obj['need_more_data'] = False
+    #         return result_obj
+    #
+    #     return result_obj
 
     def remove_wakewords(self, current_text):
         # remove wake word from last text command
@@ -386,6 +396,12 @@ class MainGround:
             logging.info(f"│ {line:<{width}} │")
         logging.info("└" + "─" * (width + 2) + "┘")
 
+    def handle_summery(self, command_to_air):
+        self.vision_manager.handle_vision_command(vision_command    = "summary",
+                                                  vision_cmd_action = command_to_air["vision_cmd_action"],
+                                                  objects_to_focus  = command_to_air["objects_to_focus"])
+
+
     def handle_user_text(self, text):
         self.monitorCollector.update_user_command("", text)
 
@@ -411,21 +427,27 @@ class MainGround:
                 "objects_to_focus" : llm_command['vision_command']['objects']
             }
 
-            if (llm_command['team_member'] == "team") or (llm_command['team_member'] == "buddy"):
-                try:
-                    log_boxed("Send vision command to master drone", [f"{k}: {v}" for k, v in command_to_air.items()])
-                    r = requests.post(self.master_drone_url, json={"command": "vision", "vision_command": command_to_air})
-                    r.raise_for_status()
-                except Exception as e:
-                    logging.info(f'Cant send vision command to master drone ({self.master_drone_url}) - no master drone')
+            if app_settings.vision.run_summery_agent_on_ground is True:
+                if ((command_to_air["vision_command"] == "summary") or
+                    (command_to_air["vision_command"] == "describe")):
+                    logging.info(f'Handle summery agent on ground')
+                    self.handle_summery(command_to_air)
+            else:
+                if (llm_command['team_member'] == "team") or (llm_command['team_member'] == "buddy"):
+                    try:
+                        log_boxed("Send vision command to master drone", [f"{k}: {v}" for k, v in command_to_air.items()])
+                        r = requests.post(self.master_drone_url, json={"command": "vision", "vision_command": command_to_air})
+                        r.raise_for_status()
+                    except Exception as e:
+                        logging.info(f'Cant send vision command to master drone ({self.master_drone_url}) - no master drone')
 
-            if (llm_command['team_member'] == "team") or (llm_command['team_member'] == "jarvis"):
-                try:
-                    log_boxed("Send vision command to slave drone", [f"{k}: {v}" for k, v in command_to_air.items()])
-                    r = requests.post(self.slave_drone_url, json={"command": "vision", "vision_command": command_to_air})
-                    r.raise_for_status()
-                except Exception as e:
-                    logging.info(f'Cant send vision command to slave drone ({self.slave_drone_url}) - no slave drone')
+                if (llm_command['team_member'] == "team") or (llm_command['team_member'] == "jarvis"):
+                    try:
+                        log_boxed("Send vision command to slave drone", [f"{k}: {v}" for k, v in command_to_air.items()])
+                        r = requests.post(self.slave_drone_url, json={"command": "vision", "vision_command": command_to_air})
+                        r.raise_for_status()
+                    except Exception as e:
+                        logging.info(f'Cant send vision command to slave drone ({self.slave_drone_url}) - no slave drone')
 
 
         if llm_command['fly_command']['fly_cmd_type'] != "":
