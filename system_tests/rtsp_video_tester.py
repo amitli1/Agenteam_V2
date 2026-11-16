@@ -1,4 +1,8 @@
 import cv2
+#
+# cv2 - computer vision 2 (open source openCV)
+#
+
 def get_video(address):
     cap = cv2.VideoCapture(address)
 
