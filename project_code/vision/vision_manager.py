@@ -432,9 +432,10 @@ class VisionManager(object):
             desc        = r.json()
             end_time   = time.time()
             logging.info(f'describe took: {(end_time - start_time):.2f} sec')
-            logging.info(f'Describe response: {desc}')
-            self.fnc_send_text_to_user(desc)
-            res = desc
+            description = desc['description']
+            logging.info(f'Describe response: {description}')
+            self.fnc_send_text_to_user(description)
+            res = description
         except Exception as e:
             logging.error(f'Error while sending describe message: {e}  (status_code = {r.status_code}) text = {r.text})')
             res = None
