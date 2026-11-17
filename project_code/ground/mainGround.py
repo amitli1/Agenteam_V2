@@ -165,11 +165,12 @@ class MainGround:
             SoundPlayerManager().get_file_queue().put(f"{app_settings.database.audio_files}/hold_on_still_flying.wav")
             return True
         elif "I have reached the destination." in text_to_user:
-            logging.info(f'Put I_have_reached_the_destination.wav into the Q')
-            SoundPlayerManager().get_file_queue().put(f"{app_settings.database.audio_files}/I_have_reached_the_destination.wav")
 
             if app_settings.vision.run_summery_agent_on_ground:
                 self.vision_manager.stop_summary()
+
+            logging.info(f'Put I_have_reached_the_destination.wav into the Q')
+            SoundPlayerManager().get_file_queue().put(f"{app_settings.database.audio_files}/I_have_reached_the_destination.wav")
 
             return True
         elif "what should I look for ?" in text_to_user:
