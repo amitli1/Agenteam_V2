@@ -367,7 +367,7 @@ class VisionManager(object):
                 res = False
         except Exception as e:
 
-            logging.error(f'Error while sending get_ready message: {e}  (status_code = {r.status_code}) text = {r.text})')
+            logging.error(f'Error while sending get_ready message: {e}')
             res = False
         return res
 
@@ -389,7 +389,7 @@ class VisionManager(object):
             res = r.json()
             logging.info(f'Start summary response: {res}')
         except Exception as e:
-            logging.error(f'Error while sending start_summarizing message: {e}  (status_code = {r.status_code}) text = {r.text})')
+            logging.error(f'Error while sending start_summarizing message: {e}')
             res = None
         return res
 
@@ -408,7 +408,7 @@ class VisionManager(object):
             r.raise_for_status()
             res = r.json()
         except Exception as e:
-            logging.error(f'Error sending stop_summarizing: {e}  (status_code = {r.status_code}) text = {r.text})')
+            logging.error(f'Error sending stop_summarizing: {e}  ')
             res = ""
 
         logging.info(f'Got stop_summarizing message: {res}')
@@ -437,7 +437,7 @@ class VisionManager(object):
             self.fnc_send_text_to_user(description)
             res = description
         except Exception as e:
-            logging.error(f'Error while sending describe message: {e}  (status_code = {r.status_code}) text = {r.text})')
+            logging.error(f'Error while sending describe message: {e} ')
             res = None
         return res
 
