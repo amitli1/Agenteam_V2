@@ -5,8 +5,9 @@ hf download \
 ```
 
 ```
-sudo docker run --rm \
+sudo docker run -d \
     --name qwen3-vllm \
+    --restart unless-stopped \
     --runtime=nvidia \
     -e NVIDIA_VISIBLE_DEVICES=all \
     -e HF_HUB_OFFLINE=1 \
@@ -23,5 +24,6 @@ sudo docker run --rm \
     --max-model-len 4096 \
     --max-num-seqs 1 \
     --max-num-batched-tokens 4096
+
 
 ```
