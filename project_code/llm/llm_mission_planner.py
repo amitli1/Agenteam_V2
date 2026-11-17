@@ -192,8 +192,13 @@ class MissionPlannerAgent:
                     max_tokens=500,
                 )
             elif "qwen" in app_settings.llm.llm_model.lower():
+
+                model_name = "Qwen/Qwen3-4B-AWQ"
+                if is_intel() is False:
+                    model_name = "/models/Qwen3-4B-AWQ"
+
                 response = self.client.chat.completions.create(
-                    model="Qwen/Qwen3-4B-AWQ",
+                    model=model_name,
                     messages=[
                         {"role": "system", "content": self._intent_prompt},
                         {"role": "user", "content": f"COMMAND: {text_command}"},

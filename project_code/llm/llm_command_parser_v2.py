@@ -115,8 +115,13 @@ class LlmCommandParser_V2:
 
 
         elif "qwen" in app_settings.llm.llm_model.lower():
+
+            model_name = "Qwen/Qwen3-4B-AWQ"
+            if is_intel() is False:
+                model_name = "/models/Qwen3-4B-AWQ"
+
             response = self.client.chat.completions.create(
-                model="Qwen/Qwen3-4B-AWQ", #"/models/Qwen3-4B-AWQ",
+                model=model_name,
                 messages=[
                     {"role": "system", "content": self.split_user_command_prompt},
                     {"role": "user", "content": f"USER COMMAND: {user_command}"}
