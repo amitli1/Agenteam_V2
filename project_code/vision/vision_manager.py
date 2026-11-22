@@ -192,6 +192,13 @@ class VisionManager(object):
 
 
     def handle_vision_hold_status(self, hold_status):
+
+        # Empty:
+        # {"msg":[],"success":true}
+        #
+        # With hold:
+        # {"msg":[[{"x":20,"y":278}]],"success":true}
+
         if len(hold_status) != 0:
 
             if 'msg' in hold_status:
