@@ -27,3 +27,20 @@ sudo docker run -d \
 
 
 ```
+
+# Test:
+```
+curl http://localhost:8090/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "/models/Qwen3-4B-AWQ",
+    "messages": [
+      {
+        "role": "user",
+        "content": "Explain what a GPU is in simple terms."
+      }
+    ],
+    "max_tokens": 256,
+    "temperature": 0.7
+  }'
+```
