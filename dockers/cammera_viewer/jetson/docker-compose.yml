@@ -1,0 +1,38 @@
+version: "3.9"
+
+services:
+  camera_viewer:
+    build:
+      context: ../../..
+      dockerfile: dockers/cammera_viewer/jetson/Dockerfile
+    image: operator_station-camera_viewer # see under docker images
+    container_name: operator_station-camera_viewer-container
+    network_mode: host
+    # Match host user and group so the X11 cookie / mounted files are usable
+    user: "${UID}:${GID}"
+
+    environment:
+      - PYTHONPATH=/app
+      # Forward the host's X server so cv2.imshow() can display a window
+      - DISPLAY=${DISPLAY}
+      - QT_X11_NO_MITSHM=1
+      # RTSP stream address the viewer will connect to
+      - RTSP_ADDRESS=rtsp://localhost:8554/gazebo_cam1
+      # Preview window size, as a percentage (1-100) of the full screen size
+      - SCREEN_SIZE_PERCENT=50
+
+    volumes:
+      - /mnt/nvme/repo/Agenteam_V2:/app
+      # X11 socket, required so cv2.imshow() can reach the host display
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+    working_dir: /app/system_tests
+
+    command: python3 rtsp_video_tester.py
+
+    # Optional: restart automatically if it crashes
+    #restart: unless-stopped # restart: always, unless-stopped
+
