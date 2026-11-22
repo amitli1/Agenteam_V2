@@ -247,9 +247,14 @@ def warmup():
         base_url   = app_settings.llm.base_url
         model_name = app_settings.llm.llm_model
 
+        if "qwen" in app_settings.llm.llm_model.lower():
+            model_name = "Qwen/Qwen3-4B-AWQ"
+            if is_intel() is False:
+                model_name = "/models/Qwen3-4B-AWQ"
+
         if is_intel() is False:
             base_url = re.sub(r'(localhost|127\.0\.0\.1)', 'host.docker.internal', base_url)
-            model_name = "/models"
+
 
         client = OpenAI(
             api_key=app_settings.llm.api_key,
