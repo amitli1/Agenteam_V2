@@ -41,13 +41,13 @@
         "_comment_toggles": "--- Feature toggles ---",
 
         "_comment_enable_kf": "Master KF switch. false = raw tracker pass-through, no smoothing/gating/SPRT.",
-        "enable_kf": true,
+        "enable_kf": false,
 
         "_comment_enable_gating": "false = accept every VLM detection (skip Mahalanobis gate). Useful for debugging.",
-        "enable_gating": true,
+        "enable_gating": false,
 
         "_comment_enable_sprt": "false = every gate-passing detection is treated as MATCH (no SWITCH possible).",
-        "enable_sprt": true,
+        "enable_sprt": false,
 
         "_comment_min_vlm_confidence": "OPTIONAL (default: 0.5). VLM detections below this confidence are rejected as misses. Prevents near-zero-confidence garbage positions from triggering SPRT SWITCH or polluting the KF. UP = stricter, ignores low-confidence detections. DOWN (e.g. 0.001) = accept almost everything.",
         "min_vlm_confidence": 0.4,
@@ -160,7 +160,7 @@
         "max_frozen_frames": 10,
 
         "_comment_freeze_position_threshold": "Max pixel movement to consider position 'frozen' (Euclidean distance). UP = allows more jitter before triggering freeze (tolerant of noisy tracker). DOWN = stricter freeze detection (catches subtle background lock). Example: 1.0 for high-res stable tracking, 3.0 for noisy low-res tracking.",
-        "freeze_position_threshold": 0,
+        "freeze_position_threshold": 100,
 
         "_comment_sam": "--- SAM Visual Verification ---",
         "_comment_sam_enabled": "Master toggle. Requires SAM service running at sam_service_url.",
@@ -185,7 +185,7 @@
 
         "_comment_distance": "--- Distance Estimation ---",
         "_comment_distance_enabled": "Master toggle. Requires sam_enabled=true (uses SAM for segmentation).",
-        "distance_enabled": true,
+        "distance_enabled": false,
         "_comment_distance_hfov_degrees": "Camera horizontal FOV in degrees. 90 is typical webcam.",
         "distance_hfov_degrees": 22.5,
         "_comment_distance_default_class": "Override object class for prior lookup. Empty = extract from lock prompt.",
