@@ -414,6 +414,7 @@ class VisionManager(object):
             r = requests.post(url, json=payload)
             r.raise_for_status()
             res = r.json()
+            res = res.get("summary", "")
         except Exception as e:
             logging.error(f'Error sending stop_summarizing: {e}  ')
             res = ""
@@ -446,7 +447,8 @@ class VisionManager(object):
         except Exception as e:
             logging.error(f'Error while sending describe message: {e} ')
             res = None
-        return res
+            description = ""
+        return description
 
 
 
