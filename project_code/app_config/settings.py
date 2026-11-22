@@ -109,7 +109,8 @@ def _apply_jetson_ip_overrides(data: dict) -> dict:
         general["slave_quad_port"] = 8001
 
         vision = data.get("vision", {})
-        vision["use_online"] = True
+        vision["use_online"]              = True
+        vision['ground_summary_agent_ip'] = '192.168.144.115'
 
         test                     = data.get("test", {})
         test["run_in_test_mode"] = False
