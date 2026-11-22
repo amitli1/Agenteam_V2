@@ -203,7 +203,7 @@ class VisionManager(object):
 
             if 'msg' in hold_status:
                 hold_data = hold_status['msg']
-                if len(hold_data) > 2:
+                if len(hold_data) >= 1:
                     logging.info(f'Got hold message: {hold_data}')
                     self.fnc_send_text_to_user("I'm holding the object")
                 else:
