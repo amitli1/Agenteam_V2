@@ -433,7 +433,8 @@ class MainGround:
                     (command_to_air["vision_command"] == "describe")):
                     logging.info(f'Handle summery agent on ground')
                     self.handle_summery(command_to_air)
-            else:
+
+            if ((command_to_air["vision_command"] != "summary") and (command_to_air["vision_command"] != "describe")):
                 if (llm_command['team_member'] == "team") or (llm_command['team_member'] == "buddy"):
                     try:
                         log_boxed("Send vision command to master drone", [f"{k}: {v}" for k, v in command_to_air.items()])
