@@ -19,7 +19,7 @@ if __name__ == "__main__":
     logging.info(f'\nStart summary test')
 
     app_settings.vision.use_online= True
-    visionManager = VisionManager(on_hold_status_callback=None, fnc_send_text_to_user=send_text_to_user)
+    visionManager = VisionManager(on_hold_status_callback=None, fnc_send_text_to_user=send_text_to_user, use_for_summery_only=True)
     visionManager.call_summary_to_get_ready()
     visionManager.start_summary(objects_to_focus="people and weapons")
     time.sleep(10)
