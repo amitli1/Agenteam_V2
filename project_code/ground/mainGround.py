@@ -70,7 +70,7 @@ class MainGround:
         self.log_slave_drone_distance  = False
 
         self.vision_manager            = VisionManager(on_hold_status_callback = None,
-                                                       fnc_send_text_to_user   = None,
+                                                       fnc_send_text_to_user   = self.run_tts,
                                                        use_for_summery_only    = True)
 
     def set_fnc_test_callback(self, fnc):
