@@ -48,7 +48,9 @@ if __name__ == "__main__":
 
 
     visionManager.start_summary(objects_to_focus="people and weapons")
-    time.sleep(10)
+    for i in range(2):
+        logging.info(f'wait for 10 seconds ...')
+        time.sleep(10)
 
     start_time = time.time()
     res = visionManager.stop_summary()
