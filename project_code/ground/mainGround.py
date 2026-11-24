@@ -398,7 +398,7 @@ class MainGround:
         logging.info("└" + "─" * (width + 2) + "┘")
 
     def handle_summery(self, command_to_air):
-        self.vision_manager.handle_vision_command(vision_command    = "summary",
+        self.vision_manager.handle_vision_command(vision_command    = command_to_air["vision_command"],
                                                   vision_cmd_action = command_to_air["vision_cmd_action"],
                                                   objects_to_focus  = command_to_air["objects_to_focus"])
 
