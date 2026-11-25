@@ -5,11 +5,38 @@ from pyproj import Geod
 
 from project_code.utils.utils import log_boxed
 
+REQUIRED_COLUMNS = ["entity_type", "entity_number", "lat", "lon", "alt",
+                    "master_yaw", "slave_yaw", "geometry"]
+
 
 class DatabaseManager:
     def __init__(self):
         self.df_db = pd.read_csv(app_settings.database.db_path)
         self.print_db_nicely()
+
+    def check_required_columns(self) -> bool:
+        missing = [c for c in REQUIRED_COLUMNS if c not in self.df_db.columns]
+        if missing:
+            logging.error(
+                f"Database '{app_settings.database.db_path}' is missing required "
+                f"columns: {missing}. Found columns: {list(self.df_db.columns)}"
+            )
+            return False
+        return True
+
+    def check_if_db_is_valid(self):
+        if not self.check_required_columns():
+            return False
+
+        l_geomtries = self.df_db['geometry'].values
+        for i in range(len(l_geomtries)):
+            geomtry = l_geomtries[i]
+            area = self.geometry_area_m2(geomtry)
+            if area > app_settings.database.max_area_in_meters:
+                entity = f"{self.df_db.entity_type.values[i]}_{self.df_db.entity_number.values[i]}"
+                logging.error(f'Max area of: {entity} is: {area}m > {app_settings.database.max_area_in_meters}m')
+                return False
+        return True
 
 
     def geometry_area_m2(self, geometry: str) -> float:
@@ -64,17 +91,6 @@ class DatabaseManager:
         area, _ = geod.polygon_area_perimeter(lons, lats)
 
         return abs(area)
-
-    def check_if_db_is_valid(self):
-        l_geomtries = self.df_db['geometry'].values
-        for i in range(len(l_geomtries)):
-            geomtry = l_geomtries[i]
-            area    = self.geometry_area_m2(geomtry)
-            if area > app_settings.database.max_area_in_meters:
-                entity = f"{self.df_db.entity_type.values[i]}_{self.df_db.entity_number.values[i]}"
-                logging.error(f'Max area of: {entity} is: {area}m > {app_settings.database.max_area_in_meters}m')
-                return False
-        return True
 
     def get_db(self):
         return self.df_db.copy()
