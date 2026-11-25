@@ -3,9 +3,13 @@ import logging
 from project_code.app_config.settings import app_settings
 from pyproj import Geod
 
+from project_code.utils.utils import log_boxed
+
+
 class DatabaseManager:
     def __init__(self):
         self.df_db = pd.read_csv(app_settings.database.db_path)
+        self.print_db_nicely()
 
 
     def geometry_area_m2(self, geometry: str) -> float:
@@ -74,6 +78,10 @@ class DatabaseManager:
 
     def get_db(self):
         return self.df_db.copy()
+
+    def print_db_nicely(self):
+        lines = self.df_db.to_string(index=False).splitlines()
+        log_boxed("Database", lines)
 
     def get_location(self, entity_type, entity_number):
         df = self.df_db.copy()

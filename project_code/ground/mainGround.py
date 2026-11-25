@@ -217,13 +217,14 @@ class MainGround:
 
         if self.databaseManager.check_if_db_is_valid() is False:
             logging.error('Fix Dataset and then try again')
-            return
+            return False
 
         self.audio_thread = threading.Thread(
             target=self.audioPipeline.run_audio_pipeline,
             daemon=True,
         )
         self.audio_thread.start()
+        return True
 
     def update_yaw(self, llm_result, angle):
         plan = llm_result.get('plan', {}) or {}
@@ -509,9 +510,12 @@ if __name__ == "__main__":
     log_version()
     log_app_settings()
     mainGround = run_ground()
-    mainGround.start_ground()
-    mainGround.flask_groundthread.join()
-    mainGround.audio_thread.join()
+    if mainGround.start_ground():
+        mainGround.flask_groundthread.join()
+        mainGround.audio_thread.join()
+    else:
+        log_boxed("Ground failed to start", ["Check logs for details"])
+
 
     #time.sleep(10)
     #logging.info('finished')
