@@ -1,12 +1,9 @@
-# Hold:
 ```
-curl -X POST http://127.0.0.1:5000/alert-start \
+curl -X POST http://localhost:8013/transcribe/   -F "file=@/home/amitli/repo/Agenteam_V2/project_code/audio/audio_files/English/Destination_not_found.wav"
+```
+
+```
+curl -X POST http://localhost:8002/synthesize/ \
   -H "Content-Type: application/json" \
-  -d '{
-    "task": "hold",
-    "description": "your description here"
-  }'
-
-
-curl -X GET http://127.0.0.1:5000/alert-get
+  -d '{"text": "Hello, this is a test."}'
 ```
