@@ -142,6 +142,31 @@ class FullSystemTest():
         if self.check_if_step_finished_successfully('I have reached the destination.') is False:
             return False
 
+    def run_surround(self):
+        # --- 1 ---
+        cmd = "Hey buddy go to building number 1"
+        self.log_test_step(cmd)
+        self.mainGroundInstance.handle_user_text(cmd)
+        if self.check_if_step_finished_successfully('I have reached the destination.') is False:
+            return False
+
+        # --- 2 ---
+        cmd = "buddy, surround the building and tell me what you see"
+        self.log_test_step(cmd)
+        mainGroundInstance.handle_user_text(cmd)
+
+        # --- 3 ---
+        cmd = 'what should I look for people and weapons'
+        self.log_test_step(cmd)
+        if self.check_if_step_finished_successfully('what should I look for ?') is True:
+            self.log_test_step("buddy, look for people and weapons")
+            mainGroundInstance.handle_user_text("buddy, look for people and weapons")
+
+            if self.check_if_step_finished_successfully('I have reached the destination.') is False:
+                return False
+
+        # wait to get all status
+        time.sleep(5)
 
     def run_final_scenario(self):
 
@@ -419,7 +444,8 @@ if __name__ == "__main__":
     wait_till_got_message_from_master_drone(mainGroundInstance)
 
 
-    result = fullSystemTest.run_final_scenario()
+    result = fullSystemTest.run_surround()
+    #result = fullSystemTest.run_final_scenario()
     #result = fullSystemTest.test_summary()
 
     #result = fullSystemTest.test_gazebo()

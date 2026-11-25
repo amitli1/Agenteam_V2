@@ -15,11 +15,12 @@ import math
 
 class QuadManager:
     def __init__(self, quad_port, fnc_send_text_to_user):
-        self.fnc_send_text_to_user = fnc_send_text_to_user
-        self.quad_port             = quad_port
-        self.target_ip             = get_running_ip()
-        self.last_status_msg       = None
-        self.last_logged_latlon    = None
+        self.fnc_send_text_to_user    = fnc_send_text_to_user
+        self.quad_port                = quad_port
+        self.target_ip                = get_running_ip()
+        self.last_status_msg          = None
+        self.last_logged_latlon       = None
+        self.last_is_mission_finished = False
 
         self.quad_url  = f"ws://{self.target_ip}:{self.quad_port}/ws/drone-status"
         self._thread   = threading.Thread(
@@ -80,6 +81,7 @@ class QuadManager:
             return False
 
         quad_isMissionInProgress.set()
+        self.last_is_mission_finished = False
         return True
 
 
@@ -92,18 +94,29 @@ class QuadManager:
         text_to_user   = None
 
 
+        # if is_in_progress:
+        #     current, total = map(int, mission_progress.split("/"))
+        #     if (total != 0) and (current == total):
+        #         text_to_user = "I have reached the destination."
+        #         quad_isMissionInProgress.clear()
+        #         self.send_get_to_destination_to_user()
+        #
+        #     else:
+        #         with quad_last_status_data_lock:
+        #             if mission_progress != quad_last_status_data.get('mission_progress'):
+        #                 text_to_user = "Hold on, still flying"
         if is_in_progress:
-            current, total = map(int, mission_progress.split("/"))
-            if (total != 0) and (current == total):
+            # Trigger only on False -> True transition of is_mission_finished
+            if is_mission_finished and not self.last_is_mission_finished:
                 text_to_user = "I have reached the destination."
                 quad_isMissionInProgress.clear()
                 self.send_get_to_destination_to_user()
-
             else:
                 with quad_last_status_data_lock:
                     if mission_progress != quad_last_status_data.get('mission_progress'):
                         text_to_user = "Hold on, still flying"
 
+        self.last_is_mission_finished = is_mission_finished
 
         if text_to_user is not None:
             if self.fnc_send_text_to_user:
