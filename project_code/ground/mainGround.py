@@ -50,6 +50,7 @@ class MainGround:
         app.add_url_rule("/get_to_destination" , view_func=self.on_air_get_to_destination  , methods=["POST"], )
         app.add_url_rule("/status"             , view_func=self.on_air_status_message      , methods=["POST"],)
         app.add_url_rule("/text_to_user"       , view_func=self.on_air_text_to_user        , methods=["POST"], )
+        app.add_url_rule("/air_log_name"       , view_func=self.on_air_log_name            , methods=["POST"], )
         self.status_received_event = threading.Event()
 
         self.master_drone_location     = None
@@ -68,10 +69,25 @@ class MainGround:
         self.last_destination          = None
         self.log_master_drone_distance = False
         self.log_slave_drone_distance  = False
+        self.master_air_log_name       = None
+        self.slave_air_log_name        = None
 
         self.vision_manager            = VisionManager(on_hold_status_callback = None,
                                                        fnc_send_text_to_user   = self.run_tts,
                                                        use_for_summery_only    = True)
+
+    def on_air_log_name(self):
+        msg        = request.get_json(silent=True)
+        drone_role = msg['drone_role']
+        log_name   = msg['log_name']
+
+        if drone_role == 'master':
+            self.master_air_log_name = log_name
+        elif drone_role == 'slave':
+            self.slave_air_log_name = log_name
+
+        logging.info(f'Got log file name: {log_name} from {drone_role} drone')
+        return "OK", 200
 
     def set_fnc_test_callback(self, fnc):
         self.fnc_test_callback = fnc

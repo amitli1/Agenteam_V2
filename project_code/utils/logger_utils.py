@@ -10,12 +10,10 @@ def get_timestamp_string():
 
 
 CURRENT_DATE = get_timestamp_string()
+_LOG_NAME    = None
 
 def init_logger(jetson_type):
-
-    logger = logging.getLogger()
-    if logger.handlers:
-        return  # already initialized
+    global _LOG_NAME
 
     prefix = ""
     if jetson_type == "ground":
@@ -26,23 +24,25 @@ def init_logger(jetson_type):
     else:
         prefix = f"log_"
 
+    log_name = f"{app_settings.logging_and_records.output_path}/{prefix}{CURRENT_DATE}.txt"
+
     logger = logging.getLogger()
+    if logger.handlers:
+        return _LOG_NAME  # already initialized, return cached name
+
+    _LOG_NAME = log_name
     logger.setLevel(logging.INFO)
 
-    # Formatter
-    formatter = logging.Formatter(   '%(asctime)s - %(levelname)s - %(filename)s - %(funcName)s - %(message)s',
-                                     datefmt='%Y-%m-%d %H:%M:%S')
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(filename)s - %(funcName)s - %(message)s',
+                                   datefmt='%Y-%m-%d %H:%M:%S')
 
-    # # File handler
-    #os.makedirs("logs", exist_ok=True)
-    log_name     = f"{app_settings.logging_and_records.output_path}/{prefix}{CURRENT_DATE}.txt"
     file_handler = logging.FileHandler(log_name)
     file_handler.setFormatter(formatter)
 
-    # Console handler
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(formatter)
 
-    # Add handlers to the logger
     logger.addHandler(console_handler)
     logger.addHandler(file_handler)
+
+    return log_name

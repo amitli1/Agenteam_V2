@@ -17,7 +17,8 @@ from project_code.vision.vision_manager import VisionManager
 init_logger(jetson_type="air")
 logging.getLogger("werkzeug").setLevel(logging.ERROR)
 
-app = Flask(__name__)
+app      = Flask(__name__)
+log_name = init_logger(jetson_type="air")
 
 class MainAir:
 
@@ -46,6 +47,18 @@ class MainAir:
         self._logic_thread.start()
         self.drone_role = "master" if app_settings.general.run_as_master else "slave"
         logging.info(f'Drone role: {self.drone_role}')
+
+        self.log_name = log_name
+        logging.info(f'Log name: {self.log_name}')
+        self.send_log_name_to_ground()
+
+    def send_log_name_to_ground(self):
+        try:
+            address = f"http://{app_settings.general.ground_ip}:{app_settings.general.ground_port}/air_log_name"
+            response = requests.post(address, json={"drone_role": self.drone_role, "log_name": self.log_name})
+            logging.info(f"Sent log file name: {self.log_name} to ground, response: {response.status_code}")
+        except Exception as e:
+            logging.error(f'Error while sending log file name to ground: {e}')
 
     def send_text_to_user(self, text_to_user):
         try:
