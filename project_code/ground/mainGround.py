@@ -165,6 +165,7 @@ class MainGround:
 
     def handle_stop_summary_text(self, text_to_user):
         try:
+            logging.info(f'Send summary to TTS: {text_to_user}')
             response = requests.post(f"http://{get_running_ip()}:8002/synthesize/", json={"text": text_to_user})
             data     = response.json()
             if response.status_code != 200:

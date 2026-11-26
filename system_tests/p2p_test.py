@@ -166,7 +166,7 @@ class FullSystemTest():
                 return False
 
         # wait to get all status
-        time.sleep(5)
+        time.sleep(10)
 
     def run_final_scenario(self):
 
