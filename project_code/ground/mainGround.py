@@ -163,6 +163,18 @@ class MainGround:
         self.status_received_event.set()
         return "OK", 200
 
+    def handle_stop_summary_text(self, text_to_user):
+        try:
+            response = requests.post(f"http://{get_running_ip()}:8002/synthesize/", json={"text": text_to_user})
+            data     = response.json()
+            if response.status_code != 200:
+                return False
+
+            prepare_audio_for_speech(data)
+
+        except Exception as e:
+            logging.error(f"Error while sending text to TTS server: {e}")
+
     def run_tts(self, text_to_user, drone_role=""):
 
         self.monitorCollector.update_text_to_user(drone_role, text_to_user)
@@ -182,11 +194,12 @@ class MainGround:
             return True
         elif "I have reached the destination." in text_to_user:
 
-            if app_settings.vision.run_summery_agent_on_ground:
-                self.vision_manager.stop_summary()
-
             logging.info(f'Put I_have_reached_the_destination.wav into the Q')
             SoundPlayerManager().get_file_queue().put(f"{app_settings.database.audio_files}/I_have_reached_the_destination.wav")
+
+            if app_settings.vision.run_summery_agent_on_ground:
+                summary_text = self.vision_manager.stop_summary()
+                self.handle_stop_summary_text(summary_text)
 
             return True
         elif "what should I look for ?" in text_to_user:
