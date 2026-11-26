@@ -54,7 +54,8 @@ def describe():
     transcription = payload.get("transcription", "")
     logging.info(f"describe request, transcription='{transcription}'")
     description = summary_state.describe(transcription)
-    # vision_manager.py treats the whole response json as the description text
+    # description is a dict like {"description": "..."} matching what
+    # vision_manager.describe_summerization() expects (desc['description'])
     return jsonify(description)
 
 

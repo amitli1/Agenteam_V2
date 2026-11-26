@@ -136,9 +136,11 @@ class SummaryState:
 
     def stop_summarizing(self):
         with self._lock:
+            objects = self.objects_to_focus or "the scene"
+            summary_text = f"Simulated summary for objects '{objects}'."
             self.summarizing = False
             self.objects_to_focus = None
-        return {"status": "stopped"}
+        return {"status": "stopped", "summary": summary_text}
 
     def status(self):
         with self._lock:
@@ -150,10 +152,11 @@ class SummaryState:
 
     def describe(self, transcription):
         objects = self.objects_to_focus or "the scene"
-        return (
+        description = (
             f"Simulated description for objects '{objects}'. "
             f"User asked: '{transcription}'."
         )
+        return {"description": description}
 
 
 # module level singletons shared by all Flask apps (they all run in the
