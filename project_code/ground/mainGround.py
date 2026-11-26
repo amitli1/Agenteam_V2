@@ -71,6 +71,7 @@ class MainGround:
         self.log_slave_drone_distance  = False
         self.master_air_log_name       = None
         self.slave_air_log_name        = None
+        self.send_start_summary        = False
 
         self.vision_manager            = VisionManager(on_hold_status_callback = None,
                                                        fnc_send_text_to_user   = self.run_tts,
@@ -199,8 +200,10 @@ class MainGround:
             SoundPlayerManager().get_file_queue().put(f"{app_settings.database.audio_files}/I_have_reached_the_destination.wav")
 
             if app_settings.vision.run_summery_agent_on_ground:
-                summary_text = self.vision_manager.stop_summary()
-                self.handle_stop_summary_text(summary_text)
+                if self.send_start_summary:
+                    summary_text = self.vision_manager.stop_summary()
+                    self.handle_stop_summary_text(summary_text)
+                    self.send_start_summary = False
 
             return True
         elif "what should I look for ?" in text_to_user:
@@ -429,6 +432,10 @@ class MainGround:
         logging.info("└" + "─" * (width + 2) + "┘")
 
     def handle_summery(self, command_to_air):
+
+        if (command_to_air["vision_command"] == "summary") and (command_to_air['vision_cmd_action'] == "start"):
+            self.send_start_summary = True
+
         self.vision_manager.handle_vision_command(vision_command    = command_to_air["vision_command"],
                                                   vision_cmd_action = command_to_air["vision_cmd_action"],
                                                   objects_to_focus  = command_to_air["objects_to_focus"])
